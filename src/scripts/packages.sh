@@ -7,6 +7,8 @@ CORE_PKGS=(
     xdg-desktop-portal-hyprland
     hyprpolkitagent
     sddm
+    swaync
+    hypridle
 )
 
 APPS_PKGS=(

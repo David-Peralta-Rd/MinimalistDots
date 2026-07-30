@@ -54,6 +54,7 @@ rsync -a "$SOURCE_DIR/" "$DEST_DIR/"
 echo "$TXT_COPYING_DONE"
 
 TARGET="$HYPR_DIR/hyprland.lua"
+TARGET_HYPRIDLE="$HYPR_DIR/hypridle.conf"
 echo "$TXT_WRITING_CONFIG $TARGET"
 
 tee "$TARGET" > /dev/null <<'EOF'
@@ -92,6 +93,28 @@ require_if_exists("custom_minimalist.general", HOME .. "/.config/hypr/custom_min
 -- Atajos de teclado
 require("hyprland.keybinds")
 require_if_exists("custom_minimalist.keybinds", HOME .. "/.config/hypr/custom_minimalist/keybinds.lua")
+EOF
+
+
+# INSTALACION DE HYPRIDLE
+tee "$TARGET_HYPRIDLE" > /dev/null <<'EOF'
+general {
+    lock_cmd = pidof hyprlock || hyprlock          # Evita abrir múltiples instancias de hyprlock
+    before_sleep_cmd = loginctl lock-session      # Bloquea la sesión automáticamente antes de suspender
+    after_sleep_cmd = hyprctl dispatch dpms on    # Enciende la pantalla al despertar
+}
+
+# Bloquear pantalla tras 10 minutos (600 segundos)
+listener {
+    timeout = 600
+    on-timeout = loginctl lock-session
+}
+
+listener {
+    timeout = 660
+    on-timeout = hyprctl dispatch dpms off
+    on-resume = hyprctl dispatch dpms on
+}
 EOF
 
 echo "$TXT_CONFIG_INSTALLED"
