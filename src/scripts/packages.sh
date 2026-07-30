@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Este archivo se "source"-ea, no se ejecuta directo.
+# Cada array es una categoría. Agrega la tuya y súmala a ALL_PKGS al final.
+
+CORE_PKGS=(
+    hyprland
+    xdg-desktop-portal-hyprland
+    hyprpolkitagent
+    sddm
+)
+
+APPS_PKGS=(
+    foot
+    ark
+    unrar
+)
+
+FONTS_PKGS=(
+    # ttf-jetbrains-mono-nerd
+)
+
+# --- Junta todas las categorías en una sola variable ---
+# Para agregar una categoría nueva: declárala arriba y agrégala aquí.
+ALL_PKGS=(
+    "${CORE_PKGS[@]}"
+    "${APPS_PKGS[@]}"
+    "${FONTS_PKGS[@]}"
+)

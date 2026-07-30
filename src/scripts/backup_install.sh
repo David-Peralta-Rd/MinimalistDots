@@ -16,7 +16,7 @@ else
 fi
 
 HYPR_DIR="$HOME/.config/hypr"
-BACKUP_ROOT="$HOME/.config/hypr-backups"
+BACKUP_ROOT="$HOME/.config/backups_dots/hypr-backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
 
