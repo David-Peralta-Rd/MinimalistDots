@@ -37,25 +37,44 @@ echo "$TXT_WELCOME"
 echo "=========================================================="
 echo ""
 
-# Si la opción no fue válida, avisamos DESPUÉS de cargar el .cfg,
-# para que el aviso mismo ya esté en el idioma correcto (inglés, en este caso).
 if [ "${MOSTRAR_AVISO_OPCION_INVALIDA:-0}" = "1" ]; then
     echo "$TXT_INVALID_OPTION"
     echo ""
 fi
 
 sleep 1
+
+# --- 4. BOOTSTRAP DEL SISTEMA (pacman -Syu, paru, sudoers) ---
+echo "=========================================================="
+echo "$TXT_UPDATING_SYSTEM"
+echo "=========================================================="
+bash "$SCRIPT_DIR/src/scripts/bootstrap_system.sh" "$ARCHIVO_LANG"
+echo ""
+
+# --- 5. INSTALACIÓN DE PAQUETES (categorías definidas en packages.sh) ---
+echo "=========================================================="
+echo "$TXT_INSTALLING_PACKAGES"
+echo "=========================================================="
+bash "$SCRIPT_DIR/src/scripts/install_packages.sh" "$ARCHIVO_LANG"
+echo ""
+
+# --- 6. CONFIGURACIONES ADICIONALES (foot, y lo que se agregue después) ---
+echo "=========================================================="
+echo "$TXT_CONFIGS_HEADER"
+echo "=========================================================="
+bash "$SCRIPT_DIR/src/scripts/install_configs.sh" "$ARCHIVO_LANG"
+echo ""
+
+# --- 7. BACKUP + INSTALACIÓN DE LA CONFIG DE HYPRLAND ---
 echo "=========================================================="
 echo "$TXT_BACKUP"
 echo "=========================================================="
 echo "=========================================================="
 echo "$TXT_COPY_DOTFILES"
 echo "=========================================================="
-
-# EJECUTANDO SCRIPT DE BACKUP Y INSTALACION
 bash "$SCRIPT_DIR/src/scripts/backup_install.sh" "$ARCHIVO_LANG"
-
 echo ""
+
 echo "=========================================================="
 echo "$TXT_FINISHED"
 echo "=========================================================="
