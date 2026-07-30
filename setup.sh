@@ -11,11 +11,14 @@ echo "1) Español (ES)"
 echo "2) English (EN)"
 read -rp "Opción / Option (1-2): " OPCION_IDIOMA
 
-if [ "$OPCION_IDIOMA" = "1" ]; then
-    ARCHIVO_LANG="es.cfg"
-else
-    ARCHIVO_LANG="en.cfg"
-fi
+case "$OPCION_IDIOMA" in
+    1) ARCHIVO_LANG="es.cfg" ;;
+    2) ARCHIVO_LANG="en.cfg" ;;
+    *)
+        ARCHIVO_LANG="en.cfg"
+        MOSTRAR_AVISO_OPCION_INVALIDA=1
+        ;;
+esac
 
 # --- 3. CARGAR EL ARCHIVO DE TRADUCCIÓN (.cfg) ---
 PATH_TRADUCCION="$LANG_DIR/$ARCHIVO_LANG"
@@ -24,7 +27,6 @@ if [ -f "$PATH_TRADUCCION" ]; then
     source "$PATH_TRADUCCION"
 else
     echo "Error: No se pudo encontrar el archivo de idioma en $PATH_TRADUCCION"
-    echo "Error: Could not find the language file at $PATH_TRADUCCION"
     exit 1
 fi
 
@@ -34,6 +36,14 @@ echo "=========================================================="
 echo "$TXT_WELCOME"
 echo "=========================================================="
 echo ""
+
+# Si la opción no fue válida, avisamos DESPUÉS de cargar el .cfg,
+# para que el aviso mismo ya esté en el idioma correcto (inglés, en este caso).
+if [ "${MOSTRAR_AVISO_OPCION_INVALIDA:-0}" = "1" ]; then
+    echo "$TXT_INVALID_OPTION"
+    echo ""
+fi
+
 sleep 1
 echo "=========================================================="
 echo "$TXT_BACKUP"
@@ -43,9 +53,10 @@ echo "$TXT_COPY_DOTFILES"
 echo "=========================================================="
 
 # EJECUTANDO SCRIPT DE BACKUP Y INSTALACION
-# Se pasa ARCHIVO_LANG como argumento: las variables cargadas con "source"
-# viven solo en este shell, no se heredan a un proceso "bash" hijo.
 bash "$SCRIPT_DIR/src/scripts/backup_install.sh" "$ARCHIVO_LANG"
 
 echo ""
+echo "=========================================================="
+echo "$TXT_FINISHED"
+echo "=========================================================="
 sleep 8
