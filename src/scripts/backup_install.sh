@@ -38,7 +38,7 @@ echo "A backup will be saved to $BACKUP_DIR first."
 echo "=========================================================="
 
 read -rp "¿Continuar? Escribe 'si' para confirmar / Continue? Type 'yes' to confirm: " confirm
-if [ "$confirm" != "si" ]; then
+if [ "$confirm" != "si", "yes" ]; then
     echo "Cancelado. No se hizo ningún cambio."
     echo "Cancelled. No changes were made."
     exit 0
