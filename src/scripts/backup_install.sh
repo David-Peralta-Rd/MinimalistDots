@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# SI NO DETECTA EL IDIOMA, SE CONFIGURA EN INGLES POR DEFECTO
 ARCHIVO_LANG="${1:-en.cfg}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,6 +10,9 @@ LANG_DIR="$PROJECT_ROOT/src/lang"
 PATH_TRADUCCION="$LANG_DIR/$ARCHIVO_LANG"
 if [ -f "$PATH_TRADUCCION" ]; then
     source "$PATH_TRADUCCION"
+else
+    echo "Error: no se pudo encontrar el archivo de idioma en $PATH_TRADUCCION" >&2
+    exit 1
 fi
 
 HYPR_DIR="$HOME/.config/hypr"
@@ -18,53 +20,41 @@ BACKUP_ROOT="$HOME/.config/hypr-backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
 
-# Direccion estable
 SOURCE_DIR="$PROJECT_ROOT/src/.config/hypr/hyprland"
 DEST_DIR="$HYPR_DIR/hyprland"
 
 if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Error: no se encontró SOURCE_DIR en '$SOURCE_DIR'" >&2
-    echo "Error: SOURCE_DIR not found in '$SOURCE_DIR'" >&2
+    echo "$TXT_SOURCE_NOT_FOUND $SOURCE_DIR" >&2
     exit 1
 fi
 
 echo "=========================================================="
-echo "Esto BORRARÁ POR COMPLETO $HYPR_DIR antes de instalar."
-echo "Se guardará un backup en $BACKUP_DIR primero."
+echo "$TXT_CONFIRM_WARNING1 $HYPR_DIR"
+echo "$TXT_CONFIRM_WARNING2 $BACKUP_DIR"
 echo "=========================================================="
-echo "=========================================================="
-echo "This will COMPLETELY DELETE $HYPR_DIR before installing."
-echo "A backup will be saved to $BACKUP_DIR first."
-echo "=========================================================="
-
-read -rp "¿Continuar? Escribe 'si' para confirmar / Continue? Type 'yes' to confirm: " confirm
-if [ "$confirm" != "si", "yes" ]; then
-    echo "Cancelado. No se hizo ningún cambio."
-    echo "Cancelled. No changes were made."
+read -rp "$TXT_CONFIRM_PROMPT " confirm
+if [ "$confirm" != "$TXT_CONFIRM_WORD" ]; then
+    echo "$TXT_CANCELLED"
     exit 0
 fi
 
-echo "Haciendo backup de $HYPR_DIR -> $BACKUP_DIR"
-echo "Backing up $HYPR_DIR -> $BACKUP_DIR"
+echo "$TXT_BACKUP_DOING $HYPR_DIR -> $BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
 cp -a "$HYPR_DIR/." "$BACKUP_DIR/"
-echo "Backup completado / "Backup completed.""
+echo "$TXT_BACKUP_DONE"
 
-echo "Borrando $HYPR_DIR por completo..."
-echo "Deleting $HYPR_DIR completely..."
+echo "$TXT_CLEANING"
 rm -rf "$HYPR_DIR"
 mkdir -p "$HYPR_DIR"
-echo "Carpeta limpia / "Folder cleaned.""
+echo "$TXT_CLEANING_DONE"
 
-echo "Copiando dotfiles de $SOURCE_DIR -> $DEST_DIR"
-echo "Copying dotfiles from $SOURCE_DIR -> $DEST_DIR"
+echo "$TXT_COPYING $SOURCE_DIR -> $DEST_DIR"
 mkdir -p "$DEST_DIR"
 rsync -a "$SOURCE_DIR/" "$DEST_DIR/"
-echo "Dotfiles copiados / Dotfiles copied."
+echo "$TXT_COPYING_DONE"
 
 TARGET="$HYPR_DIR/hyprland.lua"
-echo "Escribiendo nuevo $TARGET"
-echo "Writing new $TARGET"
+echo "$TXT_WRITING_CONFIG $TARGET"
 
 tee "$TARGET" > /dev/null <<'EOF'
 --------------------------------------------------------------------------------------
@@ -104,25 +94,25 @@ require("hyprland.keybinds")
 require_if_exists("custom_minimalist.keybinds", HOME .. "/.config/hypr/custom_minimalist/keybinds.lua")
 EOF
 
-echo "Configuración instalada."
+echo "$TXT_CONFIG_INSTALLED"
 
 if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
-    echo "Recargando Hyprland (hyprctl reload)..."
+    echo "$TXT_RELOADING"
     hyprctl reload
     sleep 1
 
     ERRORS="$(hyprctl configerrors 2>/dev/null || true)"
     if [ -n "$ERRORS" ] && [ "$ERRORS" != "no errors" ]; then
         echo "=========================================================="
-        echo "⚠ Hyprland reportó errores al cargar la nueva config:"
+        echo "$TXT_RELOAD_ERRORS"
         echo "$ERRORS"
-        echo "Tu configuración anterior sigue intacta en: $BACKUP_DIR"
+        echo "$TXT_PREVIOUS_CONFIG_SAFE $BACKUP_DIR"
         echo "=========================================================="
         exit 1
     fi
 
-    echo "Recarga exitosa, sin errores reportados."
+    echo "$TXT_RELOAD_OK"
 else
-    echo "No se detectó una sesión de Hyprland activa (HYPRLAND_INSTANCE_SIGNATURE vacío)."
-    echo "Inicia sesión en Hyprland; la config ya está instalada y se cargará sola."
+    echo "$TXT_NO_SESSION"
+    echo "$TXT_INSTALLED_WILL_LOAD"
 fi
