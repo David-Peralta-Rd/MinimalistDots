@@ -9,6 +9,7 @@ CORE_PKGS=(
     sddm
     swaync
     hypridle
+    hyprlock
 )
 
 APPS_PKGS=(

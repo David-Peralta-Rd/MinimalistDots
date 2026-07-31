@@ -55,6 +55,8 @@ echo "$TXT_COPYING_DONE"
 
 TARGET="$HYPR_DIR/hyprland.lua"
 TARGET_HYPRIDLE="$HYPR_DIR/hypridle.conf"
+TARGET_HYPRLOCK="$HYPR_DIR/hyprlock.conf"
+
 echo "$TXT_WRITING_CONFIG $TARGET"
 
 tee "$TARGET" > /dev/null <<'EOF'
@@ -104,18 +106,98 @@ general {
     after_sleep_cmd = hyprctl dispatch dpms on    # Enciende la pantalla al despertar
 }
 
-# Bloquear pantalla tras 10 minutos (600 segundos)
+# Bloquear pantalla tras 20 minutos (1200 segundos)
 listener {
-    timeout = 600
+    timeout = 1200
     on-timeout = loginctl lock-session
 }
 
 listener {
-    timeout = 660
+    timeout = 1260
     on-timeout = hyprctl dispatch dpms off
     on-resume = hyprctl dispatch dpms on
 }
 EOF
+
+
+# INSTALACION DE HYPRLOCK
+tee "$TARGET_HYPRLOCK" > /dev/null <<'EOF'
+# CONFIGURACIÓN GENERAL
+general {
+    disable_loading_bar = true
+    hide_cursor = true
+    grace = 0
+    no_fade_in = false
+}
+
+# FONDO ADAPTATIVO
+background {
+    monitor =
+    path = screenshot            # Captura dinámicamente tu fondo de pantalla actual
+
+    # Filtros de desenfoque profundo
+    blur_passes = 4              # Suavizado de alta calidad
+    blur_size = 7                # Radio del difuminado
+    noise = 0.015                # Grano fino minimalista
+    contrast = 0.8916            # Ajuste de contraste para el fondo
+    brightness = 0.70            # Oscurece la captura para que no moleste a la vista
+
+    # Capa translúcida con tu color base #1e1e2e (80% de opacidad)
+    color = rgba(1e1e2ecc)
+}
+
+# RELOJ DIGITAL ELEGANTE
+label {
+    monitor =
+    text = cmd[update:1000] echo "$(date +"%H:%M")"
+    color = rgba(cdd6f4ff)        # Color 'text' (#cdd6f4)
+    font_size = 80
+    font_family = JetBrains Mono Nerd Font Bold
+    position = 0, 180
+    halign = center
+    valign = center
+}
+
+# SALUDO MINIMALISTA
+label {
+    monitor =
+    text = Hola, $USER
+    color = rgba(cdd6f4cc)        # Color 'text' con leve transparencia
+    font_size = 14
+    font_family = JetBrains Mono Nerd Font Regular
+    position = 0, -40
+    halign = center
+    valign = center
+}
+
+# CAMPO DE ENTRADA DE CONTRASEÑA
+input-field {
+    monitor =
+    size = 250, 45
+    outline_thickness = 2
+    dots_size = 0.22
+    dots_spacing = 0.35
+    dots_center = true
+
+    # Aplicación estricta de tus colores
+    outer_color = rgba(585b70aa)  # Color 'border_inactive' con transparencia
+    check_color = rgba(89b4faff)  # Color 'border_active' al procesar
+    fail_color = rgba(f38ba8ff)   # Rojo Catppuccin para errores de contraseña
+    inner_color = rgba(313244ff)  # Color 'surface' (#313244)
+    font_color = rgba(cdd6f4ff)   # Color 'text' (#cdd6f4)
+
+    fade_on_empty = true          # Esconde la caja si no estás escribiendo
+    fade_timeout = 1500           # Tiempo antes de desvanecerse (1.5s)
+    placeholder_text = <i>Ingresa contraseña / Enter password...</i>
+    hide_input = false
+
+    position = 0, -110
+    halign = center
+    valign = center
+}
+EOF
+
+
 
 echo "$TXT_CONFIG_INSTALLED"
 
