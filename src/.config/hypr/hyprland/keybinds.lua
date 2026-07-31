@@ -13,6 +13,9 @@ kb:dispatch("J", hl.dsp.layout("togglesplit"), "Alternar dirección del split")
 kb:dispatch("mouse:272", hl.dsp.window.drag(), {mouse = true}, "Mover Ventana")
 kb:dispatch("mouse:273", hl.dsp.window.resize(), {mouse = true}, "Redimensionar ventana")
 
+-- Hypridle lock
+kb:exec("L", "loginctl lock-session", "Bloquear seccion")
+
 
 kb:focus("left",  "left")
 kb:focus("right", "right")
