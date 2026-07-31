@@ -5,6 +5,7 @@ ARCHIVO_LANG="${1:-en.cfg}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 LANG_DIR="$PROJECT_ROOT/src/lang"
+HYPRPAPER_DIR="~/.config/hyprpaper"
 
 PATH_TRADUCCION="$LANG_DIR/$ARCHIVO_LANG"
 if [ -f "$PATH_TRADUCCION" ]; then
@@ -50,3 +51,10 @@ if [ ! -f "$SUDOERS_DROPIN" ]; then
 fi
 
 echo "$TXT_BOOTSTRAP_DONE"
+
+# --- 5. Desactivamos los mensajes de hyprpaper
+mkdir -p $HYPRPAPER_DIR
+cat > "$HYPRPAPER_DIR/hyprpaper.conf" << 'EOF'
+# Desactivar mensaje de hyprland
+splash = falses
+EOF
