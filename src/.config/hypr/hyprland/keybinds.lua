@@ -22,7 +22,7 @@ kb:exec("SHIFT+BACKSPACE", "shutdown now", "Apagar PC")
 kb:exec("SHIFT+ALT+BACKSPACE", "Reboot now", "Reiniciar PC")
 
 -- Wallpaper select
-kb:exec("SHIFT+T", HOME .. "/.config/hypr/scripts/select-wallpaper.sh", "Elegir fondo de pantalla")
+kb:exec("SHIFT+T", HOME .. "/.config/hypr/hyprland/scripts/select-wallpaper.sh", "Elegir fondo de pantalla")
 
 
 
