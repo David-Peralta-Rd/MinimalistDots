@@ -5,7 +5,7 @@ ARCHIVO_LANG="${1:-en.cfg}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 LANG_DIR="$PROJECT_ROOT/src/lang"
-HYPRPAPER_DIR="~/.config/hyprpaper"
+HYPRPAPER_DIR="/home/$USER/.config/hyprpaper"
 
 PATH_TRADUCCION="$LANG_DIR/$ARCHIVO_LANG"
 if [ -f "$PATH_TRADUCCION" ]; then
