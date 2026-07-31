@@ -22,7 +22,7 @@ ya pkg add yazi-rs/plugins:mount || true
 
 echo "==> Escribiendo keymap.toml (WASD + Suprimir + plugin de montaje)"
 cat > "$YAZI_DIR/keymap.toml" << 'EOF'
-"#schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+#"schema" = "https://yazi-rs.github.io/schemas/keymap.json"
 
 [mgr]
 prepend_keymap = [
