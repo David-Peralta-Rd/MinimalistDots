@@ -21,6 +21,9 @@ kb:exec("L", "loginctl lock-session", "Bloquear seccion")
 kb:exec("BACKSPACE", "shutdown now", "Apagar PC")
 kb:exec("SHIFT+BACKSPACE", "Reboot now", "Reiniciar PC")
 
+-- Wallpaper select
+kb:exec("SHIFT+T", HOME .. "/.config/hypr/scripts/select-wallpaper.sh", "Elegir fondo de pantalla")
+
 
 
 kb:focus("left",  "left")

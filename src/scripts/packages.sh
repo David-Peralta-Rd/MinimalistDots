@@ -11,6 +11,7 @@ CORE_PKGS=(
     hypridle
     hyprlock
     waybar
+    hyprpaper
 )
 
 APPS_PKGS=(
