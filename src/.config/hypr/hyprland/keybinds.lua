@@ -18,8 +18,8 @@ kb:dispatch("mouse:273", hl.dsp.window.resize(), {mouse = true}, "Redimensionar 
 kb:exec("L", "loginctl lock-session", "Bloquear seccion")
 
 -- Shutdown PC and reboot
-kb:exec("BACKSPACE", "shutdown now", "Apagar PC")
-kb:exec("SHIFT+BACKSPACE", "Reboot now", "Reiniciar PC")
+kb:exec("SHIFT+BACKSPACE", "shutdown now", "Apagar PC")
+kb:exec("SHIFT+ALT+BACKSPACE", "Reboot now", "Reiniciar PC")
 
 -- Wallpaper select
 kb:exec("SHIFT+T", HOME .. "/.config/hypr/scripts/select-wallpaper.sh", "Elegir fondo de pantalla")
