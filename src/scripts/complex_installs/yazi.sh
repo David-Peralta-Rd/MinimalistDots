@@ -12,17 +12,21 @@ paru -S --needed --noconfirm \
     zoxide \
     jq \
     ouch \
-    udisks2
+    udisks2 \
+    imv \
+    mpv
 
 YAZI_DIR="$HOME/.config/yazi"
-mkdir -p "$YAZI_DIR"
+IMV_DIR="$HOME/.config/imv"
+MPV_DIR="$HOME/.config/mpv"
+mkdir -p "$YAZI_DIR" "$IMV_DIR" "$MPV_DIR"
 
 echo "==> Instalando plugin oficial de montaje de discos (udisksctl)"
 ya pkg add yazi-rs/plugins:mount || true
 
 echo "==> Escribiendo keymap.toml (WASD + Suprimir + plugin de montaje)"
 cat > "$YAZI_DIR/keymap.toml" << 'EOF'
-#"schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+# :schema https://yazi-rs.github.io/schemas/keymap.json
 
 [mgr]
 prepend_keymap = [
@@ -41,4 +45,41 @@ prepend_keymap = [
 ]
 EOF
 
-echo "Yazi configurado."
+echo "==> Escribiendo yazi.toml (abrir imágenes con imv, videos con mpv)"
+cat > "$YAZI_DIR/yazi.toml" << 'EOF'
+# :schema https://yazi-rs.github.io/schemas/yazi.json
+
+[opener]
+image = [
+    { run = 'imv "$@"', desc = "imv", orphan = true, for = "unix" },
+]
+play = [
+    { run = 'mpv --force-window "$@"', desc = "mpv", orphan = true, for = "unix" },
+]
+
+[open]
+prepend_rules = [
+    { mime = "image/*", use = "image" },
+    { mime = "video/*", use = "play" },
+]
+EOF
+
+echo "==> Escribiendo config de imv (colores + modo de escalado)"
+cat > "$IMV_DIR/config" << 'EOF'
+[options]
+background = 1e1e2e
+overlay_font = JetBrains Mono:16
+scaling_mode = shrink
+EOF
+
+echo "==> Escribiendo mpv.conf (sin bordes + colores del OSD)"
+cat > "$MPV_DIR/mpv.conf" << 'EOF'
+border=no
+force-window=yes
+save-position-on-quit=yes
+osd-color=#cdd6f4
+osd-border-color=#1e1e2e
+osd-font-size=28
+EOF
+
+echo "Yazi, imv y mpv configurados."
