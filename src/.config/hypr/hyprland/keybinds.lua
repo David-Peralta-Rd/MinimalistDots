@@ -16,6 +16,11 @@ kb:dispatch("mouse:273", hl.dsp.window.resize(), {mouse = true}, "Redimensionar 
 -- Hypridle lock
 kb:exec("L", "loginctl lock-session", "Bloquear seccion")
 
+-- Shutdown PC and reboot
+kb:exec("BackSpace", "shutdown now", "Apagar PC")
+kb:exec("Shift+BackSpace", "Reboot now", "Reiniciar PC")
+
+
 
 kb:focus("left",  "left")
 kb:focus("right", "right")
