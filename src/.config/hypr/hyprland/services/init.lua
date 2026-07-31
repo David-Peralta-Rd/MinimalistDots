@@ -10,6 +10,7 @@ require("hyprland.services.create_custom_config")
 require("hyprland.services.hypridle")
 --require("hyprland.services.waybar")
 require("hyprland.services.wofi_theme")
+require("hyprland.services.wallpaper")
 require("hyprland.services.udiskie")
 
 
