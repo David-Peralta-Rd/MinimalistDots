@@ -7,6 +7,7 @@ require("hyprland.services.cursor")
 require("hyprland.services.export_keybinds")
 require("hyprland.services.notifications")
 require("hyprland.services.create_custom_config")
+require("hyprland.services.hypridle")
 
 require_if_exists(
     "custom_minimalist.services.init",
