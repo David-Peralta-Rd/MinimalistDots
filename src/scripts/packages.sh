@@ -10,6 +10,7 @@ CORE_PKGS=(
     swaync
     hypridle
     hyprlock
+    waybar
 )
 
 APPS_PKGS=(
