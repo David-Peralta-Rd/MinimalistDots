@@ -12,6 +12,7 @@ CORE_PKGS=(
     hyprlock
     waybar
     hyprpaper
+    wofi
 )
 
 APPS_PKGS=(
