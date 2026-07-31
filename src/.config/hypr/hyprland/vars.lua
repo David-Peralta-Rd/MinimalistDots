@@ -4,7 +4,7 @@
 
 return {
     terminal    = "footclient",
-    fileManager = "dolphin",
+    fileManager = "footclient -e yazi",
     menu        = "hyprlauncher",
     browser     = "brave",
     mainMod     = "SUPER",
