@@ -8,7 +8,7 @@ require("hyprland.services.export_keybinds")
 require("hyprland.services.notifications")
 require("hyprland.services.create_custom_config")
 require("hyprland.services.hypridle")
-require("hyprland.services.waybar")
+--require("hyprland.services.waybar")
 require("hyprland.services.wallpaper")
 
 require_if_exists(
