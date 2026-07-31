@@ -13,6 +13,7 @@ CORE_PKGS=(
     waybar
     hyprpaper
     wofi
+    git
 )
 
 APPS_PKGS=(
@@ -24,6 +25,13 @@ APPS_PKGS=(
 
 FONTS_PKGS=(
     # ttf-jetbrains-mono-nerd
+)
+
+PROGRAMMING_PKGS=(
+    visual-studio-code-bin
+    docker
+    uv
+
 )
 
 # --- Junta todas las categorías en una sola variable ---

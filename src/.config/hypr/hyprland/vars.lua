@@ -5,8 +5,8 @@
 return {
     terminal    = "footclient",
     fileManager = "footclient -e yazi",
-    menu        = "hyprlauncher",
+    menu        = "wofi",
     browser     = "brave",
     mainMod     = "SUPER",
-    editor        = "code"
+    editor      = "code"
 }
