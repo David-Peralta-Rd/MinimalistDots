@@ -17,8 +17,8 @@ kb:dispatch("mouse:273", hl.dsp.window.resize(), {mouse = true}, "Redimensionar 
 kb:exec("L", "loginctl lock-session", "Bloquear seccion")
 
 -- Shutdown PC and reboot
-kb:exec("BackSpace", "shutdown now", "Apagar PC")
-kb:exec("Shift+BackSpace", "Reboot now", "Reiniciar PC")
+kb:exec("BACKSPACE", "shutdown now", "Apagar PC")
+kb:exec("SHIFT+BACKSPACE", "Reboot now", "Reiniciar PC")
 
 
 
