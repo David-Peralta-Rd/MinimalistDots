@@ -8,4 +8,5 @@ return {
     menu        = "hyprlauncher",
     browser     = "brave",
     mainMod     = "SUPER",
+    editor        = "code"
 }
