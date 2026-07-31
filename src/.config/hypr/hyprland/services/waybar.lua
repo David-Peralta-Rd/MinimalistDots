@@ -1,6 +1,6 @@
 -- ~/.config/hypr/hyprland/services/waybar.lua
-local Service = require("lib.services")
-local colors  = require("colors")
+local Service = require("hyprland.lib.services")
+local colors  = require("hyprland.colors")
 
 local CONFIG_DIR = os.getenv("HOME") .. "/.config/waybar"
 
