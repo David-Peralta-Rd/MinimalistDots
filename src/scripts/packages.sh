@@ -19,6 +19,7 @@ APPS_PKGS=(
     foot
     ark
     unrar
+    libreoffice-fresh
 )
 
 FONTS_PKGS=(
