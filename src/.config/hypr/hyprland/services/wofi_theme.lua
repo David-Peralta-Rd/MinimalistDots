@@ -4,6 +4,14 @@ local colors  = require("hyprland.colors")
 
 local CONFIG_DIR = os.getenv("HOME") .. "/.config/wofi"
 
+local function hex_to_css_rgba(hex, alpha)
+    hex = hex:gsub("#", "")
+    local r = tonumber(hex:sub(1, 2), 16)
+    local g = tonumber(hex:sub(3, 4), 16)
+    local b = tonumber(hex:sub(5, 6), 16)
+    return string.format("rgba(%d, %d, %d, %.2f)", r, g, b, alpha)
+end
+
 local function write_config()
     local config = [[
 # ~/.config/wofi/config
@@ -21,40 +29,39 @@ hide_scroll=true
 print_command=true
 ]]
     local f = io.open(CONFIG_DIR .. "/config", "w")
-    if f then f:write(config) f:close() end
+    if f then
+        f:write(config)
+        f:close()
+    end
 end
 
 local function write_style()
     local css = string.format([[
 /* ~/.config/wofi/style.css */
-
 /* Ventana principal */
 window {
     margin: 0px;
-    background-color: rgba(30, 30, 46, 0.85); /* #1e1e2e con 85% de opacidad */
-    border: 2px solid #89b4fa; /* border_active */
+    background-color: %s; /* background con 85%% de opacidad */
+    border: 2px solid %s; /* border_active */
     border-radius: 12px; /* Esquinas suavizadas */
     font-family: 'Inter', 'JetBrains Mono', 'monospace';
     font-size: 14px;
 }
-
 /* Caja de búsqueda */
 #input {
     margin: 12px 12px 6px 12px;
-    border: 1px solid #585b70; /* border_inactive */
+    border: 1px solid %s; /* border_inactive */
     border-radius: 8px;
-    background-color: rgba(49, 50, 68, 0.7); /* surface opaco */
-    color: #cdd6f4; /* text */
+    background-color: %s; /* surface al 70%% de opacidad */
+    color: %s; /* text */
     padding: 8px;
 }
-
 /* Contenedor de la lista */
 #inner-box {
     margin: 6px 12px 12px 12px;
     border: none;
     background-color: transparent;
 }
-
 /* Cada fila de programa */
 #entry {
     padding: 6px 8px;
@@ -62,41 +69,42 @@ window {
     border-radius: 6px;
     border: none;
 }
-
 /* Elemento seleccionado con cambio suave */
 #entry:selected {
-    background-color: rgba(49, 50, 68, 0.9); /* surface resaltado */
+    background-color: %s; /* surface resaltado al 90%% */
     transition: background-color 0.1s ease-in-out; /* Suavizado de selección */
 }
-
 /* Iconos de las apps */
 #img {
     margin-right: 10px;
 }
-
 /* Texto de las apps */
 #text {
-    color: #cdd6f4; /* text */
+    color: %s; /* text */
     background-color: transparent;
 }
-
 #text:selected {
-    color: #89b4fa; /* border_active como acento */
+    color: %s; /* border_active como acento */
     font-weight: bold;
 }
-
 /* Limpieza de contenedores ocultos */
 #outer-box { margin: 0px; border: none; background-color: transparent; }
 #scroll { margin: 0px; border: none; background-color: transparent; }
-
 ]],
-        colors.surface.hex, colors.border_inactive.hex,
-        colors.background.hex, colors.text.hex,
+        hex_to_css_rgba(colors.background.hex, 0.85),
+        colors.border_active.hex,
         colors.border_inactive.hex,
-        colors.text.hex)
+        hex_to_css_rgba(colors.surface.hex, 0.7),
+        colors.text.hex,
+        hex_to_css_rgba(colors.surface.hex, 0.9),
+        colors.text.hex,
+        colors.border_active.hex)
 
     local f = io.open(CONFIG_DIR .. "/style.css", "w")
-    if f then f:write(css) f:close() end
+    if f then
+        f:write(css)
+        f:close()
+    end
 end
 
 return Service.define("wofi_theme", function()
