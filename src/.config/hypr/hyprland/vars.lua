@@ -8,5 +8,6 @@ return {
     menu        = "wofi",
     browser     = "brave",
     mainMod     = "SUPER",
-    editor      = "code"
+    editor      = "code",
+    cliphist    = "cliphist list | wofi --dmenu | cliphist decode | wl-copy",
 }

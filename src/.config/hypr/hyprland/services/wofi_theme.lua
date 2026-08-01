@@ -12,7 +12,7 @@ allow_images=true
 image_size=20
 width=500
 # Controla la cantidad de elementos visibles (5 programas)
-lines=5
+lines=10
 # Posiciona el menú arriba en el centro
 location=top
 yoffset=20
