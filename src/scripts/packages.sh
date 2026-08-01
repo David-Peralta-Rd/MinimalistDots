@@ -14,6 +14,7 @@ CORE_PKGS=(
     hyprpaper
     wofi
     git
+    cliphist
 )
 
 APPS_PKGS=(
