@@ -39,6 +39,9 @@ kb:exec("ALT+S", vars.screenrecord .. " s -a", "Grabar pantalla con audio (area 
 kb:exec("ALT+P", vars.screenrecord .. " m", "Graban pantalla completa / Record the full screen")
 kb:exec("ALT+SHIFT+P", vars.screenshot .. " sc", "Detener cualquier grabacion / Stop any recording")
 
+-- Process Manager
+kb:exec("G", vars.process_manager, "Gestor de procesos / Process manager")
+
 
 -- Keybinds audio
 kb:exec("SHIFT+I", "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}' | head -n 1)%\"", "Subir volumen / Turn up the volume")

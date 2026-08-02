@@ -18,4 +18,5 @@ return {
     show_binds  = HOME .. "/.local/bin/minimaldots/show_binds",
     hyprlock    = "loginctl lock-session",
     screenrecord = HOME .. "/.local/bin/minimaldots/screenrecord.sh",
+    process_manager = HOME .. "/.local/bin/minimaldots/process_manager.sh"
 }
