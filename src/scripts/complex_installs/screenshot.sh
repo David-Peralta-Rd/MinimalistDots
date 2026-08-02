@@ -78,7 +78,7 @@ cat << 'EOF' > "$TARGET_FILE"
 # ==========================================
 # CONFIGURACIÓN PREDETERMINADA
 # ==========================================
-XDG_PICTURES_DIR="${XDG_PICTURES_DIR:-$HOME/pictures}"
+XDG_PICTURES_DIR="${XDG_PICTURES_DIR:-$HOME/multimedia/pictures}"
 save_dir="${XDG_PICTURES_DIR}/screenshots"
 save_file=$(date +'%y%m%d_%Hh%Mm%Ss_screenshot.png')
 temp_screenshot="${XDG_RUNTIME_DIR:-/tmp}/hypr_screenshot.png"
