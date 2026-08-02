@@ -16,17 +16,24 @@ kb:dispatch("mouse:272", hl.dsp.window.drag(), {mouse = true}, "Mover Ventana / 
 kb:dispatch("mouse:273", hl.dsp.window.resize(), {mouse = true}, "Redimensionar ventana / Resize window")
 
 -- Hypridle lock
-kb:exec("L", "loginctl lock-session", "Bloquear seccion / Lock section")
+kb:exec("L", vars.hyprlock, "Bloquear seccion / Lock section")
 
 -- Shutdown PC and reboot
 kb:exec("SHIFT+BACKSPACE", "shutdown now", "Apagar PC / Shut down PC")
 kb:exec("SHIFT+ALT+BACKSPACE", "reboot", "Reiniciar PC / Reboot PC")
 
 -- Wallpaper select
-kb:exec("SHIFT+T", HOME .. "/.config/hypr/hyprland/scripts/select_wallpaper.sh", "Elegir fondo de pantalla / Choose wallpaper")
+kb:exec("SHIFT+T", vars.select_wallpaper, "Elegir fondo de pantalla / Choose wallpaper")
 
 -- Keybinds Show
-kb:exec("SHIFT+ALT+K", HOME .. "/.local/bin/minimaldots/show_binds", "Mostrar atajos de teclado / Show keyboard shortcuts")
+kb:exec("SHIFT+ALT+K", vars.show_binds, "Mostrar atajos de teclado / Show keyboard shortcuts")
+
+-- Keybinds Screenshot
+kb:exec("SHIFT+P", vars.screenshot p, "Captura de pantalla completa / Full-screen screenshot")
+kb:exec("S", vars.screenshot sf, "Captura de pantalla congelado / Frozen screenshot")
+kb:exec("SHIFT+S", vars.screenshot sc, "Extraer texto / Extract text")
+kb:exec("SHIFT+Q", vars.screenshot sq, "Escanear codigo QR / Scan QR code")
+
 
 -- Keybinds audio
 kb:exec("SHIFT+I", "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}' | head -n 1)%\"", "Subir volumen / Turn up the volume")
