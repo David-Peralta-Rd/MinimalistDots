@@ -43,7 +43,7 @@ kb:exec("ALT+SHIFT+P", vars.screenshot .. " sc", "Detener cualquier grabacion / 
 kb:exec("G", vars.process_manager, "Gestor de procesos / Process manager")
 
 -- Update system
-kb:exec("U", "footclient fastfetch && paru -Syu --noconfirm", "Actualizar sistema con terminal / Update system via terminal")
+kb:exec("U", "footclient paru -Syu --noconfirm", "Actualizar sistema con terminal / Update system via terminal")
 
 
 -- Keybinds audio
