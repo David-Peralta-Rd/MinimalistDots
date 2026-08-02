@@ -56,7 +56,7 @@ echo "$TXT_COPYING_DONE"
 TARGET="$HYPR_DIR/hyprland.lua"
 TARGET_HYPRIDLE="$HYPR_DIR/hypridle.conf"
 TARGET_HYPRLOCK="$HYPR_DIR/hyprlock.conf"
-TARGET_HYPRPAPERK="$HYPR_DIR/hyprpaper.conf"
+TARGET_HYPRPAPER="$HYPR_DIR/hyprpaper.conf"
 
 echo "$TXT_WRITING_CONFIG $TARGET"
 
