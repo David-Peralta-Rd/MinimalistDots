@@ -128,6 +128,9 @@ La tecla modificadora principal (`mainMod`) es **SUPER**. Se definen en `src/.co
 | `SUPER + SHIFT + ALT + Backspace` | Reiniciar PC |
 | `SUPER + ←/→/↑/↓` | Mover foco entre ventanas |
 | `SUPER + 1-0` | Cambiar de espacio de trabajo |
+| `SUPER + SHIFT + ALT + K` | Mostrar todos los atajos de teclado |
+| `SUPER + SHIFT + I` | Subir volumen |
+| `SUPER + SHIFT + K` | Bajar volumen |
 | Rueda del mouse (botones 8/9) | Mover / redimensionar ventana |
 
 ## 🎨 Personalización
