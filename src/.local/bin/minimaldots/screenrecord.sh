@@ -1,46 +1,4 @@
 #!/usr/bin/env bash
-
-set -e
-
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-
-echo -e "${CYAN}=== Instalador del Grabador de Pantalla para Hyprland ===${NC}\n"
-
-# 1. Instalar dependencias
-install_dependencies() {
-    echo -e "${YELLOW}[1/3] Verificando e instalando dependencias del sistema...${NC}"
-
-    if command -v pacman &>/dev/null; then
-        echo -e "${CYAN}Detectado Arch Linux / Pacman...${NC}"
-        sudo pacman -S --needed --noconfirm slurp wf-recorder libnotify ffmpeg
-    elif command -v dnf &>/dev/null; then
-        echo -e "${CYAN}Detectado Fedora / DNF...${NC}"
-        sudo dnf install -y slurp wf-recorder libnotify ffmpeg
-    elif command -v apt &>/dev/null; then
-        echo -e "${CYAN}Detectado Debian / Ubuntu / APT...${NC}"
-        sudo apt update
-        sudo apt install -y slurp wf-recorder libnotify-bin ffmpeg
-    else
-        echo -e "${RED}Gestor de paquetes no detectado. Asegúrate de tener instalados: slurp, wl-screenrec (o wf-recorder) y libnotify.${NC}"
-    fi
-}
-
-install_dependencies
-
-# 2. Definir destino
-INSTALL_DIR="$HOME/.local/bin/minimaldots"
-TARGET_FILE="$INSTALL_DIR/screenrecord.sh"
-
-echo -e "\n${YELLOW}[2/3] Instalando el script en: ${TARGET_FILE}${NC}"
-mkdir -p "$INSTALL_DIR"
-
-# 3. Copiar el contenido al ejecutable (con la atribución correspondiente)
-cat << 'EOF' > "$TARGET_FILE"
-#!/usr/bin/env bash
 # ==============================================================================
 # Script de Grabación de Pantalla para Hyprland
 #
@@ -199,8 +157,3 @@ case $1 in
     m | monitor) start_recording "screen" ;;
     *) USAGE ;;
 esac
-EOF
-
-chmod +x "$TARGET_FILE"
-
-echo -e "${GREEN}[3/3] ¡Instalación de Grabador de Pantalla completada!${NC}\n"

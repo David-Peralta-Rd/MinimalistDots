@@ -1,46 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-
-echo -e "${CYAN}=== Instalador del Gestor Flotante de Procesos ===${NC}\n"
-
-# 1. Instalar dependencias
-install_dependencies() {
-    echo -e "${YELLOW}[1/2] Verificando e instalando dependencias...${NC}"
-
-    if command -v pacman &>/dev/null; then
-        echo -e "${CYAN}Detectado Arch Linux / Pacman...${NC}"
-        sudo pacman -S --needed --noconfirm rofi-wayland jq libnotify
-    elif command -v dnf &>/dev/null; then
-        echo -e "${CYAN}Detectado Fedora / DNF...${NC}"
-        sudo dnf install -y rofi jq libnotify
-    elif command -v apt &>/dev/null; then
-        echo -e "${CYAN}Detectado Debian / Ubuntu / APT...${NC}"
-        sudo apt update
-        sudo apt install -y rofi jq libnotify-bin
-    else
-        echo -e "${RED}Asegúrate de instalar manualmente: rofi (o rofi-wayland), jq y libnotify.${NC}"
-    fi
-}
-
-install_dependencies
-
-# 2. Instalar el script
-INSTALL_DIR="$HOME/.local/bin/minimaldots"
-TARGET_FILE="$INSTALL_DIR/process_manager.sh"
-
-mkdir -p "$INSTALL_DIR"
-
-# (Aquí se escribe el contenido del script anterior)
-cat << 'EOF' > "$TARGET_FILE"
-#!/usr/bin/env bash
-
 ROFI_THEME="${XDG_RUNTIME_DIR:-/tmp}/rofi-process-manager.rasi"
 
 cat << 'RFT' > "$ROFI_THEME"
@@ -157,8 +116,3 @@ if [[ -n "$selected" ]]; then
         fi
     fi
 fi
-EOF
-
-chmod +x "$TARGET_FILE"
-
-echo -e "\n${GREEN}[2/2] ¡Instalación completada con éxito!${NC}\n"
