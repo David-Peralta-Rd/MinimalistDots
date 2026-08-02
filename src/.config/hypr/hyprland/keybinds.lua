@@ -34,6 +34,11 @@ kb:exec("S", vars.screenshot .. " sf", "Captura de pantalla congelado / Frozen s
 kb:exec("SHIFT+S", vars.screenshot .. " sc", "Extraer texto / Extract text")
 kb:exec("SHIFT+Q", vars.screenshot .. " sq", "Escanear codigo QR / Scan QR code")
 
+-- Keybinds Screenrecords
+kb:exec("ALT+S", vars.screenrecord .. " s -a", "Grabar pantalla con audio (area seleccionada) / Record screen with audio (selected area)")
+kb:exec("ALT+P", vars.screenrecord .. " m", "Graban pantalla completa / Record the full screen")
+kb:exec("ALT+SHIFT+P", vars.screenshot .. " sc", "Detener cualquier grabacion / Stop any recording")
+
 
 -- Keybinds audio
 kb:exec("SHIFT+I", "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}' | head -n 1)%\"", "Subir volumen / Turn up the volume")
