@@ -17,6 +17,7 @@ CORE_PKGS=(
     cliphist
     webkit2gtk-4.1
     fastfetch
+    flatpak
 )
 
 APPS_PKGS=(
