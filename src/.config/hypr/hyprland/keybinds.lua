@@ -26,7 +26,7 @@ kb:exec("SHIFT+ALT+BACKSPACE", "reboot", "Reiniciar PC / Reboot PC")
 kb:exec("SHIFT+T", HOME .. "/.config/hypr/hyprland/scripts/select_wallpaper.sh", "Elegir fondo de pantalla / Choose wallpaper")
 
 -- Keybinds Show
-kb:exec("SHIFT+ALT+K", HOME .. "/.local/bin/show_binds", "Mostrar atajos de teclado / Show keyboard shortcuts")
+kb:exec("SHIFT+ALT+K", HOME .. "/.local/bin/minimaldots/show_binds", "Mostrar atajos de teclado / Show keyboard shortcuts")
 
 -- Keybinds audio
 kb:exec("SHIFT+I", "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}' | head -n 1)%\"", "Subir volumen / Turn up the volume")

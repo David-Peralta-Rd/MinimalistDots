@@ -2,7 +2,7 @@ local Service = require("hyprland.lib.services")
 local colors  = require("hyprland.colors")
 
 local SCRIPTS_DIR = os.getenv("HOME") .. "/.config/hypr/hyprland/scripts"
-local BIN_DIR     = os.getenv("HOME") .. "/.local/bin"
+local BIN_DIR     = os.getenv("HOME") .. "/.local/bin/minimaldots"
 
 -- Extraemos los strings en formato HEX limpios desde tu módulo de colores
 local bg       = colors.background.hex
