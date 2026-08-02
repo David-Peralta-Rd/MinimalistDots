@@ -303,3 +303,4 @@ Service.define("keybinds-generator", function()
         f_html:write(html_content)
         f_html:close()
     end
+end)
