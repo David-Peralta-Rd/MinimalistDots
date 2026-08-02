@@ -16,7 +16,7 @@ install_dependencies() {
 
     if command -v pacman &>/dev/null; then
         echo -e "${CYAN}Detectado Arch Linux / Pacman...${NC}"
-        sudo pacman -S --needed --noconfirm slurp wl-screenrec libnotify ffmpeg
+        sudo pacman -S --needed --noconfirm slurp wl-recorder libnotify ffmpeg
     elif command -v dnf &>/dev/null; then
         echo -e "${CYAN}Detectado Fedora / DNF...${NC}"
         sudo dnf install -y slurp wf-recorder libnotify ffmpeg
