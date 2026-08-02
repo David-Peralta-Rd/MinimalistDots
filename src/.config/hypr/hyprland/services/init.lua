@@ -12,6 +12,7 @@ require("hyprland.services.hypridle")
 require("hyprland.services.wofi_theme")
 require("hyprland.services.wallpaper")
 require("hyprland.services.udiskie")
+require("hyprland.services.keybinds_show")
 
 
 require_if_exists(

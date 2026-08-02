@@ -25,6 +25,8 @@ kb:exec("SHIFT+ALT+BACKSPACE", "reboot", "Reiniciar PC")
 -- Wallpaper select
 kb:exec("SHIFT+T", HOME .. "/.config/hypr/hyprland/scripts/select_wallpaper.sh", "Elegir fondo de pantalla")
 
+-- Keybinds Show
+kb:exec("SHIFT+ALT", HOME .. "/.local/bin/show_binds")
 
 
 kb:focus("left",  "left")
