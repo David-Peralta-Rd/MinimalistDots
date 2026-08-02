@@ -138,13 +138,13 @@ section.group {
 <div class="wrap">
     <header>
         <p class="eyebrow">MinimalistDots · Hyprland</p>
-        <h1>Mapa de atajos</h1>
+        <h1>Mapa de atajos / Key Map</h1>
     </header>
 
     <div class="toolbar">
         <div class="search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search" placeholder="Buscar por tecla, categoría o descripción...">
+            <input type="text" id="search" placeholder="Buscar por tecla, categoría o descripción / Search by key, category, or description...">
         </div>
     </div>
     <div id="sections"></div>
@@ -167,7 +167,7 @@ function renderData(data) {
     }
     const groups = {};
     data.forEach(item => {
-        const groupName = item.category || item.mod || "Otros";
+        const groupName = item.category || item.mod || "Otros / Others";
         if (!groups[groupName]) groups[groupName] = [];
         groups[groupName].push(item);
     });
@@ -246,15 +246,19 @@ sys.argv = ["hyprland-keybinds"]
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('WebKit2', '4.1')
-from gi.repository import Gtk, WebKit2
+from gi.repository import Gtk, WebKit2, GLib
+
+# Forzamos la clase app_id exacta para que Hyprland detecte la regla de ventana
+GLib.set_prgname("hyprland-keybinds")
 
 class KeybindsWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Hyprland Keybinds")
+        self.set_wmclass("hyprland-keybinds", "hyprland-keybinds")
         self.set_default_size(850, 600)
 
         html_path = os.path.expanduser("~/.config/hypr/hyprland/scripts/keybinds.html")
-        json_path = os.path.expanduser("~/.config/hypr/hyprland/scripts/keybinds.json")
+        json_path = os.path.expanduser("~/.cache/hypr/keybinds.json")
 
         if not os.path.exists(html_path):
             sys.exit(1)
