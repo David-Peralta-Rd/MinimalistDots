@@ -29,10 +29,10 @@ kb:exec("SHIFT+T", vars.select_wallpaper, "Elegir fondo de pantalla / Choose wal
 kb:exec("SHIFT+ALT+K", vars.show_binds, "Mostrar atajos de teclado / Show keyboard shortcuts")
 
 -- Keybinds Screenshot
-kb:exec("SHIFT+P", vars.screenshot p, "Captura de pantalla completa / Full-screen screenshot")
-kb:exec("S", vars.screenshot sf, "Captura de pantalla congelado / Frozen screenshot")
-kb:exec("SHIFT+S", vars.screenshot sc, "Extraer texto / Extract text")
-kb:exec("SHIFT+Q", vars.screenshot sq, "Escanear codigo QR / Scan QR code")
+kb:exec("SHIFT+P", vars.screenshot .. " p", "Captura de pantalla completa / Full-screen screenshot")
+kb:exec("S", vars.screenshot .. " sf", "Captura de pantalla congelado / Frozen screenshot")
+kb:exec("SHIFT+S", vars.screenshot .. " sc", "Extraer texto / Extract text")
+kb:exec("SHIFT+Q", vars.screenshot .. " sq", "Escanear codigo QR / Scan QR code")
 
 
 -- Keybinds audio
