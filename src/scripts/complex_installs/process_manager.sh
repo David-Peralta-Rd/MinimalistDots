@@ -98,13 +98,13 @@ listview {
 }
 
 element {
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 2px 3px;
+    border-radius: 3px;
     background-color: transparent;
 }
 
 element selected {
-    background-color: #f38ba8;
+    background-color: #992600;
     text-color: #6c7086;
 }
 
