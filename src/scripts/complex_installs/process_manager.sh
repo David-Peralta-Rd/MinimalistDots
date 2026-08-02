@@ -46,7 +46,9 @@ ROFI_THEME="${XDG_RUNTIME_DIR:-/tmp}/rofi-process-manager.rasi"
 cat << 'RFT' > "$ROFI_THEME"
 configuration {
     show-icons: true;
-    font: "JetBrainsMono Nerd Font 11";
+    font: "JetBrainsMono Nerd Font 8";
+    case-sensitive: false;
+    matching: "fuzzy";
 }
 
 * {
@@ -103,7 +105,7 @@ element {
 
 element selected {
     background-color: #f38ba8;
-    text-color: #11111b;
+    text-color: #6c7086;
 }
 
 element-text {
@@ -124,7 +126,7 @@ get_system_apps() {
 }
 
 show_category_menu() {
-    cat <<EOFM | rofi -dmenu -theme "$ROFI_THEME" -p "Gestor" -mesg "Selecciona una categoría:"
+    cat <<EOFM | rofi -dmenu -i -theme "$ROFI_THEME" -p "Gestor" -mesg "Selecciona una categoría:"
 📱 Aplicaciones del Día a Día (GUI)
 ⚙️ Procesos del Sistema / Fondo
 EOFM
@@ -134,10 +136,10 @@ category=$(show_category_menu)
 
 case "$category" in
     *"Día a Día"*)
-        selected=$(get_user_apps | rofi -dmenu -theme "$ROFI_THEME" -p "Cerrar App" -mesg "Selecciona una app para finalizarla:")
+        selected=$(get_user_apps | rofi -dmenu -i -theme "$ROFI_THEME" -p "Cerrar App" -mesg "Selecciona una app para finalizarla:")
         ;;
     *"Sistema"*)
-        selected=$(get_system_apps | rofi -dmenu -theme "$ROFI_THEME" -p "Matar Proceso" -mesg "Selecciona un proceso para matarlo:")
+        selected=$(get_system_apps | rofi -dmenu -i -theme "$ROFI_THEME" -p "Matar Proceso" -mesg "Selecciona un proceso para matarlo:")
         ;;
     *)
         exit 0
