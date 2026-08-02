@@ -1,13 +1,14 @@
 local Service = require("hyprland.lib.services")
 local colors  = require("hyprland.colors")
 
-local SCRIPTS_DIR = os.getenv("HOME") .. "/.config/hypr/scripts"
+local SCRIPTS_DIR = os.getenv("HOME") .. "/.config/hypr/hyprland/scripts"
 local BIN_DIR     = os.getenv("HOME") .. "/.local/bin"
 
 -- Extraemos los strings en formato HEX limpios desde tu módulo de colores
 local bg       = colors.background.hex
 local surface  = colors.surface.hex
 local text     = colors.text.hex
+
 -- Usamos fallbacks razonables basados en tu paleta para las variables que pide el CSS
 local surface2 = "#252538"
 local overlay  = colors.border_inactive.hex
@@ -17,9 +18,6 @@ local mod_col  = colors.border_active.hex
 -- ==========================================
 -- 1. PLANTILLA DEL ARCHIVO HTML
 -- ==========================================
--- NOTA: En los bloques [[ ]] de Lua, los caracteres de escape como \s o \d
--- dentro de expresiones de JS/CSS causan fallos si se interpretan de forma literal.
--- Cambié los templates de JS de `${i.key}` a " .. " para evitar roturas de parsing en Lua.
 local HTML_TEMPLATE = [[
 <!DOCTYPE html>
 <html lang="es">
@@ -69,7 +67,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em
 .toolbar { display: flex; margin: 16px 0 24px; }
 .search-box { flex: 1; position: relative; }
 .search-box input {
-    width: 100%;
+    width: 100%%;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     color: var(--text);
@@ -84,8 +82,8 @@ h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em
 .search-box svg {
     position: absolute;
     left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 50%%;
+    transform: translateY(-50%%);
     width: 14px;
     height: 14px;
     stroke: var(--subtext);
@@ -247,7 +245,7 @@ import gi
 sys.argv = ["hyprland-keybinds"]
 
 gi.require_version('Gtk', '3.0')
-gi.require_version('WebKit2', '4.0')
+gi.require_version('WebKit2', '4.1')
 from gi.repository import Gtk, WebKit2
 
 class KeybindsWindow(Gtk.Window):
@@ -255,8 +253,8 @@ class KeybindsWindow(Gtk.Window):
         super().__init__(title="Hyprland Keybinds")
         self.set_default_size(850, 600)
 
-        html_path = os.path.expanduser("~/.config/hypr/scripts/keybinds.html")
-        json_path = os.path.expanduser("~/.config/hypr/scripts/keybinds.json")
+        html_path = os.path.expanduser("~/.config/hypr/hyprland/scripts/keybinds.html")
+        json_path = os.path.expanduser("~/.config/hypr/hyprland/scripts/keybinds.json")
 
         if not os.path.exists(html_path):
             sys.exit(1)
@@ -292,15 +290,25 @@ if __name__ == "__main__":
 -- 3. REGISTRO DEL SERVICIO PROPIO
 -- ==========================================
 Service.define("keybinds-generator", function()
-    -- Crear directorios
+    -- Crear directorios si no existen
     os.execute("mkdir -p " .. SCRIPTS_DIR)
+    os.execute("mkdir -p " .. BIN_DIR)
 
-    -- Inyectar las variables extraídas de tu 'hyprland.colors' al string
+    -- 1. Escribir archivo HTML
     local html_content = string.format(HTML_TEMPLATE, bg, surface, surface2, overlay, text, subtext, mod_col)
-
     local f_html = io.open(SCRIPTS_DIR .. "/keybinds.html", "w")
     if f_html then
         f_html:write(html_content)
         f_html:close()
+    end
+
+    -- 2. Escribir script de Python
+    local python_path = BIN_DIR .. "/show_binds"
+    local f_py = io.open(python_path, "w")
+    if f_py then
+        f_py:write(PYTHON_TEMPLATE)
+        f_py:close()
+        -- Conceder permisos de ejecución al binario de Python
+        os.execute("chmod +x " .. python_path)
     end
 end)

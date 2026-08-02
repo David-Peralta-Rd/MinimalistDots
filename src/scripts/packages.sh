@@ -15,6 +15,7 @@ CORE_PKGS=(
     wofi
     git
     cliphist
+    webkit2gtk-4.1
 )
 
 APPS_PKGS=(
