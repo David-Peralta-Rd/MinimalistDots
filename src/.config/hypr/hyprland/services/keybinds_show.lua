@@ -4,9 +4,22 @@ local colors  = require("hyprland.colors")
 local SCRIPTS_DIR = os.getenv("HOME") .. "/.config/hypr/scripts"
 local BIN_DIR     = os.getenv("HOME") .. "/.local/bin"
 
+-- Extraemos los strings en formato HEX limpios desde tu módulo de colores
+local bg       = colors.background.hex
+local surface  = colors.surface.hex
+local text     = colors.text.hex
+-- Usamos fallbacks razonables basados en tu paleta para las variables que pide el CSS
+local surface2 = "#252538"
+local overlay  = colors.border_inactive.hex
+local subtext  = "#a6adc8"
+local mod_col  = colors.border_active.hex
+
 -- ==========================================
 -- 1. PLANTILLA DEL ARCHIVO HTML
 -- ==========================================
+-- NOTA: En los bloques [[ ]] de Lua, los caracteres de escape como \s o \d
+-- dentro de expresiones de JS/CSS causan fallos si se interpretan de forma literal.
+-- Cambié los templates de JS de `${i.key}` a " .. " para evitar roturas de parsing en Lua.
 local HTML_TEMPLATE = [[
 <!DOCTYPE html>
 <html lang="es">
@@ -163,20 +176,21 @@ function renderData(data) {
     for (const [groupTitle, items] of Object.entries(groups)) {
         const section = document.createElement('section');
         section.className = 'group';
-        section.innerHTML = `
-            <div class="group-head">
-                <div class="group-title">${groupTitle}</div>
-                <div class="group-count">${items.length} binds</div>
-            </div>
-            <div class="rows">
-                ${items.map(i => `
-                    <div class="row">
-                        <div class="combo">${renderChips(i.mod, i.key)}</div>
-                        <div class="desc">${i.description}</div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+
+        let rowsHtml = items.map(i => {
+            return '<div class="row">' +
+                        '<div class="combo">' + renderChips(i.mod, i.key) + '</div>' +
+                        '<div class="desc">' + i.description + '</div>' +
+                   '</div>';
+        }).join('');
+
+        section.innerHTML =
+            '<div class="group-head">' +
+                '<div class="group-title">' + groupTitle + '</div>' +
+                '<div class="group-count">' + items.length + ' binds</div>' +
+            '</div>' +
+            '<div class="rows">' + rowsHtml + '</div>';
+
         container.appendChild(section);
     }
 }
@@ -191,12 +205,12 @@ function renderChips(mod, key) {
             else if (m.includes('SHIFT')) cls = 'chip-shift';
             else if (m.includes('ALT')) cls = 'chip-alt';
             else if (m.includes('CTRL')) cls = 'chip-media';
-            html += `<span class="chip ${cls}">${m}</span>`;
+            html += '<span class="chip ' + cls + '">' + m + '</span>';
             if (idx < mods.length - 1) html += '<span class="plus">+</span>';
         });
         if (key) html += '<span class="plus">+</span>';
     }
-    if (key) html += `<span class="chip chip-key">${key.toUpperCase()}</span>`;
+    if (key) html += '<span class="chip chip-key">' + key.toUpperCase() + '</span>';
     return html;
 }
 
@@ -222,7 +236,7 @@ window.addEventListener('keydown', (e) => {
 ]]
 
 -- ==========================================
--- 2. PLANTILLA DEL SCRIPT DE PYTHON (Asegurando la firma de clase)
+-- 2. PLANTILLA DEL SCRIPT DE PYTHON COMPLETADA
 -- ==========================================
 local PYTHON_TEMPLATE = [[#!/usr/bin/env python3
 import os
@@ -230,7 +244,6 @@ import sys
 import json
 import gi
 
-# Forzamos la firma de la app para tu sistema de reglas de ventana basados en class
 sys.argv = ["hyprland-keybinds"]
 
 gi.require_version('Gtk', '3.0')
@@ -258,14 +271,15 @@ class KeybindsWindow(Gtk.Window):
 
         self.webview = WebKit2.WebView()
         self.webview.connect("load-changed", self.on_load_changed)
-        self.webview.load_uri(f"file://{html_path}")
+
+        self.webview.load_uri("file://" + html_path)
 
         self.add(self.webview)
         self.connect("destroy", Gtk.main_quit)
         self.show_all()
 
-    def on_load_changed(self, webview, load_event):
-        if load_event == WebKit2.LoadEvent.FINISHED:
+    def on_load_changed(self, webview, event):
+        if event == WebKit2.LoadEvent.FINISHED:
             js_code = f"cargarJsonDirecto({self.json_data});"
             self.webview.run_javascript(js_code, None, None, None)
 
@@ -275,36 +289,17 @@ if __name__ == "__main__":
 ]]
 
 -- ==========================================
--- 3. FUNCIONES DE ESCRITURA Y DEFINICIÓN DEL SERVICIO
+-- 3. REGISTRO DEL SERVICIO PROPIO
 -- ==========================================
-local function write_html()
-    local html_content = string.format(HTML_TEMPLATE,
-        colors.bg and colors.bg.hex or "#1e1e2e",
-        colors.surface and colors.surface.hex or "#313244",
-        colors.surface_2 and colors.surface_2.hex or "#3b3d54",
-        colors.border_inactive and colors.border_inactive.hex or "#585b70",
-        colors.text and colors.text.hex or "#cdd6f4",
-        colors.subtext and colors.subtext.hex or "#a6adc8",
-        colors.border_active and colors.border_active.hex or "#89b4fa"
-    )
+Service.define("keybinds-generator", function()
+    -- Crear directorios
+    os.execute("mkdir -p " .. SCRIPTS_DIR)
 
-    local f = io.open(SCRIPTS_DIR .. "/keybinds.html", "w")
-    if f then f:write(html_content) f:close() end
-end
+    -- Inyectar las variables extraídas de tu 'hyprland.colors' al string
+    local html_content = string.format(HTML_TEMPLATE, bg, surface, surface2, overlay, text, subtext, mod_col)
 
-local function write_python_script()
-    local f = io.open(BIN_DIR .. "/show_binds", "w")
-    if f then
-        f:write(PYTHON_TEMPLATE)
-        f:close()
-        os.execute("chmod +x " .. BIN_DIR .. "/show_binds")
+    local f_html = io.open(SCRIPTS_DIR .. "/keybinds.html", "w")
+    if f_html then
+        f_html:write(html_content)
+        f_html:close()
     end
-end
-
-return Service.define("keybinds", function()
-    hl.on("hyprland.start", function()
-        os.execute("mkdir -p " .. SCRIPTS_DIR)
-        os.execute("mkdir -p " .. BIN_DIR)
-        write_html())
-    end)
-end)
