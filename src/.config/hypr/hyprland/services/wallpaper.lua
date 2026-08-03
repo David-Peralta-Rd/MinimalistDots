@@ -1,7 +1,7 @@
 -- ~/.config/hypr/hyprland/services/wallpaper.lua
 local Service = require("hyprland.lib.services")
 
-local WALLPAPER_DIR = os.getenv("HOME") .. "/pictures/wallpapers"
+local WALLPAPER_DIR = os.getenv("HOME") .. "/multimedia/pictures/wallpapers"
 local STATE_FILE = os.getenv("HOME") .. "/.cache/hypr/current_wallpaper"
 
 local function read_last_wallpaper()
