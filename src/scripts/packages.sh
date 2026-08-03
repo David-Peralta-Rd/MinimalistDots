@@ -45,4 +45,5 @@ ALL_PKGS=(
     "${CORE_PKGS[@]}"
     "${APPS_PKGS[@]}"
     "${FONTS_PKGS[@]}"
+    "${PROGRAMMING_PKGS[@]}"
 )
