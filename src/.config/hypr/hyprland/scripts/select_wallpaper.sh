@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WALLPAPER_DIR="$HOME/pictures/wallpapers"
+WALLPAPER_DIR="$HOME/multimedia/pictures/wallpapers"
 STATE_FILE="$HOME/.cache/hypr/current_wallpaper"
 
 mkdir -p "$WALLPAPER_DIR" "$(dirname "$STATE_FILE")"
