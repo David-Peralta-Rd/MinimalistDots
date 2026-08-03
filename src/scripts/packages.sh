@@ -25,6 +25,7 @@ APPS_PKGS=(
     ark
     unrar
     libreoffice-fresh
+    brave-bin
 )
 
 FONTS_PKGS=(
