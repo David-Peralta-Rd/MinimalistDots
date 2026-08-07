@@ -129,7 +129,7 @@ La tecla modificadora principal (`mainMod`) es **SUPER**. Se definen en `src/.co
 | `SUPER + J` | Alternar dirección del split |
 | `SUPER + L` | Bloquear sesión |
 | `SUPER + V` | Historial de portapapeles |
-| `SUPER + U` | Lanzar terminal con comando de actualizacion |
+| `SUPER + U` | Lanzar terminal con comando de actualización |
 | `SUPER + G` | Gestor de procesos |
 | `SUPER + S` | Captura de pantalla |
 | `SUPER + 1-0` | Cambiar de espacio de trabajo |
