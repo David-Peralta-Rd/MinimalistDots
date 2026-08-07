@@ -112,6 +112,11 @@ Puedes editar `src/scripts/packages.sh` para agregar o quitar paquetes antes de 
 
 La tecla modificadora principal (`mainMod`) es **SUPER**. Se definen en `src/.config/hypr/hyprland/keybinds.lua`:
 
+
+
+| Basico de uso comun | 
+|---|
+
 | Atajo | Acción |
 |---|---|
 | `SUPER + T` | Abrir terminal (`footclient`) |
@@ -123,14 +128,46 @@ La tecla modificadora principal (`mainMod`) es **SUPER**. Se definen en `src/.co
 | `SUPER + W` | Alternar ventana flotante |
 | `SUPER + J` | Alternar dirección del split |
 | `SUPER + L` | Bloquear sesión |
-| `SUPER + SHIFT + T` | Elegir fondo de pantalla |
-| `SUPER + SHIFT + Backspace` | Apagar PC |
-| `SUPER + SHIFT + ALT + Backspace` | Reiniciar PC |
-| `SUPER + ←/→/↑/↓` | Mover foco entre ventanas |
+| `SUPER + V` | Historial de portapapeles |
+| `SUPER + U` | Lanzar terminal con comando de actualizacion |
+| `SUPER + G` | Gestor de procesos |
+| `SUPER + S` | Captura de pantalla |
 | `SUPER + 1-0` | Cambiar de espacio de trabajo |
-| `SUPER + SHIFT + ALT + K` | Mostrar todos los atajos de teclado |
+| `SUPER + ←/→/↑/↓` | Mover foco entre ventanas |
+
+
+| Acciones de segundo nivel | 
+|---|
+
+| Atajo | Acción |
+|---|---|
 | `SUPER + SHIFT + I` | Subir volumen |
 | `SUPER + SHIFT + K` | Bajar volumen |
+| `SUPER + SHIFT + T` | Seleccionar fondo de pantalla |
+| `SUPER + SHIFT + P` | Captura de pantalla completa |
+| `SUPER + SHIFT + S` | Extraer Texto |
+| `SUPER + SHIFT + Q` | Escanear codigo QR |
+| `SUPER + SHIFT + Backspace` | Apagar PC |
+
+
+| Acciones de nivel profesional |
+|---|
+
+| Atajo | Acción |
+|---|---|
+| `SUPER + ALT + S` | Seleccionar area de grabacion |
+| `SUPER + ALT + P` | Grabar pantalla completa |
+
+
+| Acciones de nivel complejo | 
+|---|
+
+| Atajo | Acción |
+|---|---|
+| `SUPER + SHIFT + ALT + K` | Mostrar todos los atajos de teclado |
+| `SUPER + SHIFT + ALT + P` | Detener todas las grabaciones |
+| `SUPER + SHIFT + ALT + Backspace` | Reiniciar PC |
+
 | Rueda del mouse (botones 8/9) | Mover / redimensionar ventana |
 
 ## 🎨 Personalización
