@@ -5,7 +5,7 @@
 return {
     -- Fast Execution
     terminal    = "footclient",
-    fileManager = "footclient -e yazi",
+    fileManager = "dolphin",
     menu        = "wofi",
     browser     = "brave",
     mainMod     = "SUPER",
