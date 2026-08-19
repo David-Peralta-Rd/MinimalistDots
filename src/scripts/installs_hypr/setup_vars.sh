@@ -35,7 +35,7 @@ return {
     editor          = "code",
 
     -- Complex Execution
-    cliphist        = "cliphist list | wofi -c " .. HOME .. "/.config/wofi/configs/config-clipboard -s " .. HOME .. "/.config/wofi/style-clipboard.css --dmenu | cliphist decode | wl-copy",
+    cliphist        = "cliphist list | wofi -c " .. HOME .. "/.config/wofi/configs/config-clipboard -s " .. HOME .. "/.config/wofi/themes/style-clipboard.css --dmenu | cliphist decode | wl-copy",
     screenshot      = HOME .. "/.local/bin/minimaldots/screenshot.sh",
     select_wallpaper = HOME .. "/.config/hypr/hyprland/scripts/select_wallpaper.sh",
     show_binds      = HOME .. "/.local/bin/minimaldots/show_binds",
