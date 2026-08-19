@@ -43,7 +43,7 @@ write_config() {
 FOOT_CONF=$(cat <<EOF
 [main]
 shell=/bin/zsh
-font=JetBrains Mono:size=8.5
+font=JetBrains Mono:size=6.8
 pad=12x12
 
 [csd]
