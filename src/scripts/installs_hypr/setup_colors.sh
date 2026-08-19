@@ -9,6 +9,19 @@ if [[ -f "$PATH_TRADUCCION" ]]; then
     source "$PATH_TRADUCCION"
 fi
 
+# ------------------------------------------------------------------
+# Cargar la paleta global (fuente única de verdad de todos los colores)
+# Generada previamente por src/scripts/colors.sh -> src/colors/palette.sh
+# ------------------------------------------------------------------
+PALETTE_FILE="$SCRIPT_DIR/colors/palette.sh"
+if [[ -f "$PALETTE_FILE" ]]; then
+    source "$PALETTE_FILE"
+else
+    echo "Error: no se encontró la paleta en $PALETTE_FILE" >&2
+    echo "Ejecuta primero src/scripts/colors.sh antes de este script." >&2
+    exit 1
+fi
+
 echo "=========================================================="
 echo "${TXT_COLORS_INSTALLING:-Generando módulo de colores...}"
 echo "=========================================================="
@@ -16,27 +29,42 @@ echo "=========================================================="
 HYPR_DIR="$HOME/.config/hypr/hyprland"
 mkdir -p "$HYPR_DIR"
 
-cat << 'EOF' > "$HYPR_DIR/colors.lua"
--- Módulo de paleta de colores (Gris Frío & Colores Muted)
--- Autogenerado por el instalador.
+# ------------------------------------------------------------------
+# Genera hyprland/colors.lua a partir de la paleta bash.
+# Esta es la ÚNICA fuente de colores que usan los módulos Lua
+# (general.lua, y todos los services/*.lua: waybar, wofi, swaync, etc).
+# Cambiar los colores = editar src/colors/palette.sh y reinstalar.
+# ------------------------------------------------------------------
+cat << EOF > "$HYPR_DIR/colors.lua"
+-- ~/.config/hypr/hyprland/colors.lua
+-- Autogenerado por setup_colors.sh a partir de src/colors/palette.sh
+-- NO EDITES ESTE ARCHIVO A MANO: tus cambios se perderán en la
+-- próxima instalación. Para cambiar la paleta, edita:
+--   src/scripts/colors.sh (o src/colors/palette.sh si ya existe)
 
-local colors = {
-    background      = { hex = "#1e222a", rgb = "1e222a", rgba = "rgba(30, 34, 42, 1.0)" },
-    surface         = { hex = "#282c34", rgb = "282c34", rgba = "rgba(40, 44, 52, 1.0)" },
-    selection       = { hex = "#3e4451", rgb = "3e4451", rgba = "rgba(62, 68, 81, 1.0)" },
+local function rgba(raw_hex, alpha)
+    alpha = alpha or "ee"
+    return "rgba(" .. raw_hex .. alpha .. ")"
+end
 
-    border_inactive = { hex = "#4b5263", rgb = "4b5263", rgba = "rgba(75, 82, 99, 1.0)" },
-    border_active   = { hex = "#7ec7a2", rgb = "7ec7a2", rgba = "rgba(126, 199, 162, 1.0)" },
+return {
+    background      = { hex = "${C_BG}",             hypr = rgba("${RAW_BG}") },
+    surface         = { hex = "${C_SURFACE}",         hypr = rgba("${RAW_SURFACE}") },
+    selection       = { hex = "${C_SELECTION}",       hypr = rgba("${RAW_SELECTION}") },
 
-    text            = { hex = "#abb2bf", rgb = "abb2bf", rgba = "rgba(171, 178, 191, 1.0)" },
-    subtext         = { hex = "#5c6370", rgb = "5c6370", rgba = "rgba(92, 99, 112, 1.0)" },
+    border_inactive = { hex = "${C_BORDER_INACTIVE}", hypr = rgba("${RAW_GRAY}", "aa") },
+    border_active   = { hex = "${C_BORDER_ACTIVE}",   hypr = rgba("${RAW_GREEN}") },
 
-    accent_blue     = { hex = "#7aa2f7", rgb = "7aa2f7", rgba = "rgba(122, 162, 247, 1.0)" },
-    accent_green    = { hex = "#7ec7a2", rgb = "7ec7a2", rgba = "rgba(126, 199, 162, 1.0)" },
-    accent_red      = { hex = "#e06c75", rgb = "e06c75", rgba = "rgba(224, 108, 117, 1.0)" },
+    text            = { hex = "${C_TEXT}",            hypr = rgba("${RAW_TEXT}") },
+    subtext         = { hex = "${C_SUBTEXT}",         hypr = rgba("${RAW_SUBTEXT}") },
+
+    accent_blue     = { hex = "${C_ACCENT_BLUE}",     hypr = rgba("${RAW_BLUE}") },
+    accent_green    = { hex = "${C_ACCENT_GREEN}",    hypr = rgba("${RAW_GREEN}") },
+    accent_red      = { hex = "${C_ACCENT_RED}",      hypr = rgba("${RAW_RED}") },
+    accent_yellow   = { hex = "${C_ACCENT_YELLOW}",   hypr = rgba("${RAW_YELLOW}") },
+    accent_magenta  = { hex = "${C_ACCENT_MAGENTA}",  hypr = rgba("${RAW_MAGENTA}") },
+    accent_cyan     = { hex = "${C_ACCENT_CYAN}",     hypr = rgba("${RAW_CYAN}") },
 }
-
-return colors
 EOF
 
 echo "${TXT_COLORS_OK:-Módulo de colores configurado correctamente.}"
