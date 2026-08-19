@@ -17,6 +17,7 @@ CORE_PKGS=(
     cliphist
     fastfetch
     flatpak
+    jq
 )
 
 APPS_PKGS=(
