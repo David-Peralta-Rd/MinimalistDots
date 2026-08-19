@@ -9,7 +9,7 @@ LANG_DIR="$PROJECT_ROOT/src/lang"
 [ -f "$LANG_DIR/$ARCHIVO_LANG" ] && source "$LANG_DIR/$ARCHIVO_LANG"
 
 echo "==> Instalando dependencias de Screen Recording..."
-paru -S --needed --noconfirm slurp wl-screenrec libnotify ffmpeg
+paru -S --needed --noconfirm slurp wf-recorder libnotify ffmpeg
 
 INSTALL_DIR="$HOME/.local/bin/minimaldots"
 TARGET_FILE="$INSTALL_DIR/screenrecord.sh"
