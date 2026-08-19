@@ -8,6 +8,15 @@ LANG_DIR="$PROJECT_ROOT/src/lang"
 
 [ -f "$LANG_DIR/$ARCHIVO_LANG" ] && source "$LANG_DIR/$ARCHIVO_LANG"
 
+# Paleta global de colores (misma fuente que el resto de la instalación)
+PALETTE_FILE="$PROJECT_ROOT/src/colors/palette.sh"
+if [ -f "$PALETTE_FILE" ]; then
+    source "$PALETTE_FILE"
+else
+    RAW_BG="1e222a"
+    RAW_TEXT="abb2bf"
+fi
+
 echo "==> Instalando Dolphin, tema oscuro Breeze y plugins de previsualización..."
 paru -S --needed --noconfirm \
     dolphin breeze breeze-icons ffmpegthumbs \
@@ -19,19 +28,19 @@ MPV_DIR="$HOME/.config/mpv"
 mkdir -p "$IMV_DIR" "$MPV_DIR"
 
 echo "==> Aplicando configuración base para imv y mpv..."
-cat > "$IMV_DIR/config" << 'EOF'
+cat > "$IMV_DIR/config" << EOF
 [options]
-background = 1e1e2e
+background = ${RAW_BG}
 overlay_font = JetBrains Mono:9
 scaling_mode = shrink
 EOF
 
-cat > "$MPV_DIR/mpv.conf" << 'EOF'
+cat > "$MPV_DIR/mpv.conf" << EOF
 border=no
 force-window=yes
 save-position-on-quit=yes
-osd-color=#cdd6f4
-osd-border-color=#1e1e2e
+osd-color=#${RAW_TEXT}
+osd-border-color=#${RAW_BG}
 osd-font-size=14
 EOF
 
