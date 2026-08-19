@@ -4,14 +4,14 @@ set -euo pipefail
 # 1. Rutas y carga de idiomas
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LANG_FILE="${1:-es.cfg}"
-PATH_TRADUCCION="$SCRIPT_DIR/src/lang/$LANG_FILE"
+PATH_TRADUCCION="$SCRIPT_DIR/lang/$LANG_FILE"
 
 if [[ -f "$PATH_TRADUCCION" ]]; then
     source "$PATH_TRADUCCION"
 fi
 
-# 2. Cargar paleta global de colores
-COLORS_FILE="$SCRIPT_DIR/src/scripts/colors.sh"
+# 2. Cargar paleta global de colores (archivo generado por colors.sh, no el script generador)
+COLORS_FILE="$SCRIPT_DIR/colors/palette.sh"
 if [[ -f "$COLORS_FILE" ]]; then
     source "$COLORS_FILE"
 else

@@ -14,18 +14,10 @@ else
     exit 1
 fi
 
-# 1. Instalación de paquetes genéricos declarados en packages.sh
-source "$SCRIPT_DIR/packages.sh"
+# Nota: los paquetes de packages.sh ya se instalan en install_hypr.sh,
+# por eso aquí solo se ejecutan los módulos de complex_install/ (no se repite paru).
 
-if [ ${#ALL_PKGS[@]} -gt 0 ]; then
-    echo "=========================================================="
-    echo "$TXT_INSTALLING_PACKAGES ${#ALL_PKGS[@]}"
-    echo "=========================================================="
-    paru -S --needed --noconfirm "${ALL_PKGS[@]}"
-    echo "$TXT_PACKAGES_DONE"
-fi
-
-# 2. Ejecutar instalaciones complejas / módulos personalizados
+# 1. Ejecutar instalaciones complejas / módulos personalizados
 COMPLEX_DIR="$SCRIPT_DIR/complex_install"
 if [ -d "$COMPLEX_DIR" ]; then
     shopt -s nullglob
@@ -35,7 +27,7 @@ if [ -d "$COMPLEX_DIR" ]; then
     for script in "${COMPLEX_SCRIPTS[@]}"; do
         NAME="$(basename "$script" .sh)"
         echo "=========================================================="
-        echo "$TXT_COMPLEX_RUNNING $NAME"
+        echo "${TXT_COMPLEX_RUNNING:-Ejecutando módulo:} $NAME"
         echo "=========================================================="
         bash "$script" "$ARCHIVO_LANG"
     done

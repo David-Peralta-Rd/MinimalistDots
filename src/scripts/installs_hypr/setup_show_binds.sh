@@ -4,7 +4,7 @@ set -euo pipefail
 # 1. Rutas y carga de idiomas
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LANG_FILE="${1:-es.cfg}"
-PATH_TRADUCCION="$SCRIPT_DIR/src/lang/$LANG_FILE"
+PATH_TRADUCCION="$SCRIPT_DIR/lang/$LANG_FILE"
 
 if [[ -f "$PATH_TRADUCCION" ]]; then
     source "$PATH_TRADUCCION"
