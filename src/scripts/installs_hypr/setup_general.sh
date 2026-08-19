@@ -76,7 +76,7 @@ hl.config({
             scroll_factor         = 0.7,
         },
 
-        sensitivity   = -0.8,
+        sensitivity   = -0.4,
         accel_profile = "flat",
     },
 })
