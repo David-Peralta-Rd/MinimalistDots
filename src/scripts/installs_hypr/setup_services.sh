@@ -144,35 +144,11 @@ return Service.define("hypridle", function()
 end)
 EOF
 
-# 8. keybinds_show.lua (Lector nativo mediante Wofi)
-cat << 'EOF' > "$SERVICES_DIR/keybinds_show.lua"
-local Service = require("hyprland.lib.services")
-
-local BIN_DIR  = os.getenv("HOME") .. "/.local/bin/minimaldots"
-local SCRIPT   = BIN_DIR .. "/show_binds"
-
-local WOFI_SCRIPT = [[#!/usr/bin/env bash
-JSON_FILE="$HOME/.cache/hypr/keybinds.json"
-
-if [[ ! -f "$JSON_FILE" ]]; then
-    notify-send "Keybinds" "No se encontró el archivo de atajos en $JSON_FILE"
-    exit 1
-fi
-
-jq -r '.[] | "\(.category // "Otros") │ \(.mod)\(if .mod != "" and .key != "" then " + " else "" end)\(.key) ➔ \(.description)"' "$JSON_FILE" \
-    | wofi --dmenu --prompt "Atajos de teclado / Keybinds" --width 650 --height 400
-]]
-
-return Service.define("keybinds-generator", function()
-    os.execute("mkdir -p " .. BIN_DIR)
-    local f = io.open(SCRIPT, "w")
-    if f then
-        f:write(WOFI_SCRIPT)
-        f:close()
-        os.execute("chmod +x " .. SCRIPT)
-    end
-end)
-EOF
+# NOTA: el visor de atajos (show_binds) ya NO se genera como servicio Lua
+# en tiempo de arranque de Hyprland. Se genera una sola vez en la
+# instalación mediante setup_wofi_extra.sh, con una versión más completa
+# (agrupada por categoría, con estilo propio en wofi/themes/style-binds.css).
+# Tener las dos versiones generaba una pisándose a la otra en cada sesión.
 
 # 9. notifications.lua
 cat << 'EOF' > "$SERVICES_DIR/notifications.lua"
@@ -432,7 +408,6 @@ require("hyprland.services.hypridle")
 require("hyprland.services.wofi_theme")
 require("hyprland.services.wallpaper")
 require("hyprland.services.udiskie")
-require("hyprland.services.keybinds_show")
 
 require_if_exists(
     "custom_minimalist.services.init",
