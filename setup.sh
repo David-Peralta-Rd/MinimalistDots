@@ -26,56 +26,48 @@ PATH_TRADUCCION="$LANG_DIR/$ARCHIVO_LANG"
 if [ -f "$PATH_TRADUCCION" ]; then
     source "$PATH_TRADUCCION"
 else
-    echo "Error: No se pudo encontrar el archivo de idioma en $PATH_TRADUCCION"
+    echo "Error: No se pudo encontrar el archivo de idioma en $PATH_TRADUCCION" >&2
     exit 1
 fi
 
-# Empezamos la instalación de los Minimal Clean Dotfiles.
+# Inicio de la instalación
 clear
 echo "=========================================================="
-echo "$TXT_WELCOME"
+echo "${TXT_WELCOME:-Welcome / Bienvenido}"
 echo "=========================================================="
 echo ""
 
 if [ "${MOSTRAR_AVISO_OPCION_INVALIDA:-0}" = "1" ]; then
-    echo "$TXT_INVALID_OPTION"
+    echo "${TXT_INVALID_OPTION:-Option invalid, using English by default.}"
     echo ""
 fi
 
 sleep 1
 
-# --- 4. BOOTSTRAP DEL SISTEMA (pacman -Syu, paru, sudoers) ---
+# --- 4. BACKUP Y LIMPIEZA PREVIA ---
 echo "=========================================================="
-echo "$TXT_UPDATING_SYSTEM"
+echo "${TXT_BACKUP_DOING:-Iniciando proceso de respaldo y preparación...}"
 echo "=========================================================="
-bash "$SCRIPT_DIR/src/scripts/bootstrap_system.sh" "$ARCHIVO_LANG"
+bash "$SCRIPT_DIR/src/scripts/backup_and_clean.sh" "$ARCHIVO_LANG"
 echo ""
 
-# --- 5. INSTALACIÓN DE PAQUETES (categorías definidas en packages.sh) ---
+# --- 5. GENERACIÓN DEL MÓDULO DE COLORES ---
 echo "=========================================================="
-echo "$TXT_INSTALLING_PACKAGES"
+echo "${TXT_COLORS_INSTALLING:-Generando paleta de colores...}"
 echo "=========================================================="
-bash "$SCRIPT_DIR/src/scripts/install_packages.sh" "$ARCHIVO_LANG"
+bash "$SCRIPT_DIR/src/scripts/colors.sh" "$ARCHIVO_LANG"
 echo ""
 
-# --- 6. CONFIGURACIONES ADICIONALES (foot, y lo que se agregue después) ---
+# --- 6. INSTALANDO PAQUETES Y ARCHIVOS DE HYPRLAND ---
 echo "=========================================================="
-echo "$TXT_CONFIGS_HEADER"
+echo "${TXT_INSTALLING_HYPR:-Instalando componentes de Hyprland...}"
 echo "=========================================================="
-bash "$SCRIPT_DIR/src/scripts/install_configs.sh" "$ARCHIVO_LANG"
+bash "$SCRIPT_DIR/src/scripts/install_hypr.sh" "$ARCHIVO_LANG"
 echo ""
 
-# --- 7. BACKUP + INSTALACIÓN DE LA CONFIG DE HYPRLAND ---
+# --- 7. INSTALANDO APLICACIONES Y MÓDULOS COMPLEJOS ---
 echo "=========================================================="
-echo "$TXT_BACKUP"
+echo "${TXT_INSTALLING_COMPLEX:-Instalando aplicaciones y utilidades adicionales...}"
 echo "=========================================================="
-echo "=========================================================="
-echo "$TXT_COPY_DOTFILES"
-echo "=========================================================="
-bash "$SCRIPT_DIR/src/scripts/backup_install.sh" "$ARCHIVO_LANG"
+bash "$SCRIPT_DIR/src/scripts/install_complex.sh" "$ARCHIVO_LANG"
 echo ""
-
-echo "=========================================================="
-echo "$TXT_FINISHED"
-echo "=========================================================="
-sleep 8
