@@ -30,7 +30,6 @@ else
     exit 1
 fi
 
-# Inicio de la instalación
 clear
 echo "=========================================================="
 echo "${TXT_WELCOME:-Welcome / Bienvenido}"
@@ -58,14 +57,22 @@ echo "=========================================================="
 bash "$SCRIPT_DIR/src/scripts/colors.sh" "$ARCHIVO_LANG"
 echo ""
 
-# --- 6. INSTALANDO PAQUETES Y ARCHIVOS DE HYPRLAND ---
+# --- 6. INSTALACIÓN DE CONFIGURACIONES DINÁMICAS (FOOT, ETC.) ---
+# -> AQUÍ VA: usa los colores recién generados para construir las config
+echo "=========================================================="
+echo "${TXT_CONFIGS_HEADER:-Generando e inyectando configuraciones de aplicaciones...}"
+echo "=========================================================="
+bash "$SCRIPT_DIR/src/scripts/install_configs.sh" "$ARCHIVO_LANG"
+echo ""
+
+# --- 7. INSTALANDO PAQUETES Y ARCHIVOS DE HYPRLAND ---
 echo "=========================================================="
 echo "${TXT_INSTALLING_HYPR:-Instalando componentes de Hyprland...}"
 echo "=========================================================="
 bash "$SCRIPT_DIR/src/scripts/install_hypr.sh" "$ARCHIVO_LANG"
 echo ""
 
-# --- 7. INSTALANDO APLICACIONES Y MÓDULOS COMPLEJOS ---
+# --- 8. INSTALANDO APLICACIONES Y MÓDULOS COMPLEJOS ---
 echo "=========================================================="
 echo "${TXT_INSTALLING_COMPLEX:-Instalando aplicaciones y utilidades adicionales...}"
 echo "=========================================================="
