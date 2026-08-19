@@ -8,6 +8,16 @@ LANG_DIR="$PROJECT_ROOT/src/lang"
 
 [ -f "$LANG_DIR/$ARCHIVO_LANG" ] && source "$LANG_DIR/$ARCHIVO_LANG"
 
+# Paleta global de colores (misma fuente que el resto de la instalación)
+PALETTE_FILE="$PROJECT_ROOT/src/colors/palette.sh"
+if [ -f "$PALETTE_FILE" ]; then
+    source "$PALETTE_FILE"
+else
+    C_BG="#1e222a"; C_SURFACE="#282c34"; C_SELECTION="#3e4451"
+    C_TEXT="#abb2bf"; C_SUBTEXT="#5c6370"; C_ACCENT_BLUE="#7aa2f7"
+    C_ACCENT_RED="#e06c75"
+fi
+
 echo "==> Instalando dependencias de Process Manager..."
 paru -S --needed --noconfirm rofi-wayland jq libnotify
 
@@ -29,9 +39,9 @@ configuration {
 }
 
 * {
-    background-color: #1e1e2e;
-    text-color: #cdd6f4;
-    border-color: #89b4fa;
+    background-color: __C_BG__;
+    text-color: __C_TEXT__;
+    border-color: __C_ACCENT_BLUE__;
 }
 
 window {
@@ -42,7 +52,7 @@ window {
     border: 2px;
     border-radius: 12px;
     padding: 16px;
-    background-color: #1e1e2e;
+    background-color: __C_BG__;
 }
 
 mainbox {
@@ -52,19 +62,19 @@ mainbox {
 
 inputbar {
     children: [ prompt, entry ];
-    background-color: #313244;
+    background-color: __C_SURFACE__;
     border-radius: 8px;
     padding: 8px 12px;
 }
 
 prompt {
-    text-color: #89b4fa;
+    text-color: __C_ACCENT_BLUE__;
     margin: 0px 8px 0px 0px;
 }
 
 entry {
     placeholder: "Buscar o seleccionar para cerrar...";
-    placeholder-color: #6c7086;
+    placeholder-color: __C_SUBTEXT__;
 }
 
 listview {
@@ -81,8 +91,8 @@ element {
 }
 
 element selected {
-    background-color: #992600;
-    text-color: #cdd6f4;
+    background-color: __C_ACCENT_RED__;
+    text-color: __C_TEXT__;
 }
 
 element-text {
@@ -137,4 +147,17 @@ fi
 EOF
 
 chmod +x "$TARGET_FILE"
+
+# Inyectar la paleta real de colores en el script instalado
+# (se mantiene el heredoc principal citado 'EOF' para no romper las
+# variables de runtime como $pid o $selected).
+sed -i \
+    -e "s/__C_BG__/${C_BG}/g" \
+    -e "s/__C_TEXT__/${C_TEXT}/g" \
+    -e "s/__C_ACCENT_BLUE__/${C_ACCENT_BLUE}/g" \
+    -e "s/__C_SURFACE__/${C_SURFACE}/g" \
+    -e "s/__C_SUBTEXT__/${C_SUBTEXT}/g" \
+    -e "s/__C_ACCENT_RED__/${C_ACCENT_RED}/g" \
+    "$TARGET_FILE"
+
 echo "==> Gestor de procesos instalado exitosamente en $TARGET_FILE"
