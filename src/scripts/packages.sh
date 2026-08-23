@@ -33,7 +33,7 @@ FONTS_PKGS=(
 )
 
 PROGRAMMING_PKGS=(
-    visual-studio-code-bin
+    antigravity-ide
     docker
     uv
 
