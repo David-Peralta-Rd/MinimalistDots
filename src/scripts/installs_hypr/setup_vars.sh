@@ -32,7 +32,7 @@ return {
     menu            = "wofi",
     browser         = "brave",
     mainMod         = "SUPER",
-    editor          = "code",
+    editor          = "antigravity-ide",
 
     -- Complex Execution
     cliphist        = "cliphist list | wofi -c " .. HOME .. "/.config/wofi/configs/config-clipboard -s " .. HOME .. "/.config/wofi/themes/style-clipboard.css --dmenu | cliphist decode | wl-copy",
