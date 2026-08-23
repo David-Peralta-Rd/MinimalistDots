@@ -45,7 +45,7 @@ kb:category("Sistema")
   :exec("L", vars.hyprlock, "Bloquear sesión / Lock session")
   :exec("SHIFT+BACKSPACE", "shutdown now", "Apagar PC / Shut down PC")
   :exec("SHIFT+ALT+BACKSPACE", "reboot", "Reiniciar PC / Reboot PC")
-  :exec("SHIFT+T", vars.select_wallpaper, "Elegir fondo de pantalla / Choose wallpaper")
+  :exec("SHIFT+ALT+T", vars.select_wallpaper, "Elegir fondo de pantalla / Choose wallpaper")
   :exec("SHIFT+ALT+K", vars.show_binds, "Mostrar atajos de teclado / Show keyboard shortcuts")
   :exec("G", vars.process_manager, "Gestor de procesos / Process manager")
   :exec("U", "footclient paru -Syu --noconfirm", "Actualizar sistema con terminal / Update system via terminal")
@@ -55,15 +55,15 @@ kb:category("Sistema")
 -- ---------------------------------------------------------
 kb:category("Capturas")
   :exec("SHIFT+P", vars.screenshot .. " p", "Captura de pantalla completa / Full-screen screenshot")
-  :exec("S", vars.screenshot .. " sf", "Captura de pantalla congelado / Frozen screenshot")
-  :exec("SHIFT+S", vars.screenshot .. " sc", "Extraer texto / Extract text")
+  :exec("SHIFT+S", vars.screenshot .. " sf", "Captura de pantalla congelado / Frozen screenshot")
+  :exec("SHIFT+T", vars.screenshot .. " sc", "Extraer texto / Extract text")
   :exec("SHIFT+Q", vars.screenshot .. " sq", "Escanear código QR / Scan QR code")
 
 -- ---------------------------------------------------------
 -- GRABACIÓN DE PANTALLA
 -- ---------------------------------------------------------
 kb:category("Grabación")
-  :exec("ALT+S", vars.screenrecord .. " s -a", "Grabar pantalla con audio (área) / Record screen with audio (area)")
+  :exec("ALT+S", vars.screenrecord .. " s -A", "Grabar pantalla con audio (área) / Record screen with audio (area)")
   :exec("ALT+P", vars.screenrecord .. " m", "Grabar pantalla completa / Record the full screen")
   :exec("ALT+SHIFT+P", vars.screenshot .. " sc", "Detener cualquier grabación / Stop any recording")
 
