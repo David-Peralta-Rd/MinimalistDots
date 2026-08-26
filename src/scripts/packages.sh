@@ -35,6 +35,7 @@ FONTS_PKGS=(
 PROGRAMMING_PKGS=(
     antigravity-ide
     docker
+    docker-compose
     uv
 
 )
