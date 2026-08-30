@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARCHIVO_LANG="${1:-en.cfg}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-LANG_DIR="$PROJECT_ROOT/src/lang"
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-PATH_TRADUCCION="$LANG_DIR/$ARCHIVO_LANG"
-if [ -f "$PATH_TRADUCCION" ]; then
-    source "$PATH_TRADUCCION"
-else
-    echo "Error: no se pudo encontrar el archivo de idioma en $PATH_TRADUCCION" >&2
-    exit 1
+# Si el subscript se ejecuta solo (sin pasar por setup.sh), carga el idioma guardado
+if [ -z "${TXT_WELCOME:-}" ]; then
+    source "$SRC_DIR/load_lang.sh"
 fi
 
-# Nota: los paquetes de packages.sh ya se instalan en install_hypr.sh,
-# por eso aquí solo se ejecutan los módulos de complex_install/ (no se repite paru).
+
+
+
+
+
 
 # 1. Ejecutar instalaciones complejas / módulos personalizados
-COMPLEX_DIR="$SCRIPT_DIR/complex_install"
+COMPLEX_DIR="$SRC_DIR/complex_install"
 if [ -d "$COMPLEX_DIR" ]; then
     shopt -s nullglob
     COMPLEX_SCRIPTS=("$COMPLEX_DIR"/*.sh)

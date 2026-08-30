@@ -1,25 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-LANG_FILE="${1:-es.cfg}"
-PATH_TRADUCCION="$SCRIPT_DIR/lang/$LANG_FILE"
-
-if [[ -f "$PATH_TRADUCCION" ]]; then
-    source "$PATH_TRADUCCION"
-fi
-
-echo "=========================================================="
-echo "${TXT_GENERAL_INSTALLING:-Generando configuración general (gaps, bordes, input)...}"
-echo "=========================================================="
-
-HYPR_DIR="$HOME/.config/hypr/hyprland"
-mkdir -p "$HYPR_DIR"
-
-# Nota: general.lua no necesita variables bash inyectadas, porque lee
-# los colores directamente desde el módulo compartido hyprland.colors
-# (generado por setup_colors.sh) en tiempo de carga de Hyprland.
-cat << 'EOF' > "$HYPR_DIR/general.lua"
 -- ~/.config/hypr/hyprland/general.lua
 local colors = require("hyprland.colors")
 
@@ -80,7 +58,3 @@ hl.config({
         accel_profile = "flat",
     },
 })
-EOF
-
-echo "${TXT_GENERAL_OK:-Configuración general generada correctamente.}"
-echo ""

@@ -1,22 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-LANG_FILE="${1:-es.cfg}"
-PATH_TRADUCCION="$SCRIPT_DIR/lang/$LANG_FILE"
-
-if [[ -f "$PATH_TRADUCCION" ]]; then
-    source "$PATH_TRADUCCION"
-fi
-
-echo "=========================================================="
-echo "${TXT_KEYBINDS_INSTALLING:-Generando atajos de teclado...}"
-echo "=========================================================="
-
-HYPR_DIR="$HOME/.config/hypr/hyprland"
-mkdir -p "$HYPR_DIR"
-
-cat << 'EOF' > "$HYPR_DIR/keybinds.lua"
 local Keybinder = require("hyprland.lib.keybinder")
 local vars      = require("hyprland.vars")
 
@@ -87,7 +68,3 @@ kb:category("Navegación")
   :focus("up",    "up")
   :focus("down",  "down")
   :workspaces(10)
-EOF
-
-echo "${TXT_KEYBINDS_OK:-Keybinds generados y asociados correctamente.}"
-echo ""

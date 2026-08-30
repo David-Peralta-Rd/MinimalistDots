@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARCHIVO_LANG="${1:-en.cfg}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-LANG_DIR="$PROJECT_ROOT/src/lang"
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-[ -f "$LANG_DIR/$ARCHIVO_LANG" ] && source "$LANG_DIR/$ARCHIVO_LANG"
+# Si el subscript se ejecuta solo (sin pasar por setup.sh), carga el idioma guardado
+if [ -z "${TXT_WELCOME:-}" ]; then
+    source "$SRC_DIR/load_lang.sh"
+fi
+
 
 # Paleta global de colores (misma fuente que el resto de la instalación)
 PALETTE_FILE="$PROJECT_ROOT/src/colors/palette.sh"
@@ -18,10 +19,8 @@ else
     C_ACCENT_RED="#e06c75"
 fi
 
-echo "==> Instalando dependencias de Process Manager..."
-paru -S --needed --noconfirm rofi-wayland jq libnotify
 
-INSTALL_DIR="$HOME/.local/bin/minimaldots"
+INSTALL_DIR="$HOME/.local/bin/minimalist_dots/scripts"
 TARGET_FILE="$INSTALL_DIR/process_manager.sh"
 mkdir -p "$INSTALL_DIR"
 

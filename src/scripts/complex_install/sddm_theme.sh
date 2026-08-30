@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARCHIVO_LANG="${1:-en.cfg}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-LANG_DIR="$PROJECT_ROOT/src/lang"
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-[ -f "$LANG_DIR/$ARCHIVO_LANG" ] && source "$LANG_DIR/$ARCHIVO_LANG"
+# Si el subscript se ejecuta solo (sin pasar por setup.sh), carga el idioma guardado
+if [ -z "${TXT_WELCOME:-}" ]; then
+    source "$SRC_DIR/load_lang.sh"
+fi
+
 
 FLAVOR="mocha"
 ACCENT="blue"
@@ -17,8 +18,6 @@ THEMES_DIR="/usr/share/sddm/themes"
 CONF_DIR="/etc/sddm.conf.d"
 CONF_FILE="$CONF_DIR/catppuccin.conf"
 
-echo "==> Instalando dependencias del tema de SDDM..."
-paru -S --needed --noconfirm qt6-svg qt6-declarative jq unzip curl
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
