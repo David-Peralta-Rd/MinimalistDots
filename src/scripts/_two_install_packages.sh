@@ -35,10 +35,11 @@ DELETE_ALL_PKGS=(
     "${DELETE_PKGS[@]}"
 )
 
-# Desinstalamos los paquetes de forma segura uno por uno
+# Desinstalamos los paquetes de forma segura con coincidencia exacta
 for pkg in "${DELETE_ALL_PKGS[@]}"; do
-    paru -Qs "$pkg" >/dev/null && paru -Rncs --noconfirm "$pkg"
+    paru -Qq "$pkg" &>/dev/null && paru -Rncs --noconfirm "$pkg"
 done
+
 
 
 
