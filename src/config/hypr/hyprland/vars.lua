@@ -6,7 +6,7 @@ local HOME = os.getenv("HOME")
 
 return {
     -- Fast Execution
-    terminal        = "alacritty",
+    terminal        = "footclient",
     fileManager     = "thunar",
     menu            = "wofi",
     browser         = "brave",
