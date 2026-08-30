@@ -5,20 +5,31 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Si el subscript se ejecuta solo (sin pasar por setup.sh), carga el idioma guardado
 if [ -z "${TXT_WELCOME:-}" ]; then
-    source "$SRC_DIR/load_lang.sh"
+    LANG_LOADER="$SRC_DIR/../../lang/load_lang.sh"
+    if [ -f "$LANG_LOADER" ]; then
+        source "$LANG_LOADER"
+    else
+        echo "Aviso: No se pudo encontrar el archivo de idioma en $LANG_LOADER"
+    fi
 fi
 
+echo "==> Limpiando instalaciones anteriores de zsh (si existen)..."
+# Borramos directorios y archivos previos para evitar conflictos de clonación o duplicados
+rm -rf "$HOME/.local/share/zsh/plugins/zsh-autocomplete"
+rm -f "$HOME/.aliaszsh"
+rm -f "$HOME/.zshrc.d/plugins.zsh"
 
 PLUGIN_DIR="$HOME/.local/share/zsh/plugins"
 ZSHRC_D="$HOME/.zshrc.d"
 mkdir -p "$PLUGIN_DIR" "$ZSHRC_D"
 
-if [ ! -d "$PLUGIN_DIR/zsh-autocomplete" ]; then
-    git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "$PLUGIN_DIR/zsh-autocomplete"
-fi
+echo "==> Instalando/Clonando zsh-autocomplete..."
+git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "$PLUGIN_DIR/zsh-autocomplete"
 
-AUTOSUGGESTIONS_FILE=$(paru -Ql zsh-autosuggestions | awk '/autosuggestions\.zsh$/ {print $2; exit}')
-SYNTAX_FILE=$(paru -Ql zsh-syntax-highlighting | awk '/zsh-syntax-highlighting\.zsh$/ {print $2; exit}')
+echo "==> Buscando rutas de paquetes del sistema..."
+# Aseguramos que paru no rompa el script si busca archivos y no los halla de inmediato
+AUTOSUGGESTIONS_FILE=$(paru -Ql zsh-autosuggestions 2>/dev/null | awk '/autosuggestions\.zsh$/ {print $2; exit}' || echo "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh")
+SYNTAX_FILE=$(paru -Ql zsh-syntax-highlighting 2>/dev/null | awk '/zsh-syntax-highlighting\.zsh$/ {print $2; exit}' || echo "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh")
 
 cat > "$HOME/.aliaszsh" << 'EOF'
 # Sistema
@@ -46,8 +57,8 @@ EOF
 
 cat > "$ZSHRC_D/plugins.zsh" << EOF
 # Plugins
-source "$AUTOSUGGESTIONS_FILE"
-source "$SYNTAX_FILE"
+[[ -f "$AUTOSUGGESTIONS_FILE" ]] && source "$AUTOSUGGESTIONS_FILE"
+[[ -f "$SYNTAX_FILE" ]] && source "$SYNTAX_FILE"
 fpath+=(/usr/share/zsh/site-functions)
 if [[ -f "$PLUGIN_DIR/zsh-autocomplete/zsh-autocomplete.plugin.zsh" ]]; then
     source "$PLUGIN_DIR/zsh-autocomplete/zsh-autocomplete.plugin.zsh"
@@ -65,4 +76,4 @@ else
     echo "[[ -f ~/.zshrc.d/plugins.zsh ]] && source ~/.zshrc.d/plugins.zsh" > "$HOME/.zshrc"
 fi
 
-echo "==> Configuración de Zsh completada."
+echo "==> Configuración de Zsh completada con éxito."

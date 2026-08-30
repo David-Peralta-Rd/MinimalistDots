@@ -2,15 +2,22 @@
 set -euo pipefail
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SRC_DIR/../../.." && pwd)"
 
 # Si el subscript se ejecuta solo (sin pasar por setup.sh), carga el idioma guardado
 if [ -z "${TXT_WELCOME:-}" ]; then
-    source "$SRC_DIR/load_lang.sh"
+    # Subimos un nivel con ".." para salir de "scripts/" y entrar a "src/"
+    LANG_LOADER="$SRC_DIR/../../lang/load_lang.sh"
+    if [ -f "$LANG_LOADER" ]; then
+        source "$LANG_LOADER"
+    else
+        echo "Aviso: No se pudo encontrar el archivo de idioma en $LANG_LOADER"
+    fi
 fi
 
 
 # Paleta global de colores (misma fuente que el resto de la instalación)
-PALETTE_FILE="$PROJECT_ROOT/src/colors/palette.sh"
+PALETTE_FILE="$PROJECT_ROOT/src/scripts/colors/palette.sh"
 if [ -f "$PALETTE_FILE" ]; then
     source "$PALETTE_FILE"
 else

@@ -69,7 +69,6 @@ CORE_PKGS=(
 )
 
 APPS_PKGS=(
-    zsh
     ark
     foot
     unrar
@@ -91,6 +90,7 @@ CURSOR_PKGS=(
 
 ZSH_PKGS=(
     git
+    zsh
     zsh-completions
     zsh-autosuggestions
     zsh-syntax-highlighting

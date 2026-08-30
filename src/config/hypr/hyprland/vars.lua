@@ -19,6 +19,6 @@ return {
     select_wallpaper = HOME .. "/.local/bin/minimalist_dots/scripts/select_wallpaper.sh",
     show_binds      = HOME .. "/.local/bin/minimalist_dots/scripts/show_binds",
     hyprlock        = "loginctl lock-session",
-    screenrecord    = HOME .. "/.local/bin/minimalist_dots/screenrecord.sh",
-    process_manager = HOME .. "/.local/bin/minimalist_dots/process_manager.sh"
+    screenrecord    = HOME .. "/.local/bin/minimalist_dots/scripts/screenrecord.sh",
+    process_manager = HOME .. "/.local/bin/minimalist_dots/scripts/process_manager.sh"
 }
