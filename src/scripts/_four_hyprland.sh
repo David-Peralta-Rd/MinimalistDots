@@ -380,7 +380,7 @@ EOF
 # ".configs"
 # Cargar la paleta global de colores (archivo generado por colors.sh,
 # NUNCA el script generador).
-PALETTE_FILE="$SCRIPT_DIR/colors/palette.sh"
+PALETTE_FILE="$SRC_DIR/colors/palette.sh"
 if [[ -f "$PALETTE_FILE" ]]; then
     source "$PALETTE_FILE"
 else

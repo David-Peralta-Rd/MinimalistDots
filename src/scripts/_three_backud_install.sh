@@ -61,7 +61,7 @@ echo "$TXT_COPYING_DONE"
 # ==== EMPEZAMOS LA INSTALACION DE LOS DIFERENTES APARTADOS DE HYPRLAND ==== #
 # ========================================================================== #
 # INSTALAMOS COLORES
-PALETTE_DIR="$PROJECT_ROOT/src/colors"
+PALETTE_DIR="$PROJECT_ROOT/src/scripts/colors"
 PALETTE_FILE="$PALETTE_DIR/palette.sh"
 mkdir -p "$PALETTE_DIR"
 
@@ -125,6 +125,22 @@ echo "==> Paleta de colores guardada en $PALETTE_FILE"
 echo "=========================================================="
 echo "${TXT_COLORS_INSTALLING:-Generando módulo de colores...}"
 echo "=========================================================="
+# Cargar la paleta global (para hyprlock.conf, que es .conf plano y no
+PALETTE_FILE="$SRC_DIR/colors/palette.sh"
+if [[ -f "$PALETTE_FILE" ]]; then
+    source "$PALETTE_FILE"
+else
+    echo "Error: no se encontró la paleta en $PALETTE_FILE" >&2
+    exit 1
+fi
+
+hex_to_rgb() {
+    local hex="${1#\#}"
+    local r=$((16#${hex:0:2}))
+    local g=$((16#${hex:2:2}))
+    local b=$((16#${hex:4:2}))
+    echo "$r, $g, $b"
+}
 
 HYPR_DIR="$HOME/.config/hypr/hyprland"
 mkdir -p "$HYPR_DIR"
@@ -180,7 +196,7 @@ echo ""
 # ====  "hyprland.lua", "hypridle.conf", "hyprlock.conf" ==== #
 # =========================================================== #
 # Cargar la paleta global (para hyprlock.conf, que es .conf plano y no
-PALETTE_FILE="$SCRIPT_DIR/colors/palette.sh"
+PALETTE_FILE="$SRC_DIR/colors/palette.sh"
 if [[ -f "$PALETTE_FILE" ]]; then
     source "$PALETTE_FILE"
 else

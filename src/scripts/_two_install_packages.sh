@@ -118,7 +118,6 @@ THUNAR_PKGS=(
     file-roller
     poppler-glib
     thunar-volman
-    arc-gtk-theme
     raw-thumbnailer
     ffmpegthumbnailer
     papirus-icon-theme
