@@ -71,8 +71,8 @@ CORE_PKGS=(
 APPS_PKGS=(
     zsh
     ark
+    foot
     unrar
-    alacritty
     brave-bin
     libreoffice-fresh
 )
