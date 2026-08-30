@@ -26,6 +26,5 @@ if [ -d "$COMPLEX_DIR" ]; then
         echo "=========================================================="
         echo "${TXT_COMPLEX_RUNNING:-Ejecutando módulo:} $NAME"
         echo "=========================================================="
-        bash "$script" "$ARCHIVO_LANG"
     done
 fi
