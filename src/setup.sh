@@ -31,3 +31,6 @@ bash "$SCRIPT_DIR/_four_hyprland.sh"
 
 # INSTALAMOS SCRIPTS DE USO DIARIO
 bash "$SCRIPT_DIR/_five_install_scripts.sh"
+
+# CONFIGURAMOS LOS PROGRAMAS
+bash "$SCRIPT_DIR/_six_configs.sh"
