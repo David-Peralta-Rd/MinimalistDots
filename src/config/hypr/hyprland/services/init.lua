@@ -10,8 +10,6 @@ require("dbus_env")
 
 require("clipboard")
 
-require("cursor")
-
 require("export_keybinds")
 
 require("notifications")
