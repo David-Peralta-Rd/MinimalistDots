@@ -22,6 +22,8 @@ require("wofi_theme")
 
 require("wallpaper")
 
+require("footclient")
+
 -- Custom
 require_if_exists(
     "custom.services.init",

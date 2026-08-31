@@ -371,7 +371,10 @@ EOF
 
 # 10. footclient.lua
 cat << 'EOF' > "$SERVICES_DIR/footclient.lua"
-local Service = require("hyprland.lib.services")
+local home = os.getenv("HOME")
+package.path = package.path .. ";" .. home .. "/.config/hypr/hyprland/lib/?.lua"
+
+local Service = require("services")
 
 return Service.define("footclient", function()
     hl.on("hyprland.start", function()

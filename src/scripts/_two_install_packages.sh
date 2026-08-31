@@ -94,6 +94,7 @@ ZSH_PKGS=(
     zsh-completions
     zsh-autosuggestions
     zsh-syntax-highlighting
+
 )
 
 SCREENSHOT_PKGS=(
