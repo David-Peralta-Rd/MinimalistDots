@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LANG_DIR="$(cd "$SCRIPT_DIR/../lang" && pwd)"
+UTILS_DIR="$(cd "$SCRIPT_DIR/utils" && pwd)"
 
 # CARGAR EL IDIOMA SI EL SCRIPT SE EJECUTA DIRECTAMENTE
 if [ -z "${T_BIENVENIDO:-}" ]; then
@@ -14,8 +15,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPONENTS_DIR="$SCRIPT_DIR/components"
 
 # CARGAMOS UTILIDAD DE TITULO
-source ./utils/title.sh
-source ./utils/palette.sh
+source $UTILS_DIR/title.sh
+source $UTILS_DIR/palette.sh
 
 
 # ======================================= #
