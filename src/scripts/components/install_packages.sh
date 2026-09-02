@@ -22,8 +22,10 @@ sudo pacman -Sy --noconfirm paru
 # ==== LISTANDO PAQUETES QUE SE VAN A INSTALAR. ==== #
 # ================================================== #
 ZSH_PKGS=(
+    zsh
     git
     zsh-completions
+    zsh-autocomplete
     zsh-autosuggestions
     zsh-syntax-highlighting
 )

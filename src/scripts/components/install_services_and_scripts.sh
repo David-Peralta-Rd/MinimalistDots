@@ -66,19 +66,6 @@ ZSHRC_D="$HOME/.zshrc.d"
 
 
 # ============================================================
-# 1. Instalar paquetes
-# ============================================================
-
-paru -S --needed --noconfirm \
-    zsh \
-    zsh-autocomplete \
-    zsh-autosuggestions \
-    zsh-syntax-highlighting \
-    zsh-completions \
-    git
-
-
-# ============================================================
 # 2. Crear directorios
 # ============================================================
 
@@ -480,8 +467,8 @@ get_system_apps() {
 
 show_category_menu() {
     cat <<EOFM | rofi -dmenu -i -theme "$ROFI_THEME" -p "Gestor" -mesg "Selecciona una categoría:"
-📱 Day-to-Day Applications (GUI)
-⚙️ System Processes / Background
+📱 Aplicaciones Día a Día (GUI)
+⚙️ Procesos del Sistema / Fondo
 EOFM
 }
 
