@@ -213,7 +213,7 @@ splash = false
 EOF
 
         # Escribir colors.lua
-        tee "$TARGET_HYPRLAND_COLORS" > /dev/null <<'EOF'
+        tee "$TARGET_HYPRLAND_COLORS" > /dev/null <<EOF
 -- ~/.config/hypr/hyprland/colors.lua
 -- Autogenerado a partir de src/scripts/utils/palette.sh
 -- NO EDITES ESTE ARCHIVO A MANO: tus cambios se perderán en la
