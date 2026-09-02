@@ -11,8 +11,8 @@ package.path = package.path .. ";" .. home .. "/.local/bin/MinimalistDots/servic
 
 require("polkit")
 require("footclient")
-require("dbus_env.lua")
-require("clipboard.lua")
+require("dbus_env")
+require("clipboard")
 require("export_keybinds")
 require("notifications")
 require("create_custom_config")
