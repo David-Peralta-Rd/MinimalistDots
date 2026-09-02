@@ -17,7 +17,6 @@ require("export_keybinds")
 require("notifications")
 require("create_custom_config")
 require("hypridle")
-require("wofi_theme")
 require("wallpaper")
 
 
