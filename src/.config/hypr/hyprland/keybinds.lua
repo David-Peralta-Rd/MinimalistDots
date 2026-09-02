@@ -52,8 +52,8 @@ kb:category("Grabación")
 -- MULTIMEDIA
 -- ---------------------------------------------------------
 kb:category("Multimedia")
-  :exec("SHIFT+I", "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}' | head -n 1)%\"", "Subir volumen / Turn up the volume")
-  :exec("SHIFT+K", "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}' | head -n 1)%\"", "Bajar volumen / Lower volume")
+  :exec("SHIFT+I", vars.volume_up, "Subir volumen / Turn up the volume")
+  :exec("SHIFT+K", vars.volume_down, "Bajar volumen / Lower volume")
 
 Keybinder.media("XF86AudioRaiseVolume", "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", "Subir volumen / Turn up the volume", true)
 Keybinder.media("XF86AudioLowerVolume", "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",       "Bajar volumen / Lower volume", true)
