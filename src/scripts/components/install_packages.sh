@@ -16,6 +16,7 @@ fi
 
 # ACTUALIZAMOS EL SISTEMA
 sudo pacman -Syu --noconfirm
+sudo pacman -Sy --noconfirm paru
 
 # ================================================== #
 # ==== LISTANDO PAQUETES QUE SE VAN A INSTALAR. ==== #
