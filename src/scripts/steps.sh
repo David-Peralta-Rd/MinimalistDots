@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LANG_DIR="$(cd "$SCRIPT_DIR/../lang" && pwd)"
+
+# CARGAR EL IDIOMA SI EL SCRIPT SE EJECUTA DIRECTAMENTE
+if [ -z "${T_BIENVENIDO:-}" ]; then
+    source "$LANG_DIR/load_lang.sh"
+fi
+
+# DEFINIMOS LA RUTA DE LA CARPETA DE SCRIPTS
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPONENTS_DIR="$SCRIPT_DIR/components"
+
+# CARGAMOS UTILIDAD DE TITULO
+source ./utils/title.sh
+source ./utils/palette.sh
+
+
+# ======================================= #
+# ==== EMPEZAMOS A EJECUTR LOS PASOS ==== #
+# ======================================= #
+print_title "$T_BIENVENIDO"
+
+# PRIMER PASO -- CREACIONES DE CARPETAS
+print_title "$T_NUEVAS_CARPETAS"
+bash "$COMPONENTS_DIR/new_folders.sh"
+
+# SEGUNDO PASO -- INSTALACION DE PAQUETES
+print_title "$T_INSTALANDO_PAQUETES"
+bash "$COMPONENTS_DIR/install_packages.sh"
+
+# TERCER PASO -- BACKUP DE LAS CONFIGURACIONES DENTRO DE "~/.config"
+print_title "$T_COMENZANDO_BACKUP_Y_INSTALACION"
+bash "$COMPONENTS_DIR/backup_and_install.sh"
+
+# CUARTO PASO -- INSTALACION DE SERVICIOS Y SCRIPTS
+print_title "$T_INSTALANDO_SERVICIOS_Y_SCRIPTS"
+bash "$COMPONENTS_DIR/install_services_and_scripts.sh"

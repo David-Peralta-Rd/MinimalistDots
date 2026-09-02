@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# src/load_lang.sh
+# src/lang/load_lang.sh
 
 LANG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_TMP="/tmp/.current_lang"
@@ -9,14 +9,18 @@ if [ -z "${SELECTED_LANG:-}" ]; then
     if [ -f "$CONFIG_TMP" ]; then
         SELECTED_LANG="$(cat "$CONFIG_TMP")"
     else
-        echo "Selecciona tu idioma / Select your language:"
+        echo "Selecciona tu idioma / Choose your language / Choisissez votre langue / Wählen Sie Ihre Sprache:"
         echo "1) Español (ES)"
         echo "2) English (EN)"
-        read -rp "Opción / Option (1-2): " OPCION_IDIOMA
+        echo "3) Français (FR)"
+        echo "4) Deutsch (DE)"
+        read -rp "Opción / Option / Option / Option (1-4): " OPCION_IDIOMA
 
         case "$OPCION_IDIOMA" in
             1) SELECTED_LANG="es.cfg" ;;
             2) SELECTED_LANG="en.cfg" ;;
+            3) SELECTED_LANG="fr.cfg" ;;
+            4) SELECTED_LANG="de.cfg" ;;
             *) SELECTED_LANG="en.cfg" ;;
         esac
 
