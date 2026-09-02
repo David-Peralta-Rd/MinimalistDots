@@ -42,63 +42,348 @@ cp $SRC_HYPRLAND_SCRIPTS/*.sh $MINIMALISTDOTS/scripts
 
 
 # ==== ZSH INSTALACION ==== #
+# ============================================================
+# ZSH - CachyOS / Arch Linux
+#
+# Incluye:
+#   - zsh-autocomplete
+#   - zsh-autosuggestions
+#   - zsh-syntax-highlighting
+#   - zsh-completions
+#
+# Autosuggestions:
+#   - history
+#   - completion
+#
+# ============================================================
+
+# ============================================================
+# Variables
+# ============================================================
+
 PLUGIN_DIR="$HOME/.local/share/zsh/plugins"
 ZSHRC_D="$HOME/.zshrc.d"
-mkdir -p "$PLUGIN_DIR" "$ZSHRC_D"
 
-if [ ! -d "$PLUGIN_DIR/zsh-autocomplete" ]; then
-    git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "$PLUGIN_DIR/zsh-autocomplete"
+
+# ============================================================
+# 1. Instalar paquetes
+# ============================================================
+
+paru -S --needed --noconfirm \
+    zsh \
+    zsh-autocomplete \
+    zsh-autosuggestions \
+    zsh-syntax-highlighting \
+    zsh-completions \
+    git
+
+
+# ============================================================
+# 2. Crear directorios
+# ============================================================
+
+mkdir -p "$PLUGIN_DIR"
+mkdir -p "$ZSHRC_D"
+
+
+# ============================================================
+# 3. zsh-autocomplete
+# ============================================================
+
+# Si ya existe una instalación manual antigua,
+# la eliminamos para evitar conflictos.
+
+if [[ -d "$PLUGIN_DIR/zsh-autocomplete" ]]; then
+    rm -rf "$PLUGIN_DIR/zsh-autocomplete"
 fi
 
-AUTOSUGGESTIONS_FILE=$(paru -Ql zsh-autosuggestions | awk '/autosuggestions\.zsh$/ {print $2; exit}')
-SYNTAX_FILE=$(paru -Ql zsh-syntax-highlighting | awk '/zsh-syntax-highlighting\.zsh$/ {print $2; exit}')
+# IMPORTANTE:
+# Usamos el paquete oficial de Arch/CachyOS en lugar de
+# clonar directamente main desde GitHub.
+#
+# Esto evita que una actualización inesperada del repositorio
+# rompa la configuración.
 
-cat > "$HOME/.aliaszsh" << 'EOF'
-# Sistema
+AUTOCOMPLETE_FILE=""
+
+# Buscar automáticamente dónde instaló el paquete
+AUTOCOMPLETE_FILE=$(pacman -Ql zsh-autocomplete 2>/dev/null \
+    | awk '/zsh-autocomplete\.plugin\.zsh$/ {print $2; exit}')
+
+if [[ -z "$AUTOCOMPLETE_FILE" ]]; then
+    echo
+    echo "ERROR: No se encontró zsh-autocomplete."
+    echo
+    exit 1
+fi
+
+echo "    zsh-autocomplete:"
+echo "    $AUTOCOMPLETE_FILE"
+
+
+# ============================================================
+# 4. Localizar autosuggestions
+# ============================================================
+
+AUTOSUGGESTIONS_FILE=$(pacman -Ql zsh-autosuggestions 2>/dev/null \
+    | awk '/zsh-autosuggestions\.zsh$/ {print $2; exit}')
+
+if [[ -z "$AUTOSUGGESTIONS_FILE" ]]; then
+    echo
+    echo "ERROR: No se encontró zsh-autosuggestions."
+    echo
+    exit 1
+fi
+
+echo "    zsh-autosuggestions:"
+echo "    $AUTOSUGGESTIONS_FILE"
+
+
+# ============================================================
+# 5. Localizar syntax highlighting
+# ============================================================
+
+SYNTAX_FILE=$(pacman -Ql zsh-syntax-highlighting 2>/dev/null \
+    | awk '/zsh-syntax-highlighting\.zsh$/ {print $2; exit}')
+
+if [[ -z "$SYNTAX_FILE" ]]; then
+    echo
+    echo "ERROR: No se encontró zsh-syntax-highlighting."
+    echo
+    exit 1
+fi
+
+echo "    zsh-syntax-highlighting:"
+echo "    $SYNTAX_FILE"
+
+
+# ============================================================
+# 6. Aliases
+# ============================================================
+
+cat > "$HOME/.aliaszsh" <<'EOF'
+
+# ============================================================
+# SISTEMA
+# ============================================================
+
 alias t="touch"
 alias mk="mkdir -p"
+
+
+# ============================================================
+# PACMAN / PARU
+# ============================================================
+
+# Instalar
 alias in="paru -S --needed --noconfirm"
+
+# Desinstalar
 alias un="paru -Rns --noconfirm"
+
+# Actualizar sistema
 alias up="paru -Syu --noconfirm"
+
+# Eliminar paquetes huérfanos
 alias po='sudo pacman -Rns $(pacman -Qdtq)'
 
-# Git
+
+# ============================================================
+# GIT
+# ============================================================
+
 alias gs="git status"
 alias ga="git add"
 alias gm="git commit -m"
 alias gpl="git pull"
 alias gps="git push"
 
-# Docker
+
+# ============================================================
+# DOCKER
+# ============================================================
+
 alias dk-up="docker compose up -d"
 alias dk-dw="docker compose down"
 alias dk-lg="docker logs -f"
 alias dk-pl="docker pull"
 alias dk-clean="docker system prune -f"
+
 EOF
 
-cat > "$ZSHRC_D/plugins.zsh" << EOF
-# Plugins
-source "$AUTOSUGGESTIONS_FILE"
-source "$SYNTAX_FILE"
+
+# ============================================================
+# 7. Configuración de plugins
+# ============================================================
+
+cat > "$ZSHRC_D/plugins.zsh" <<EOF
+
+# ============================================================
+# ZSH PLUGINS
+# ============================================================
+
+
+# ------------------------------------------------------------
+# Variables
+# ------------------------------------------------------------
+
+PLUGIN_DIR="\$HOME/.local/share/zsh/plugins"
+
+
+# ------------------------------------------------------------
+# zsh-autocomplete
+#
+# IMPORTANTE:
+# Debe cargarse temprano.
+#
+# NO ejecutar compinit manualmente.
+# ------------------------------------------------------------
+
+if [[ -f "$AUTOCOMPLETE_FILE" ]]; then
+    source "$AUTOCOMPLETE_FILE"
+fi
+
+
+# ------------------------------------------------------------
+# zsh-completions
+#
+# Proporciona completions adicionales para comandos.
+# ------------------------------------------------------------
+
 fpath+=(/usr/share/zsh/site-functions)
-if [[ -f "$PLUGIN_DIR/zsh-autocomplete/zsh-autocomplete.plugin.zsh" ]]; then
-    source "$PLUGIN_DIR/zsh-autocomplete/zsh-autocomplete.plugin.zsh"
+
+
+# ------------------------------------------------------------
+# zsh-autosuggestions
+#
+# HISTORY:
+#   Busca comandos utilizados anteriormente.
+#
+# COMPLETION:
+#   Busca sugerencias utilizando el sistema de completion
+#   de Zsh.
+#
+# Esto permite sugerencias en tiempo real incluso para
+# comandos/opciones que no estén en el historial.
+# ------------------------------------------------------------
+
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+
+if [[ -f "$AUTOSUGGESTIONS_FILE" ]]; then
+    source "$AUTOSUGGESTIONS_FILE"
 fi
 
+
+# ------------------------------------------------------------
+# zsh-syntax-highlighting
+#
+# IMPORTANTE:
+# Debe cargarse al final.
+# ------------------------------------------------------------
+
+if [[ -f "$SYNTAX_FILE" ]]; then
+    source "$SYNTAX_FILE"
+fi
+
+
+# ------------------------------------------------------------
 # Aliases
-[[ -f ~/.aliaszsh ]] && source ~/.aliaszsh
+# ------------------------------------------------------------
+
+[[ -f "\$HOME/.aliaszsh" ]] && source "\$HOME/.aliaszsh"
+
 EOF
 
-if [ -f "$HOME/.zshrc" ]; then
-    if ! grep -q "source ~/.zshrc.d/plugins.zsh" "$HOME/.zshrc"; then
-        echo "[[ -f ~/.zshrc.d/plugins.zsh ]] && source ~/.zshrc.d/plugins.zsh" >> "$HOME/.zshrc"
-    fi
+
+# ============================================================
+# 8. Configurar ~/.zshrc
+# ============================================================
+
+touch "$HOME/.zshrc"
+
+
+# Eliminar líneas antiguas de nuestro instalador
+sed -i \
+    '\|\.zshrc\.d/plugins\.zsh|d' \
+    "$HOME/.zshrc"
+
+
+# Eliminar compinit añadido manualmente por este instalador,
+# si existiera.
+
+sed -i \
+    '/^[[:space:]]*autoload -Uz compinit/d' \
+    "$HOME/.zshrc"
+
+sed -i \
+    '/^[[:space:]]*compinit/d' \
+    "$HOME/.zshrc"
+
+
+# Añadir nuestra configuración
+
+cat >> "$HOME/.zshrc" <<'EOF'
+
+
+# ============================================================
+# CONFIGURACIÓN PERSONAL DE ZSH
+# ============================================================
+
+[[ -f "$HOME/.zshrc.d/plugins.zsh" ]] && \
+    source "$HOME/.zshrc.d/plugins.zsh"
+
+EOF
+
+
+# ============================================================
+# 9. Comprobaciones
+# ============================================================
+
+echo "Zsh:"
+zsh --version
+
+echo
+echo "zsh-autocomplete:"
+if [[ -f "$AUTOCOMPLETE_FILE" ]]; then
+    echo "  OK"
 else
-    echo "[[ -f ~/.zshrc.d/plugins.zsh ]] && source ~/.zshrc.d/plugins.zsh" > "$HOME/.zshrc"
+    echo "  ERROR"
 fi
 
-echo "$T_ZSH_INSTALADO"
+echo
+echo "zsh-autosuggestions:"
+if [[ -f "$AUTOSUGGESTIONS_FILE" ]]; then
+    echo "  OK"
+else
+    echo "  ERROR"
+fi
+
+echo
+echo "zsh-syntax-highlighting:"
+if [[ -f "$SYNTAX_FILE" ]]; then
+    echo "  OK"
+else
+    echo "  ERROR"
+fi
+
+echo
+echo "zsh-completions:"
+if [[ -d "/usr/share/zsh/site-functions" ]]; then
+    echo "  OK"
+else
+    echo "  ERROR"
+fi
+
+
+# ============================================================
+# 10. Final
+# ============================================================
+
+echo "============================================================"
+echo "       $T_ZSH_INSTALADO"
+echo "============================================================"
 
 
 # ==== Process_manager.sh ==== #
