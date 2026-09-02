@@ -248,26 +248,3 @@ EOF
 
     fi
 done
-
-# ========================================================== #
-# ==== RECARGA FINAL DE HYPRLAND (SI ESTÁ ACTIVO) ========== #
-# ========================================================== #
-if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
-    echo "$T_RECARGA"
-    hyprctl reload
-    sleep 1
-
-    ERRORS="$(hyprctl configerrors 2>/dev/null || true)"
-    if [ -n "$ERRORS" ] && [ "$ERRORS" != "no errors" ]; then
-        echo "=========================================================="
-        echo "$T_RECARGA_ERROR"
-        echo "$ERRORS"
-        echo "=========================================================="
-        exit 1
-    fi
-    echo "$T_RECARGA_EXITO"
-else
-    echo " $T_NO_SESION"
-fi
-
-echo "$T_CONFIGURACIONES_LISTAS"

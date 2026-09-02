@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LANG_DIR="$(cd "$SCRIPT_DIR/../../lang" && pwd)"
-MINIMALISTDOTS="$HOME/.local/bin/MinimalistDots"
+MINIMALISTDOTS="$(cd "$HOME/.local/bin/MinimalistDots" && pwd)"
 SRC_HYPRLAND_SERVICES="$(cd "$SCRIPT_DIR/../../../src/.local/bin/MinimalistDots/services" && pwd)"
 SRC_HYPRLAND_SCRIPTS="$(cd "$SCRIPT_DIR/../../../src/.local/bin/MinimalistDots/scripts" && pwd)"
 
@@ -26,8 +26,6 @@ rm -f $MINIMALISTDOTS/services/*.lua
 echo "$T_COPIANDO_SERVICIOS_NUEVOS"
 cp $SRC_HYPRLAND_SERVICES/*.lua $MINIMALISTDOTS/services
 
-hyprctl reload
-
 
 # =============================================================================== #
 # ==== INSTALANDO SCRIPTS DENTRO DE "~/.local/bin/MinimalistDots/scripts" ==== #
@@ -41,8 +39,6 @@ rm -f $MINIMALISTDOTS/scripts/*.sh
 
 echo "$T_COPIANDO_SCRIPTS_NUEVOS"
 cp $SRC_HYPRLAND_SCRIPTS/*.sh $MINIMALISTDOTS/scripts
-
-hyprctl reload
 
 
 # ==== ZSH INSTALACION ==== #
