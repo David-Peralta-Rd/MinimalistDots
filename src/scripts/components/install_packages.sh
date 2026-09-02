@@ -42,8 +42,8 @@ CORE_PKGS=(
     hyprland
     hyprlock
     hyprpaper
-    qt5ct-kde
-    qt6ct-kde
+    qt5ct
+    qt6ct
     fastfetch
     hyprpolkitagent
     xdg-desktop-portal-hyprland
