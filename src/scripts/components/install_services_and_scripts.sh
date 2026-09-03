@@ -634,36 +634,69 @@ EOF
 # 3. OSD DE VOLUMEN (Wofi HUD)
 # ==========================================================
 cat << EOF > "$WOFI_CONFIGS/config-volume"
-# Configuración específica para HUD de Volumen
 show=dmenu
 allow_images=false
-width=320
-height=60
-lines=1
+width=200
+height=42
+lines=2
+dynamic_lines=true
 location=top
-yoffset=30
+yoffset=15
+hide_search=true
 hide_scroll=true
 no_actions=true
-prompt=🔊 Volumen
+filter_title=volume-osd
 EOF
 
 cat << EOF > "$WOFI_THEMES/style-volume.css"
-/* Estilo dedicado para el OSD de Volumen */
+/* Estilo OSD de Volumen */
 window {
     margin: 0px;
     background-color: ${BG_90_RGBA};
     border: 2px solid ${C_ACCENT_PURPLE:-#c678dd};
     border-radius: 10px;
     font-family: 'JetBrainsMono Nerd Font', 'monospace';
-    font-size: 14px;
+    font-size: 13px;
 }
+
 #input {
-    display: none; /* Oculta la barra de búsqueda para que parezca solo un HUD */
+    display: none;
+    visibility: hidden;
+    margin: 0px;
+    padding: 0px;
+    border: none;
 }
-#inner-box { margin: 10px; border: none; background-color: transparent; }
-#entry { padding: 4px; background-color: transparent; border: none; }
-#text { color: ${C_TEXT}; background-color: transparent; font-weight: bold; }
-#outer-box { margin: 0px; border: none; background-color: transparent; }
+
+#inner-box {
+    margin: 0px;
+    padding: 6px 12px;
+    border: none;
+    background-color: transparent;
+}
+
+#entry {
+    padding: 0px;
+    margin: 0px;
+    background-color: transparent;
+    border: none;
+}
+
+#entry:selected {
+    background-color: transparent;
+}
+
+#text {
+    color: ${C_TEXT};
+    background-color: transparent;
+    font-weight: bold;
+}
+
+#outer-box, #scroll {
+    margin: 0px;
+    padding: 0px;
+    border: none;
+    background-color: transparent;
+}
 EOF
 
 # El binario "show_binds" agrupa por categoría usando jq y lanza Wofi

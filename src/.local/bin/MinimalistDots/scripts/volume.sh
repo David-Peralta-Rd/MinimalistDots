@@ -30,7 +30,7 @@ fi
 
 # Mostrar el HUD de Wofi durante 1.2 segundos en segundo plano
 CONFIG_DIR="$HOME/.config/wofi"
-echo "$TEXT" | wofi -c "$CONFIG_DIR/configs/config-volume" -s "$CONFIG_DIR/themes/style-volume.css" &
+echo "$TEXT" | wofi --define=hide_search=true -c "$CONFIG_DIR/configs/config-volume" -s "$CONFIG_DIR/themes/style-volume.css" &
 
 PID=$!
 (sleep 1.2 && kill "$PID" 2>/dev/null) &
