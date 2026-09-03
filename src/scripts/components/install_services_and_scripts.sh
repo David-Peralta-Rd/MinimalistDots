@@ -630,6 +630,42 @@ window {
 #scroll { margin: 0px; border: none; background-color: transparent; }
 EOF
 
+# ==========================================================
+# 3. OSD DE VOLUMEN (Wofi HUD)
+# ==========================================================
+cat << EOF > "$WOFI_CONFIGS/config-volume"
+# Configuración específica para HUD de Volumen
+show=dmenu
+allow_images=false
+width=320
+height=60
+lines=1
+location=top
+yoffset=30
+hide_scroll=true
+no_actions=true
+prompt=🔊 Volumen
+EOF
+
+cat << EOF > "$WOFI_THEMES/style-volume.css"
+/* Estilo dedicado para el OSD de Volumen */
+window {
+    margin: 0px;
+    background-color: ${BG_90_RGBA};
+    border: 2px solid ${C_ACCENT_PURPLE:-#c678dd};
+    border-radius: 10px;
+    font-family: 'JetBrainsMono Nerd Font', 'monospace';
+    font-size: 14px;
+}
+#input {
+    display: none; /* Oculta la barra de búsqueda para que parezca solo un HUD */
+}
+#inner-box { margin: 10px; border: none; background-color: transparent; }
+#entry { padding: 4px; background-color: transparent; border: none; }
+#text { color: ${C_TEXT}; background-color: transparent; font-weight: bold; }
+#outer-box { margin: 0px; border: none; background-color: transparent; }
+EOF
+
 # El binario "show_binds" agrupa por categoría usando jq y lanza Wofi
 # con el estilo generado arriba. Consume el JSON que exporta el
 # Keybinder de Lua (categorías incluidas).
