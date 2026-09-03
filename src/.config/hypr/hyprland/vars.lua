@@ -21,9 +21,9 @@ return {
 -- =========================== --
     cliphist = "cliphist list | wofi -c " .. HOME .. "/.config/wofi/configs/config-clipboard -s " .. HOME .. "/.config/wofi/themes/style-clipboard.css --dmenu | cliphist decode | wl-copy",
 
-    volume_up = [[sh -c "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int(\$2 * 100)}')%\""]],
+    volume_up = [[bash -c "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ && VOL=\$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int(\$2 * 100)}') && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"\${VOL}%\""]],
 
-    volume_down = [[sh -c "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int(\$2 * 100)}')%\""]],
+    volume_down = [[bash -c "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && VOL=\$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int(\$2 * 100)}') && notify-send -e -u low -h string:x-canonical-private-synchronous:volume 'Volumen' \"\${VOL}%\""]],
 
 -- ========================== --
 -- ==== Keybinds Scripts ==== --
