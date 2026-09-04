@@ -95,6 +95,7 @@ PROGRAMMING_PKGS=(
     uv
     docker
     docker-compose
+    drawio-desktop
     visual-studio-code-bin
 )
 
