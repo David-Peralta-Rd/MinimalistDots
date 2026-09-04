@@ -47,7 +47,7 @@ CORE_PKGS=(
     fastfetch
     hyprpolkitagent
     xdg-desktop-portal-hyprland
-
+    mpv
 )
 
 APPS_PKGS=(
