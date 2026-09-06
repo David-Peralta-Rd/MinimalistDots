@@ -1,0 +1,37 @@
+/* Limpieza absoluta de estilos GTK heredados */
+* {
+  all: unset;
+  font-family: "JetBrains Mono", "Inter", "Noto Sans", sans-serif;
+}
+
+/* Forzar transparencia en las capas del contenedor eww */
+window, 
+.background, 
+box {
+  background-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+/* Caja de tu widget */
+.clock-card {
+  background-color: transparent;
+  padding: 10px;
+}
+
+/* El texto de la hora (Contraste inverso con tu C_LIGHT_GRAY) */
+.clock-time {
+  font-size: 56px;
+  font-weight: 800;
+  color: #abb2bf;
+  text-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6); 
+}
+
+/* El texto de la fecha (C_SUBTEXT) sin la propiedad inválida */
+.clock-date {
+  font-size: 16px;
+  font-weight: 500;
+  color: #5c6370;
+  margin-top: 4px;
+}
