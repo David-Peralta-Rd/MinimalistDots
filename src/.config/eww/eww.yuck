@@ -1,20 +1,22 @@
 (defpoll time_clock :interval "30s" "date +%H:%M")
-(defpoll date_clock :interval "30s" "date +'%a, %d %b'")
+;; Convertimos la salida de la fecha a minúsculas de forma nativa
+(defpoll date_clock :interval "30s" "date +'%a, %d %b' | tr 'A-Z' 'a-z'")
 
 (defwidget clock []
   (box :class "clock-card" 
        :orientation "v" 
        :space-evenly false
-    (label :class "clock-time" :text time_clock)
-    (label :class "clock-date" :text date_clock)))
+       :halign "end"
+    (label :class "clock-time" :text time_clock :halign "end")
+    (label :class "clock-date" :text date_clock :halign "end")))
 
 (defwindow desktop_clock
   :monitor 0
-  :geometry (geometry :x "30px"
-                      :y "30px"
+  :geometry (geometry :x "0px"
+                      :y "40px"          ;; Distancia respecto al borde superior
                       :width "280px" 
                       :height "120px"
-                      :anchor "top right")
+                      :anchor "left center") ;; Anclaje al centro izquierdo
   :stacking "bottom"
   :focusable false
   (clock))
