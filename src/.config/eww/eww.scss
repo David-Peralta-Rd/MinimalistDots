@@ -1,0 +1,37 @@
+// ==============================================================================
+// Paleta de Colores Inyectada
+// ==============================================================================
+$c-bg: #1e222a;
+$c-surface: #282c34;
+$c-border-active: #7ec7a2; // Verde menta
+$c-text: #abb2bf;
+$c-subtext: #5c6370;
+
+// ==============================================================================
+// Estilos del Widget
+// ==============================================================================
+* {
+  font-family: "JetBrains Mono", "Inter", "Noto Sans", sans-serif;
+}
+
+.clock-card {
+  background-color: $c-surface;
+  border: 2px solid $c-border-active;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.clock-time {
+  font-size: 38px;
+  font-weight: bold;
+  color: $c-text;
+  margin-bottom: -2px; // Ajuste fino de espaciado
+}
+
+.clock-date {
+  font-size: 14px;
+  font-weight: 500;
+  color: $c-subtext;
+  text-transform: lowercase; // Estilo minimalista estricto
+}
