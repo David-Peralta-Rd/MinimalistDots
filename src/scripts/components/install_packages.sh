@@ -33,6 +33,7 @@ ZSH_PKGS=(
 CORE_PKGS=(
     mpv
     git
+    eww
     wofi
     sddm
     swaync
@@ -44,7 +45,6 @@ CORE_PKGS=(
     hyprlock
     hyprpaper
     fastfetch
-    eww-wayland
     hyprpolkitagent
     xdg-desktop-portal-hyprland
 )
