@@ -1,18 +1,23 @@
-(defpoll time :interval "1s"
-  `date +%H:%M:%S`)
+;; Variables optimizadas (consultan cada 30 segundos)
+(defpoll time_clock :interval "30s" "date +%H:%M")
+(defpoll date_clock :interval "30s" "date +'%a, %d %b'")
 
 (defwidget clock []
-  (box :class "clock-widget" :orientation "v" :space-evenly false
-    (label :text time :font-size "40px")))
+  (box :class "clock-card" 
+       :orientation "v" 
+       :space-evenly false
+    ;; Hora principal
+    (label :class "clock-time" :text time_clock)
+    ;; Fecha secundaria para balancear el diseño minimalista
+    (label :class "clock-date" :text date_clock)))
 
 (defwindow desktop_clock
   :monitor 0
-  :geometry (geometry :x "20px"
-                      :y "20px"
-                      :width "200px"
-                      :height "80px"
+  :geometry (geometry :x "24px"
+                      :y "24px"
+                      :width "220px"
+                      :height "100px"
                       :anchor "top right")
   :stacking "bottom"
   :focusable false
   (clock))
-
