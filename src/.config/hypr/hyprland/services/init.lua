@@ -19,6 +19,7 @@ require("create_custom_config")
 require("wofi_theme")
 require("hypridle")
 require("wallpaper")
+require("eww_clock")
 
 
 -- Custom
