@@ -36,6 +36,7 @@ CORE_PKGS=(
     eww
     wofi
     sddm
+    qt6ct
     swaync
     flatpak
     udisks2
