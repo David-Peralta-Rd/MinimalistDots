@@ -195,7 +195,7 @@ alias dk-up="docker compose up -d"
 alias dk-dw="docker compose down"
 alias dk-lg="docker logs -f"
 alias dk-pl="docker pull"
-alias dk-clean="docker system prune -f"
+alias dk-clean="docker system prune -a -f"
 alias dk-run="docker compose run --entrypoint bash"
 
 EOF
