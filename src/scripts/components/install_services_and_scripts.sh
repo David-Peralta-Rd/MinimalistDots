@@ -190,6 +190,7 @@ alias gps="git push"
 # DOCKER
 # ============================================================
 
+alias dk="docker"
 alias dk-up="docker compose up -d"
 alias dk-dw="docker compose down"
 alias dk-lg="docker logs -f"
