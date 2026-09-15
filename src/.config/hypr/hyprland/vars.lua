@@ -9,6 +9,7 @@ return {
 -- ==== Fast Execution ==== --
 -- ======================== --
     terminal        = "footclient",
+    terminal_float  = "footclient --app-id=programing-terminal",
     fileManager     = "dolphin",
     menu            = "wofi",
     browser         = "brave",
