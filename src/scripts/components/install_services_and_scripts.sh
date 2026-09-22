@@ -192,6 +192,7 @@ alias gps="git push"
 
 alias dk="docker"
 alias dk-up="docker compose up -d"
+alias dk-dev="docker compose -f docker-compose-dev.yml up -d"
 alias dk-dw="docker compose down"
 alias dk-lg="docker logs -f"
 alias dk-pl="docker pull"
