@@ -7,10 +7,9 @@ save_path="$save_dir/$save_file"
 RECORD_NOTIFY=${RECORD_NOTIFY:-true}
 RECORD_AUDIO=${RECORD_AUDIO:-false}
 
-if command -v wl-screenrec &>/dev/null; then
-    REC_TOOL="wl-screenrec"
-elif command -v wf-recorder &>/dev/null; then
-    REC_TOOL="wf-recorder"
+# Comprobamos la nueva herramienta
+if command -v gpu-screen-recorder &>/dev/null; then
+    REC_TOOL="gpu-screen-recorder"
 else
     REC_TOOL=""
 fi
@@ -25,7 +24,7 @@ Opciones:
   t, toggle      Detener cualquier grabación en curso
 
 Flags:
-  -a, --audio    Incluir grabación de audio (sistema / mic)
+  -a, --audio    Incluir grabación de audio (sistema por defecto)
   --no-notify    Desactivar notificaciones
   -h, --help     Mostrar este mensaje de ayuda
 EOHELP
@@ -47,14 +46,17 @@ send_notification() {
 
 stop_active_recording() {
     local pids
-    pids=$(pgrep -x "wl-screenrec" || pgrep -x "wf-recorder")
+    # Buscamos cualquier proceso que contenga "gpu-screen-recorder" en el comando
+    pids=$(pgrep -f "gpu-screen-recorder")
 
     if [[ -n "$pids" ]]; then
+        # Enviamos la señal SIGINT a todos los PIDs encontrados para guardar bien los videos
         kill -INT $pids
         send_notification "Grabación Detenida" "Procesando y guardando el video..." "media-playback-stop"
         exit 0
     fi
 }
+
 
 RECORD_ARGS=()
 while [[ $# -gt 0 ]]; do
@@ -81,7 +83,7 @@ done
 set -- "${RECORD_ARGS[@]}"
 
 if [[ -z "$REC_TOOL" ]]; then
-    send_notification "Error de Grabación" "No se encontró wl-screenrec ni wf-recorder instalados."
+    send_notification "Error de Grabación" "No se encontró gpu-screen-recorder instalado."
     exit 1
 fi
 
@@ -98,34 +100,36 @@ start_recording() {
     local mode=$1
     local geometry=""
     local audio_flags=()
+    local video_flags=()
+
+    # Configuración de Audio
+    if [[ "$RECORD_AUDIO" == true ]]; then
+        # "default" captura el audio interno del sistema. Cambiar a "focused" si solo quieres el de la ventana activa.
+        audio_flags+=("-a" "default") 
+    fi
+
+    # Configuración de Video (Balance de peso óptimo y 60 FPS fijos)
+    # Usamos formato mp4 y calidad 'high' (puedes cambiar a 'medium' si quieres archivos aún más pequeños)
+    video_flags+=("-c" "mp4" "-q" "high" "-k" "hevc" "-f" "60")
+
 
     if [[ "$mode" == "area" ]]; then
-        geometry=$(slurp)
+        # Formato corregido para gpu-screen-recorder en Wayland (ANCHO x ALTO + X + Y)
+        geometry=$(slurp -f "%wx%h+%x+%y")
         if [[ -z "$geometry" ]]; then
             send_notification "Grabación Cancelada" "No se seleccionó ninguna área."
             exit 0
         fi
-    fi
-
-    if [[ "$RECORD_AUDIO" == true ]]; then
-        audio_flags+=("--audio")
+        video_flags+=("-w" "$geometry")
+    else
+        # "screen" le dice a la herramienta que grabe todo el monitor
+        video_flags+=("-w" "screen")
     fi
 
     send_notification "Grabación Iniciada" "Presiona el atajo de nuevo para detener." "media-record"
 
-    if [[ "$REC_TOOL" == "wl-screenrec" ]]; then
-        if [[ -n "$geometry" ]]; then
-            wl-screenrec -g "$geometry" -f "$save_path" "${audio_flags[@]}"
-        else
-            wl-screenrec -f "$save_path" "${audio_flags[@]}"
-        fi
-    elif [[ "$REC_TOOL" == "wf-recorder" ]]; then
-        if [[ -n "$geometry" ]]; then
-            wf-recorder -g "$geometry" -f "$save_path" "${audio_flags[@]}"
-        else
-            wf-recorder -f "$save_path" "${audio_flags[@]}"
-        fi
-    fi
+    # Ejecución de GPU Screen Recorder
+    gpu-screen-recorder "${video_flags[@]}" "${audio_flags[@]}" -o "$save_path"
 
     if [[ -f "$save_path" ]]; then
         send_notification "Grabación Guardada" "Guardada en: $save_path" "video-x-generic"
