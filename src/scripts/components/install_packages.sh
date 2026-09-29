@@ -103,7 +103,7 @@ SCREENRECORD_PKGS=(
     slurp
     ffmpeg
     libnotify
-    wf-recorder
+    gpu-screen-recorder
 )
 
 PROCESS_MANAGER_PKGS=(
