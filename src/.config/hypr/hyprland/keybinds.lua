@@ -47,7 +47,7 @@ kb:category("Capturas")
 kb:category("Grabación")
   :exec("ALT+S", vars.screenrecord .. " s -A", "Grabar pantalla con audio (área) / Record screen with audio (area)")
   :exec("ALT+P", vars.screenrecord .. " m", "Grabar pantalla completa / Record the full screen")
-  :exec("ALT+SHIFT+P", vars.screenshot .. " sc", "Detener cualquier grabación / Stop any recording")
+  :exec("ALT+SHIFT+P", vars.screenrecord .. " sc", "Detener cualquier grabación / Stop any recording")
 
 -- ---------------------------------------------------------
 -- MULTIMEDIA
