@@ -2,45 +2,50 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LANG_DIR="$(cd "$SCRIPT_DIR/../lang" && pwd)"
-UTILS_DIR="$(cd "$SCRIPT_DIR/utils" && pwd)"
 
-# CARGAR EL IDIOMA SI EL SCRIPT SE EJECUTA DIRECTAMENTE
-if [ -z "${T_BIENVENIDO:-}" ]; then
-    source "$LANG_DIR/load_lang.sh"
-fi
+# RUTAS (MD_*), IDIOMA (T_*) Y PALETA (C_*)
+source "$SCRIPT_DIR/utils/u3_env.sh"
 
-# DEFINIMOS LA RUTA DE LA CARPETA DE SCRIPTS
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPONENTS_DIR="$SCRIPT_DIR/components"
-
-# CARGAMOS UTILIDAD DE TITULO
-source $UTILS_DIR/title.sh
-source $UTILS_DIR/palette.sh
+# UTILIDAD DE TITULO
+source "$MD_UTILS_DIR/u1_title.sh"
 
 
 # ======================================= #
-# ==== EMPEZAMOS A EJECUTR LOS PASOS ==== #
+# ==== EMPEZAMOS A EJECUTAR LOS PASOS ==== #
 # ======================================= #
 print_title "$T_BIENVENIDO"
 
+# PASO 0 -- SESION DE SUDO (antes de lo largo, para no pedir la clave a mitad de la instalacion)
+print_title "$T_CONFIGURANDO_SUDO"
+bash "$MD_COMPONENTS_DIR/c0_sudo_session.sh"
+
 # PRIMER PASO -- CREACIONES DE CARPETAS
 print_title "$T_NUEVAS_CARPETAS"
-bash "$COMPONENTS_DIR/new_folders.sh"
+bash "$MD_COMPONENTS_DIR/c1_new_folders.sh"
 
 # SEGUNDO PASO -- INSTALACION DE PAQUETES
 print_title "$T_INSTALANDO_PAQUETES"
-bash "$COMPONENTS_DIR/install_packages.sh"
+bash "$MD_COMPONENTS_DIR/c2_install_packages.sh"
 
 # TERCER PASO -- BACKUP DE LAS CONFIGURACIONES DENTRO DE "~/.config"
+# c3 devuelve 10 cuando el usuario cancela: en ese caso no se sigue con nada mas.
 print_title "$T_COMENZANDO_BACKUP_Y_INSTALACION"
-bash "$COMPONENTS_DIR/backup_and_install.sh"
+C3_STATUS=0
+bash "$MD_COMPONENTS_DIR/c3_backup_and_install.sh" || C3_STATUS=$?
+if [ "$C3_STATUS" -eq 10 ]; then
+    exit 0
+elif [ "$C3_STATUS" -ne 0 ]; then
+    exit "$C3_STATUS"
+fi
 
 # CUARTO PASO -- INSTALACION DE SERVICIOS Y SCRIPTS
+# Si un sub-paso falla (p. ej. sin internet para el tema de SDDM) igual se
+# recarga Hyprland y se informa al final.
 print_title "$T_INSTALANDO_SERVICIOS_Y_SCRIPTS"
-bash "$COMPONENTS_DIR/install_services_and_scripts.sh"
+C4_STATUS=0
+bash "$MD_COMPONENTS_DIR/c4_install_services_and_scripts.sh" || C4_STATUS=$?
 
-# REFRESCAMOS HYPRLAND
+
 # ========================================================== #
 # ==== RECARGA FINAL DE HYPRLAND (SI ESTÁ ACTIVO) ========== #
 # ========================================================== #
@@ -60,6 +65,15 @@ if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
     echo "$T_RECARGA_EXITO"
 else
     echo " $T_NO_SESION"
+fi
+
+# OPCIONAL: si la sesion de sudo sin caducidad solo la quieres durante la
+# instalacion, descomenta esta linea para borrarla al terminar:
+# sudo rm -f "/etc/sudoers.d/sudo_timeout_${SUDO_USER:-$(whoami)}"
+
+if [ "$C4_STATUS" -ne 0 ]; then
+    echo "$T_INSTALACION_CON_ERRORES"
+    exit "$C4_STATUS"
 fi
 
 echo "$T_CONFIGURACIONES_LISTAS"

@@ -6,11 +6,11 @@ El objetivo es levantar un escritorio Wayland limpio y coherente —Hyprland, Wo
 
 ## Características
 
-- **Instalador de un solo comando** (`install.sh`) que orquesta todo el proceso paso a paso a través de `src/scripts/steps.sh`.
-- **Selector de idioma** al inicio de la instalación: **Español, English, Français, Deutsch** (con archivo de traducciones adicional en portugués listo para activarse). La elección se recuerda durante toda la instalación en `/tmp/.current_lang`.
-- **Backup automático y dinámico**: antes de instalar, el script detecta *todas* las carpetas dentro de `src/.config/` (hypr, foot, dolphin, etc.), hace una copia de tu configuración actual con timestamp en `~/.config/backups_dots/<app>-backups/`, y luego despliega la nueva. Pide una única confirmación antes de tocar nada.
-- **Configuración de Hyprland en Lua**, modular y organizada en `general`, `animations`, `env`, `monitors`, `windowrules` y `keybinds`, con overrides personalizados en `~/.config/hypr/custom/` que **nunca se pierden** al reinstalar (se cargan automáticamente después de la config base).
-- **Paleta de colores unificada** ("gris frío y colores muted") definida en un único archivo (`src/scripts/utils/palette.sh`) y propagada en tiempo de instalación a Hyprland/hyprlock, Wofi, Rofi (gestor de procesos) y Foot.
+- **Instalador de un solo comando** (`install.sh`) que orquesta todo el proceso paso a paso a través de `src/setup/scripts/steps.sh`.
+- **Selector de idioma** al inicio de la instalación: **Español, English, Français, Deutsch, Português**. La elección se recuerda durante toda la instalación en `/tmp/.current_lang`.
+- **Backup automático y dinámico**: antes de instalar, el script detecta *todo* lo que haya en `src/hyprland-dots/config/` (carpetas como hypr o foot, y archivos sueltos como `dolphinrc`), hace una copia de tu configuración actual con timestamp en `~/.config/backups_dots/<app>-backups/`, y luego despliega la nueva. Pide una única confirmación antes de tocar nada.
+- **Configuración de Hyprland en Lua**, modular y organizada en `general`, `animations`, `env`, `monitors`, `windowrules` y `keybinds`, con overrides personalizados en `~/.config/hypr/custom/` que **nunca se pierden** al reinstalar (el instalador los restaura desde el backup y se cargan automáticamente después de la config base).
+- **Paleta de colores unificada** ("gris frío y colores muted") definida en un único archivo (`src/setup/scripts/utils/u2_palette.sh`) y propagada en tiempo de instalación a Hyprland (`colors.lua`), Wofi y Rofi (gestor de procesos). Los valores de Foot coinciden con la paleta y están fijos en `foot.ini`.
 - **Servicios de Hyprland en Lua** (`~/.local/bin/MinimalistDots/services/`): Polkit, entorno D-Bus, `footclient`, portapapeles (`cliphist`), notificaciones (SwayNC), `hypridle`, fondo de pantalla persistente, tema de Wofi, exportación de atajos y generación de configs personalizados — todos activables/desactivables comentando una línea en `services/init.lua`.
 - **Scripts de usuario** (`~/.local/bin/MinimalistDots/scripts/`) para capturas de pantalla, grabación de pantalla, selector de fondo de pantalla, control de volumen, gestor de procesos (Rofi) y visor de atajos de teclado (Wofi).
 - **Zsh listo para usar**: autosugerencias, autocompletado, resaltado de sintaxis y un set de alias (sistema, pacman/paru, git, docker) configurados automáticamente sobre el paquete oficial de Arch (sin clonar repos manualmente).
@@ -23,7 +23,7 @@ El objetivo es levantar un escritorio Wayland limpio y coherente —Hyprland, Wo
 - Acceso a `sudo`.
 - Conexión a internet (se actualizan e instalan paquetes, y se descarga el tema de SDDM desde GitHub).
 
-> ⚠️ El instalador **reemplaza por completo** cualquier configuración existente en `~/.config/hypr`, `~/.config/foot` y `~/.config/dolphinrc` (con backup previo automático), y modifica `~/.zshrc`. Revisa `src/scripts/components/install_packages.sh` para ver la lista completa de paquetes antes de ejecutar.
+> ⚠️ El instalador **reemplaza por completo** cualquier configuración existente en `~/.config/hypr`, `~/.config/foot` y `~/.config/dolphinrc` (con backup previo automático), y modifica `~/.zshrc`. Revisa `src/setup/scripts/components/c2_install_packages.sh` para ver la lista completa de paquetes antes de ejecutar.
 
 ## Instalación
 
@@ -37,48 +37,59 @@ Durante la ejecución se te pedirá:
 1. Elegir el idioma de la instalación.
 2. Confirmar el reemplazo de las configuraciones detectadas (se hace backup automático de cada una).
 
-El instalador ejecuta, en orden, los componentes definidos en `src/scripts/components/`:
+El instalador ejecuta, en orden, los componentes definidos en `src/setup/scripts/components/`:
 
 | Paso | Componente | Descripción |
 |------|------------|-------------|
-| 1 | `new_folders.sh` | Crea las carpetas necesarias en `$HOME` (`.config/hypr/hyprland`, `.local/bin/MinimalistDots/...`, etc.) |
-| 2 | `install_packages.sh` | Actualiza el sistema, instala `paru` y todos los paquetes agrupados por categoría (Zsh, núcleo, apps, cursores, Dolphin, tema de SDDM, capturas, programación, grabación, gestor de procesos) |
-| 3 | `backup_and_install.sh` | Detecta dinámicamente cada carpeta en `src/.config/`, hace backup de su equivalente en `~/.config/` y la reemplaza; además genera `hyprland.lua`, `hypridle.conf`, `hyprlock.conf`, `hyprpaper.conf` y `colors.lua` con la paleta actual |
-| 4 | `install_services_and_scripts.sh` | Instala los servicios y scripts de Lua/Bash, configura Zsh y sus plugins, genera el gestor de procesos y los menús de Wofi (portapapeles, atajos, OSD de volumen), e instala el tema de SDDM |
+| 0 | `c0_sudo_session.sh` | Configura sudo para que no vuelva a pedir la clave durante la instalación (se hace primero para cubrir la instalación de paquetes) |
+| 1 | `c1_new_folders.sh` | Crea las carpetas necesarias en `$HOME` (`.config/hypr/hyprland`, `.local/bin/MinimalistDots/{scripts,services,wofi}`, etc.) |
+| 2 | `c2_install_packages.sh` | Actualiza el sistema, instala `paru` (repos de CachyOS o compilado del AUR en Arch) y todos los paquetes agrupados por categoría |
+| 3 | `c3_backup_and_install.sh` | Detecta lo que hay en `src/hyprland-dots/config/`, hace backup de su equivalente en `~/.config/` y lo reemplaza. Para Hyprland ejecuta además las piezas de `c3_backup_hypr/` (`hyprland.lua`, `hypridle.conf`, `hyprlock.conf`, `hyprpaper.conf`, `colors.lua`) y restaura `custom/` |
+| 4 | `c4_install_services_and_scripts.sh` | Instala los servicios y scripts de Lua/Bash y ejecuta las piezas de `c4_backup_scripts/`: Zsh, gestor de procesos, menús de Wofi y tema de SDDM. Si una pieza falla, las demás continúan y se informa al final |
+
+Para agregar una pieza nueva basta con crear un `bkN_*.sh` en `c3_backup_hypr/` o `c4_backup_scripts/` (se ejecutan en orden numérico, del 1 al 9). Todas las rutas y la carga de idioma y paleta viven en `src/setup/scripts/utils/u3_env.sh`, por lo que cualquier pieza puede ejecutarse sola.
+
+Si respondes que **no** en la confirmación del paso 3, el instalador se detiene sin tocar tus configuraciones (Enter equivale a confirmar).
 
 Al finalizar, si detecta una sesión activa de Hyprland, recarga la configuración automáticamente (`hyprctl reload`) y te avisa si hay errores.
 
 ## Estructura del proyecto
 
 ```
-MinimalistDots/
-├── install.sh                       # Punto de entrada
+MiniTest/
+├── install.sh                          # Punto de entrada
 ├── src/
-│   ├── .config/                     # Configuraciones que se copian a ~/.config
-│   │   ├── dolphinrc
-│   │   ├── foot/foot.ini
-│   │   └── hypr/hyprland/           # Configuración de Hyprland en Lua
-│   │       ├── general.lua
-│   │       ├── animations.lua
-│   │       ├── env.lua
-│   │       ├── monitors.lua
-│   │       ├── vars.lua             # Programas por defecto (terminal, navegador, editor, etc.)
-│   │       ├── windowrules.lua
-│   │       ├── keybinds.lua
-│   │       ├── lib/                 # Librerías internas (keybinder, rules, services, helpers)
-│   │       └── services/init.lua    # Lista de servicios activos
-│   ├── .local/bin/MinimalistDots/
-│   │   ├── services/                # Servicios en Lua (uno por archivo)
-│   │   └── scripts/                 # Scripts de usuario en Bash
-│   ├── scripts/
-│   │   ├── steps.sh                 # Orquesta todo el proceso de instalación
-│   │   ├── components/              # Un script por paso de instalación
-│   │   └── utils/
-│   │       ├── palette.sh           # Paleta de colores única para todo el proyecto
-│   │       └── title.sh             # Utilidad para imprimir encabezados
-│   └── lang/
-│       ├── es.cfg / en.cfg / fr.cfg / de.cfg / pt.cfg
-│       └── load_lang.sh
+│   ├── hyprland-dots/                  # LO QUE SE INSTALA (los dotfiles)
+│   │   ├── config/                     # Se copia a ~/.config
+│   │   │   ├── dolphinrc
+│   │   │   ├── eww/  foot/  qt6ct/
+│   │   │   └── hypr/hyprland/          # Configuración de Hyprland en Lua
+│   │   │       ├── general.lua  animations.lua  env.lua  monitors.lua
+│   │   │       ├── vars.lua            # Programas por defecto y rutas de scripts
+│   │   │       ├── windowrules.lua  keybinds.lua
+│   │   │       ├── lib/                # Librerías internas (keybinder, rules, services, helpers)
+│   │   │       └── services/init.lua   # Lista de servicios activos
+│   │   └── local/bin/MinimalistDots/   # Se copia a ~/.local/bin/MinimalistDots
+│   │       ├── services/               # Servicios en Lua (uno por archivo)
+│   │       └── scripts/                # Scripts de usuario en Bash
+│   └── setup/                          # EL INSTALADOR
+│       ├── lang/
+│       │   ├── load_lang.sh
+│       │   └── options/lg1_es.cfg ... lg5_pt.cfg
+│       └── scripts/
+│           ├── steps.sh                # Orquesta todo el proceso
+│           ├── utils/
+│           │   ├── u1_title.sh         # Encabezados
+│           │   ├── u2_palette.sh       # Paleta de colores única
+│           │   └── u3_env.sh           # Rutas (MD_*), idioma y paleta compartidos
+│           └── components/
+│               ├── c0_sudo_session.sh
+│               ├── c1_new_folders.sh
+│               ├── c2_install_packages.sh
+│               ├── c3_backup_and_install.sh
+│               ├── c3_backup_hypr/     # bk1..bk5: hyprland.lua, hypridle, hyprlock, hyprpaper, colors.lua
+│               ├── c4_install_services_and_scripts.sh
+│               └── c4_backup_scripts/  # bk1..bk4: zsh, process_manager, wofi, sddm_theme
 ├── LICENSE
 └── README.md
 ```
@@ -87,9 +98,9 @@ MinimalistDots/
 
 La configuración base de Hyprland **no debe editarse directamente**: se sobrescribe en cada instalación. En su lugar, crea tus propios archivos en `~/.config/hypr/custom/` (`env.lua`, `monitors.lua`, `windowrules.lua`, `general.lua`, `keybinds.lua`, `services/init.lua`) — se cargan automáticamente después de la configuración base y son seguros de editar.
 
-Para cambiar la paleta de colores global, edita `src/scripts/utils/palette.sh` y vuelve a ejecutar el instalador; Hyprland, hyprlock, Wofi, Rofi y Foot toman los colores desde ahí.
+Para cambiar la paleta de colores global, edita `src/setup/scripts/utils/u2_palette.sh` y vuelve a ejecutar el instalador; Hyprland (`colors.lua`), Wofi y Rofi toman los colores desde ahí.
 
-Para activar o desactivar un servicio de Hyprland (por ejemplo, el fondo de pantalla persistente o las notificaciones), comenta o descomenta su línea `require(...)` en `src/.config/hypr/hyprland/services/init.lua`.
+Para activar o desactivar un servicio de Hyprland (por ejemplo, el fondo de pantalla persistente o las notificaciones), comenta o descomenta su línea `require(...)` en `src/hyprland-dots/config/hypr/hyprland/services/init.lua`.
 
 ## Atajos de teclado principales
 
@@ -112,7 +123,7 @@ La tecla modificadora por defecto es `SUPER` (definida en `vars.lua`). Consulta 
 
 ## Idiomas
 
-Todos los mensajes de la instalación están centralizados en `src/lang/*.cfg` y disponibles en Español, Inglés, Francés y Alemán (portugués incluido pero aún no expuesto en el menú de selección). Añadir un idioma nuevo es tan simple como copiar un `.cfg` existente, traducirlo y agregar la opción en `load_lang.sh`.
+Todos los mensajes de la instalación están centralizados en `src/setup/lang/options/*.cfg` y disponibles en Español, Inglés, Francés y Alemán (incluido portugués). Añadir un idioma nuevo es tan simple como copiar un `.cfg` existente de `options/`, traducirlo y agregar la opción en `src/setup/lang/load_lang.sh`.
 
 ## Licencia
 

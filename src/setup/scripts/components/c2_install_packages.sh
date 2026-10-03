@@ -2,12 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LANG_DIR="$(cd "$SCRIPT_DIR/../../lang" && pwd)"
-
-# CARGAR EL IDIOMA SI EL SCRIPT SE EJECUTA DIRECTAMENTE
-if [ -z "${T_BIENVENIDO:-}" ]; then
-    source "$LANG_DIR/load_lang.sh"
-fi
+source "$SCRIPT_DIR/../utils/u3_env.sh"
 
 
 # ============================================ #
@@ -16,7 +11,29 @@ fi
 
 # ACTUALIZAMOS EL SISTEMA
 sudo pacman -Syu --noconfirm
-sudo pacman -Sy --noconfirm paru
+
+# INSTALAMOS PARU SI NO ESTA
+ensure_paru() {
+    if command -v paru &>/dev/null; then
+        return 0
+    fi
+
+    # CachyOS (y otras derivadas) lo traen en sus repositorios
+    if sudo pacman -S --needed --noconfirm paru; then
+        return 0
+    fi
+
+    # Arch puro: paru solo existe en el AUR, se compila paru-bin
+    echo "$T_INSTALANDO_PARU"
+    sudo pacman -S --needed --noconfirm base-devel git
+
+    local build_dir
+    build_dir="$(mktemp -d)"
+    git clone --depth 1 https://aur.archlinux.org/paru-bin.git "$build_dir/paru-bin"
+    (cd "$build_dir/paru-bin" && makepkg -si --noconfirm)
+    rm -rf "$build_dir"
+}
+ensure_paru
 
 # ================================================== #
 # ==== LISTANDO PAQUETES QUE SE VAN A INSTALAR. ==== #
@@ -45,6 +62,7 @@ CORE_PKGS=(
     hyprland
     hyprlock
     hyprpaper
+    reflector
     fastfetch
     hyprpolkitagent
     xdg-desktop-portal-hyprland
@@ -113,12 +131,6 @@ PROCESS_MANAGER_PKGS=(
 )
 
 
-
-
-
-
-
-
 # Para agregar una categoría nueva: declárala arriba y agrégala aquí.
 ALL_PKGS=(
     "${ZSH_PKGS[@]}"
@@ -133,5 +145,8 @@ ALL_PKGS=(
     "${PROCESS_MANAGER_PKGS[@]}"
 )
 
-# INSTALAMOS LOS PAQUETES
-paru -Sy --needed --noconfirm "${ALL_PKGS[@]}"
+# Quitamos duplicados (git, jq, slurp, libnotify...) conservando el orden
+mapfile -t ALL_PKGS < <(printf '%s\n' "${ALL_PKGS[@]}" | awk '!seen[$0]++')
+
+# INSTALAMOS LOS PAQUETES (la base ya quedó sincronizada con -Syu arriba)
+paru -S --needed --noconfirm "${ALL_PKGS[@]}"
