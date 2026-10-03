@@ -17,7 +17,7 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #   configs/config-*      themes/style-*.css
 
 # Tamaño del OSD de volumen (si el texto se ve cortado, súbele el ancho)
-OSD_WIDTH=140
+OSD_WIDTH=172
 OSD_HEIGHT=34
 
 mkdir -p "$MD_WOFI_CONFIGS" "$MD_WOFI_THEMES" "$MD_SCRIPTS_DIR"
