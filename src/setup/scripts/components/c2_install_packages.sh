@@ -112,8 +112,10 @@ SCREENSHOT_PKGS=(
 PROGRAMMING_PKGS=(
     uv
     docker
-    docker-compose
+    github-cli
+    docker-buildx
     drawio-desktop
+    docker-compose
     visual-studio-code-bin
 )
 
