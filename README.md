@@ -45,7 +45,7 @@ El instalador ejecuta, en orden, los componentes definidos en `src/setup/scripts
 | 1 | `c1_new_folders.sh` | Crea las carpetas necesarias en `$HOME` (`.config/hypr/hyprland`, `.local/bin/MinimalistDots/{scripts,services,wofi}`, etc.) |
 | 2 | `c2_install_packages.sh` | Actualiza el sistema, instala `paru` (repos de CachyOS o compilado del AUR en Arch) y todos los paquetes agrupados por categoría |
 | 3 | `c3_backup_and_install.sh` | Detecta lo que hay en `src/hyprland-dots/config/`, hace backup de su equivalente en `~/.config/` y lo reemplaza. Para Hyprland ejecuta además las piezas de `c3_backup_hypr/` (`hyprland.lua`, `hypridle.conf`, `hyprlock.conf`, `hyprpaper.conf`, `colors.lua`) y restaura `custom/` |
-| 4 | `c4_install_services_and_scripts.sh` | Instala los servicios y scripts de Lua/Bash y ejecuta las piezas de `c4_backup_scripts/`: Zsh, gestor de procesos, menús de Wofi, tema de SDDM, Docker sin sudo y Git/GitHub (login por navegador + firma GPG; pregunta antes de empezar y se omite sin terminal interactiva). Si una pieza falla, las demás continúan y se informa al final |
+| 4 | `c4_install_services_and_scripts.sh` | Instala los servicios y scripts de Lua/Bash y ejecuta las piezas de `c4_backup_scripts/`: Zsh, gestor de procesos, menús de Wofi, tema de SDDM, Docker sin sudo, Git/GitHub (login por navegador + firma GPG; pregunta antes de empezar y se omite sin terminal interactiva) y optimización de red (BBR + CAKE, tarjeta de red persistente y DNS con caché). Si una pieza falla, las demás continúan y se informa al final |
 
 Para agregar una pieza nueva basta con crear un `bkN_*.sh` en `c3_backup_hypr/` o `c4_backup_scripts/` (se ejecutan en orden numérico, del 1 al 9). Todas las rutas y la carga de idioma y paleta viven en `src/setup/scripts/utils/u3_env.sh`, por lo que cualquier pieza puede ejecutarse sola.
 
@@ -89,7 +89,7 @@ MiniTest/
 │               ├── c3_backup_and_install.sh
 │               ├── c3_backup_hypr/     # bk1..bk5: hyprland.lua, hypridle, hyprlock, hyprpaper, colors.lua
 │               ├── c4_install_services_and_scripts.sh
-│               └── c4_backup_scripts/  # bk1..bk6: zsh, process_manager, wofi, sddm_theme, docker, github
+│               └── c4_backup_scripts/  # bk1..bk7: zsh, process_manager, wofi, sddm_theme, docker, github, network
 ├── LICENSE
 └── README.md
 ```
