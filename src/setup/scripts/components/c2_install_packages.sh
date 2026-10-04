@@ -86,6 +86,7 @@ DOLPHIN_PKGS=(
     ffmpegthumbs
     kde-cli-tools
     dolphin
+    kvantum
 )
 
 SDDM_THEME_PKGS=(
