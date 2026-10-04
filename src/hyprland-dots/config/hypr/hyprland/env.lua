@@ -12,15 +12,9 @@ hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("XCURSOR_SIZE", "20")
 
 
--- ==== DOLPHIN CONFIGURACION ==== --
--- Gestión de Temas Qt6 (Obligatoria para el tema oscuro de Dolphin)
-hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+-- ==== DOLPHIN / QT ====
+hl.env("QT_QPA_PLATFORMTHEME", "kde")
+hl.env("QT_STYLE_OVERRIDE", "kvantum")
 hl.env("QT_QUICK_CONTROLS_STYLE", "org.kde.desktop")
-
--- Compatibilidad con Wayland (Evita parpadeos y fallos de renderizado)
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
-
--- Integración con el Sistema y Portales de Archivos
-hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
-hl.env("XDG_SESSION_TYPE", "wayland")
-hl.env("XDG_SESSION_DESKTOP", "Hyprland")
+hl.env("XDG_MENU_PREFIX", "arch-")

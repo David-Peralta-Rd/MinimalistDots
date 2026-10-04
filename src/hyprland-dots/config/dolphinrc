@@ -1,24 +1,32 @@
+[General]
+Version=202
+RememberOpenedTabs=false
+ShowFullPath=false
+ShowSpaceInfo=false
+ShowZoomSlider=false
+EditableUrl=false
+FilterBar=false
+SplitView=false
+GlobalViewProps=true
+BrowseThroughArchives=true
+
+[MainWindow]
+MenuBar=Disabled
+StatusBar=Disabled
+ToolBarsMovable=Disabled
+
 [DetailsMode]
 ExpandableFolders=false
 PreviewSize=16
-
-[General]
-RememberOpenedTabs=false
-Version=202
-ViewPropsTimestamp=2026,9,10,20,42,46.274
+UseSystemFont=true
 
 [IconsMode]
 PreviewSize=80
+UseSystemFont=true
+
+[PreviewSettings]
+Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail
 
 [KFileDialog Settings]
 Places Icons Auto-resize=false
 Places Icons Static Size=22
-
-[MainWindow]
-MenuBar=Disabled
-
-[PreviewSettings]
-Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail,glycin-heif,comicbookthumbnai>
-
-[UiSettings]
-ColorScheme=KvAdaptaDark

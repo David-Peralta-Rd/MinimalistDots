@@ -82,11 +82,21 @@ CURSOR_PKGS=(
 )
 
 DOLPHIN_PKGS=(
-    qt5-imageformats
-    ffmpegthumbs
-    kde-cli-tools
     dolphin
+    kde-cli-tools
+    plasma-integration     # platform theme de KDE
+    breeze-icons           # iconos (o usa papirus-icon-theme)
+    kio-extras             # miniaturas y protocolos extra
+    kio-admin              # "abrir como administrador" (opcional)
+    ffmpegthumbs
+    kdegraphics-thumbnailers
+    kimageformats
+    qt6-imageformats
     kvantum
+    archlinux-xdg-menu     # arregla el menú "Abrir con"
+    plasma-integration
+    qqc2-desktop-style
+    archlinux-xdg-menu
 )
 
 SDDM_THEME_PKGS=(
