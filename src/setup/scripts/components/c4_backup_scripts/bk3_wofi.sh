@@ -16,8 +16,8 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 # Todo se instala en $MD_WOFI_DIR (~/.local/bin/MinimalistDots/wofi):
 #   configs/config-*      themes/style-*.css
 
-# Tamaño del OSD de volumen (si el texto se ve cortado, súbele el ancho)
-OSD_WIDTH=172
+# Tamaño del OSD de volumen (solo muestra "ícono + número"; si ves el texto cortado, súbele el ancho)
+OSD_WIDTH=80
 OSD_HEIGHT=34
 
 mkdir -p "$MD_WOFI_CONFIGS" "$MD_WOFI_THEMES" "$MD_SCRIPTS_DIR"
