@@ -25,28 +25,35 @@
 ;; ============================================================
 ;; POMODORO  (lo controla ~/.local/bin/MinimalistDots/scripts/pomodoro.sh)
 ;; El script va actualizando estas variables cada segundo con `eww update`.
+;; Minimalista: minutos restantes, sesión, una barra fina y 3 botones en columna a la derecha.
 ;; ============================================================
-(defvar pomo_time    "00:00")
-(defvar pomo_pct     "100")
-(defvar pomo_session "1/1")
-(defvar pomo_label   "")
-(defvar pomo_class   "focus")   ;; focus | break | paused  (define el color del anillo)
+(defvar pomo_time    "0")       ;; minutos restantes ("24") o, en el último minuto, segundos (":45")
+(defvar pomo_pct     "100")     ;; % de la fase que queda (0-100)
+(defvar pomo_session "1/1")     ;; sesión actual / total
+(defvar pomo_class   "focus")   ;; focus | break | paused  (color de la barra)
 (defvar pomo_icon    "❚❚")      ;; ❚❚ pausar  |  ▶ reanudar
 
 (defwidget pomodoro []
-  ;; eventbox: permite que el :hover del CSS detecte el mouse sobre toda la tarjeta
+  ;; eventbox: el :hover del CSS detecta el mouse y los clics controlan el pomodoro
   (eventbox :class "pomo-card"
-    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
-      (circular-progress :class "pomo-ring ${pomo_class}"
-                         :value pomo_pct
-                         :thickness 5
-                         :start-at 75        ;; empieza arriba (12 en punto)
-                         :clockwise true
-        (box :orientation "v" :space-evenly false :halign "center" :valign "center"
-          (label :class "pomo-time"    :text pomo_time)
-          (label :class "pomo-session" :text pomo_session)
-          (label :class "pomo-label"   :text pomo_label)))
-      (box :class "pomo-controls" :orientation "h" :space-evenly false :halign "center" :spacing 8
+            :tooltip "Clic: pausa / reanudar  ·  Clic derecho: reiniciar fase  ·  Clic medio: detener"
+            :onclick       "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh pause"
+            :onrightclick  "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh restart"
+            :onmiddleclick "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh stop"
+    (box :orientation "h" :space-evenly false :spacing 6 :halign "center" :valign "center"
+
+      ;; --- Contenido: número, sesión y barra ---
+      (box :orientation "v" :space-evenly false :spacing 3 :halign "center" :valign "center"
+        (label :class "pomo-time ${pomo_class}" :text pomo_time)
+        (label :class "pomo-session" :text pomo_session)
+        ;; Barra de progreso: la pista mide 30px (ver .pomo-track en eww.css)
+        (box :class "pomo-track" :orientation "h" :space-evenly false
+          (box :class "pomo-fill ${pomo_class}"
+               :halign "start"
+               :style "min-width: ${round(pomo_pct * 30 / 100, 0)}px;")))
+
+      ;; --- Botones en columna (pausa/reanudar, reiniciar fase, detener) ---
+      (box :class "pomo-controls" :orientation "v" :space-evenly true
         (button :class "pomo-btn"
                 :onclick "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh pause"
           (label :text pomo_icon))
@@ -63,8 +70,8 @@
   :monitor 0
   :geometry (geometry :x "0px"
                       :y "6px"
-                      :width "160px"
-                      :height "200px"
+                      :width "80px"
+                      :height "50px"
                       :anchor "bottom center")
   :stacking "fg"
   :focusable false

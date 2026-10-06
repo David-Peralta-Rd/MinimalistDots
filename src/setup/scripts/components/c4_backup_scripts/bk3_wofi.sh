@@ -12,6 +12,7 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #   1. El selector del portapapeles (cliphist)
 #   2. El visor de atajos de teclado (keybinds.json -> wofi)
 #   3. El OSD de volumen
+#   4. Las preguntas del Pomodoro (el reloj circular en sí es un widget de eww)
 #
 # Todo se instala en $MD_WOFI_DIR (~/.local/bin/MinimalistDots/wofi):
 #   configs/config-*      themes/style-*.css
@@ -169,7 +170,17 @@ EOF
 
 
 # ==========================================================
-# 4. SCRIPT "show_binds"
+# 4. POMODORO -- preguntas de tiempos y sesiones (scripts/pomodoro.sh)
+#    El título ("Concentración", "Descanso"...) lo pone el script con --prompt.
+#    Se puede elegir un valor de la lista o escribir uno propio.
+# ==========================================================
+write_menu_config "$MD_WOFI_CONFIGS/config-pomodoro" "las preguntas del Pomodoro" \
+    "🍅 Pomodoro" 300 340 9
+write_menu_css "$MD_WOFI_THEMES/style-pomodoro.css" "las preguntas del Pomodoro" "$C_ACCENT_RED" 10
+
+
+# ==========================================================
+# 5. SCRIPT "show_binds"
 # ==========================================================
 # Agrupa por categoría usando jq y lanza Wofi con el estilo generado arriba.
 # Consume el JSON que exporta el Keybinder de Lua (categorías incluidas).
