@@ -20,3 +20,52 @@
   :stacking "bottom"
   :focusable false
   (clock))
+
+
+;; ============================================================
+;; POMODORO  (lo controla ~/.local/bin/MinimalistDots/scripts/pomodoro.sh)
+;; El script va actualizando estas variables cada segundo con `eww update`.
+;; ============================================================
+(defvar pomo_time    "00:00")
+(defvar pomo_pct     "100")
+(defvar pomo_session "1/1")
+(defvar pomo_label   "")
+(defvar pomo_class   "focus")   ;; focus | break | paused  (define el color del anillo)
+(defvar pomo_icon    "❚❚")      ;; ❚❚ pausar  |  ▶ reanudar
+
+(defwidget pomodoro []
+  ;; eventbox: permite que el :hover del CSS detecte el mouse sobre toda la tarjeta
+  (eventbox :class "pomo-card"
+    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+      (circular-progress :class "pomo-ring ${pomo_class}"
+                         :value pomo_pct
+                         :thickness 5
+                         :start-at 75        ;; empieza arriba (12 en punto)
+                         :clockwise true
+        (box :orientation "v" :space-evenly false :halign "center" :valign "center"
+          (label :class "pomo-time"    :text pomo_time)
+          (label :class "pomo-session" :text pomo_session)
+          (label :class "pomo-label"   :text pomo_label)))
+      (box :class "pomo-controls" :orientation "h" :space-evenly false :halign "center" :spacing 8
+        (button :class "pomo-btn"
+                :onclick "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh pause"
+          (label :text pomo_icon))
+        (button :class "pomo-btn"
+                :onclick "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh restart"
+          (label :text "↻"))
+        (button :class "pomo-btn"
+                :onclick "$HOME/.local/bin/MinimalistDots/scripts/pomodoro.sh stop"
+          (label :text "✕"))))))
+
+;; Abajo al centro. y = gaps_out de Hyprland (6px) para quedar alineado con el borde de las ventanas.
+;; Es una capa superpuesta: no reserva espacio ni mueve tus ventanas.
+(defwindow pomodoro
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "6px"
+                      :width "160px"
+                      :height "200px"
+                      :anchor "bottom center")
+  :stacking "fg"
+  :focusable false
+  (pomodoro))

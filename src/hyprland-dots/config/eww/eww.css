@@ -35,3 +35,60 @@ box {
   color: #5c6370;
   margin-top: 4px;
 }
+
+
+/* ============================================================
+   POMODORO  (colores de la paleta: u2_palette.sh)
+   ============================================================ */
+
+/* Tarjeta: mismo borde y redondeo que las ventanas de Hyprland (border_size 1, rounding 3) */
+.pomo-card {
+  background-color: rgba(30, 34, 42, 0.92);   /* C_BG */
+  border: 1px solid #4b5263;                  /* C_BORDER_INACTIVE */
+  border-radius: 3px;
+  padding: 10px;
+  opacity: 0.35;                              /* semitransparente: no distrae mientras estudias */
+  transition: opacity 200ms ease-in-out;
+}
+
+/* Al pasar el mouse por encima se vuelve totalmente visible */
+.pomo-card:hover {
+  opacity: 1;
+}
+
+/* Anillo: "color" es el arco y "background-color" la pista */
+.pomo-ring {
+  min-width: 128px;
+  min-height: 128px;
+  background-color: #282c34;                  /* C_SURFACE */
+}
+.pomo-ring.focus  { color: #e06c75; }         /* C_ACCENT_RED   */
+.pomo-ring.break  { color: #7ec7a2; }         /* C_ACCENT_GREEN */
+.pomo-ring.paused { color: #5c6370; }         /* C_GRAY         */
+
+.pomo-time {
+  font-size: 26px;
+  font-weight: 800;
+  color: #abb2bf;                             /* C_TEXT */
+}
+.pomo-session {
+  font-size: 12px;
+  color: #abb2bf;
+  margin-top: 2px;
+}
+.pomo-label {
+  font-size: 10px;
+  color: #5c6370;                             /* C_SUBTEXT */
+}
+
+/* Botones: pausa, reinicio, detener */
+.pomo-btn {
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #5c6370;
+}
+.pomo-btn:hover {
+  background-color: #3e4451;                  /* C_SELECTION */
+  color: #abb2bf;
+}

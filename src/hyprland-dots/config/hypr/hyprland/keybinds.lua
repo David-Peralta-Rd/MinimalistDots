@@ -62,6 +62,12 @@ Keybinder.media("XF86AudioLowerVolume", "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5
 Keybinder.media("XF86AudioMute",        "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",      "Silenciar audio / Mute audio", true)
 
 -- ---------------------------------------------------------
+-- PRODUCTIVIDAD
+-- ---------------------------------------------------------
+kb:category("Productividad")
+  :exec("P", vars.pomodoro, "Pomodoro: iniciar / detener / Pomodoro: start / stop")
+
+-- ---------------------------------------------------------
 -- NAVEGACIÓN Y ESPACIOS DE TRABAJO
 -- ---------------------------------------------------------
 kb:category("Navegación")

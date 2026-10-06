@@ -33,5 +33,6 @@ return {
     select_wallpaper    = MINIMALISTDOTS .. "/scripts/select_wallpaper.sh",
     show_binds          = MINIMALISTDOTS .. "/scripts/show_binds",
     screenrecord        = MINIMALISTDOTS .. "/scripts/screenrecord.sh",
-    process_manager     = MINIMALISTDOTS .. "/scripts/process_manager.sh"
+    process_manager     = MINIMALISTDOTS .. "/scripts/process_manager.sh",
+    pomodoro            = MINIMALISTDOTS .. "/scripts/pomodoro.sh toggle"
 }
