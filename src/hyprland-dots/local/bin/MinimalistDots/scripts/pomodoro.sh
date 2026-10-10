@@ -67,11 +67,32 @@ REMAINING=0; END_TS=0; NOW=0; LEN=0
 set_now()   { printf -v NOW '%(%s)T' -1; }
 phase_len() { if [ "$PHASE" = "focus" ]; then LEN="$FOCUS_LEN"; else LEN="$BREAK_LEN"; fi; }
 
-# Envía el estado al widget de eww
+# Variables de eww que existen en tu eww.yuck. Se detectan una vez al iniciar:
+# `eww update` rechaza variables que el yuck no define, así que solo se envían las que existen.
+# Si la detección falla, se asume el conjunto básico del widget minimalista.
+POMO_VARS=" pomo_time pomo_pct pomo_session pomo_class pomo_icon "
+
+detect_vars() {
+    local state v found=" "
+    state="$(eww state --all 2> /dev/null || eww state 2> /dev/null || true)"
+    for v in pomo_time pomo_pct pomo_session pomo_class pomo_icon pomo_label; do
+        [[ "$state" == *"$v"* ]] && found+="$v "
+    done
+    # Solo se acepta si encontró al menos el tiempo; si no, se queda el conjunto básico
+    [[ "$found" == *" pomo_time "* ]] && POMO_VARS="$found"
+    return 0
+}
+
+has_var() { [[ "$POMO_VARS" == *" $1 "* ]]; }
+
+# Envía el estado al widget de eww (minutos restantes, sesión, barra e icono de pausa)
 render() {
     local pct clock cls icon label
+    local -a args=()
     phase_len
     pct=$((REMAINING * 100 / LEN))
+
+    # Minutos y segundos en formato MM:SS para todo el temporizador
     printf -v clock '%02d:%02d' $((REMAINING / 60)) $((REMAINING % 60))
 
     if [ "$PAUSED" -eq 1 ]; then
@@ -82,8 +103,14 @@ render() {
         cls="break"; icon="❚❚"; label="Descanso"
     fi
 
-    eww update pomo_time="$clock" pomo_pct="$pct" pomo_session="$SESSION/$TOTAL" \
-        pomo_label="$label" pomo_class="$cls" pomo_icon="$icon" > /dev/null 2>&1 || true
+    has_var pomo_time    && args+=(pomo_time="$clock")
+    has_var pomo_pct     && args+=(pomo_pct="$pct")
+    has_var pomo_session && args+=(pomo_session="$SESSION/$TOTAL")
+    has_var pomo_class   && args+=(pomo_class="$cls")
+    has_var pomo_icon    && args+=(pomo_icon="$icon")
+    has_var pomo_label   && args+=(pomo_label="$label")
+
+    eww update "${args[@]}" > /dev/null 2>&1 || true
 }
 
 # Pasa a la siguiente fase. Devuelve 1 cuando ya terminaron todas las sesiones.
@@ -157,6 +184,7 @@ daemon() {
     trap on_restart USR2
 
     open_window
+    detect_vars
 
     SESSION=1; PHASE="focus"; PAUSED=0
     set_now
