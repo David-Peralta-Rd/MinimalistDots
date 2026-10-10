@@ -17,6 +17,7 @@ DIRECTORIES=(
     "$MD_WOFI_THEMES"
     "$MD_WOFI_LAUNCHER_DIR"
     "$HOME/.cache/hypr"
+    "$HOME/models"          # modelos .gguf para llm_menu.sh
 )
 
 # CREAMOS CARPETAS USANDO UN BUCLE

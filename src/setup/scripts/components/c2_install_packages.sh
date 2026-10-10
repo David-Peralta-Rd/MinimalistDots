@@ -143,6 +143,17 @@ PROCESS_MANAGER_PKGS=(
     rofi-wayland
 )
 
+# bk7_99_network_optimization.sh necesita ethtool para ajustar la tarjeta de red
+NETWORK_PKGS=(
+    ethtool
+)
+
+# IA local (llm_menu.sh): llama-cpp trae llama-server; ggml-vulkan es el backend de GPU (AMD/Intel/NVIDIA vía Vulkan)
+LLM_PKGS=(
+    llama-cpp
+    ggml-vulkan
+)
+
 
 # Para agregar una categoría nueva: declárala arriba y agrégala aquí.
 ALL_PKGS=(
@@ -156,6 +167,8 @@ ALL_PKGS=(
     "${PROGRAMMING_PKGS[@]}"
     "${SCREENRECORD_PKGS[@]}"
     "${PROCESS_MANAGER_PKGS[@]}"
+    "${NETWORK_PKGS[@]}"
+    "${LLM_PKGS[@]}"
 )
 
 # Quitamos duplicados (git, jq, slurp, libnotify...) conservando el orden

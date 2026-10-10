@@ -13,6 +13,7 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #   2. El visor de atajos de teclado (keybinds.json -> wofi)
 #   3. El OSD de volumen
 #   4. Las preguntas del Pomodoro (el reloj circular en sí es un widget de eww)
+#   5. El menú de modelos de IA local (scripts/llm_menu.sh)
 #
 # Todo se instala en $MD_WOFI_DIR (~/.local/bin/MinimalistDots/wofi):
 #   configs/config-*      themes/style-*.css
@@ -180,7 +181,16 @@ write_menu_css "$MD_WOFI_THEMES/style-pomodoro.css" "las preguntas del Pomodoro"
 
 
 # ==========================================================
-# 5. SCRIPT "show_binds"
+# 5. IA LOCAL -- menú de modelos (scripts/llm_menu.sh)
+#    Más ancho que el resto: los nombres de modelo y sus tamaños son largos.
+# ==========================================================
+write_menu_config "$MD_WOFI_CONFIGS/config-llm" "el menú de IA local (llama.cpp)" \
+    "🤖 IA local" 780 420 10
+write_menu_css "$MD_WOFI_THEMES/style-llm.css" "el menú de IA local" "$C_ACCENT_MAGENTA" 10
+
+
+# ==========================================================
+# 6. SCRIPT "show_binds"
 # ==========================================================
 # Agrupa por categoría usando jq y lanza Wofi con el estilo generado arriba.
 # Consume el JSON que exporta el Keybinder de Lua (categorías incluidas).
