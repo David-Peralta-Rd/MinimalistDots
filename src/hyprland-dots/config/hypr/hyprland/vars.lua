@@ -34,5 +34,6 @@ return {
     show_binds          = MINIMALISTDOTS .. "/scripts/show_binds",
     screenrecord        = MINIMALISTDOTS .. "/scripts/screenrecord.sh",
     process_manager     = MINIMALISTDOTS .. "/scripts/process_manager.sh",
-    pomodoro            = MINIMALISTDOTS .. "/scripts/pomodoro.sh toggle"
+    pomodoro            = MINIMALISTDOTS .. "/scripts/pomodoro.sh toggle",
+    llm_toggle          = MINIMALISTDOTS .. "/scripts/llm_toggle.sh",
 }
