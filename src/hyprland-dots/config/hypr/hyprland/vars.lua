@@ -35,5 +35,5 @@ return {
     screenrecord        = MINIMALISTDOTS .. "/scripts/screenrecord.sh",
     process_manager     = MINIMALISTDOTS .. "/scripts/process_manager.sh",
     pomodoro            = MINIMALISTDOTS .. "/scripts/pomodoro.sh toggle",
-    llm_toggle          = MINIMALISTDOTS .. "/scripts/llm_toggle.sh",
+    llm_menu            = MINIMALISTDOTS .. "/scripts/llm_toggle.sh",
 }
