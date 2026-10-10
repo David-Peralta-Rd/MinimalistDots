@@ -66,6 +66,7 @@ Keybinder.media("XF86AudioMute",        "wpctl set-mute @DEFAULT_AUDIO_SINK@ tog
 -- ---------------------------------------------------------
 kb:category("Productividad")
   :exec("P", vars.pomodoro, "Pomodoro: iniciar / detener / Pomodoro: start / stop")
+  :exec("ALT+SHIFT+L", vars.llm_menu, "LLM: Start models / stop models / LLM: Start models / stop models")
 
 -- ---------------------------------------------------------
 -- NAVEGACIÓN Y ESPACIOS DE TRABAJO
