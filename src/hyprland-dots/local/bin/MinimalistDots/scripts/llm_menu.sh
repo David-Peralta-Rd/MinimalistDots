@@ -5,11 +5,11 @@
 #   Autocompletado  -> puerto 8081
 #
 # Uso:
-#   llm_menu.sh toggle   (por defecto) Atajo: si hay servidores los apaga; si hay
+#   llm-menu.sh toggle   (por defecto) Atajo: si hay servidores los apaga; si hay
 #                        un menú abierto lo cancela; si no, abre el menú.
-#   llm_menu.sh start    Abre el menú e inicia.
-#   llm_menu.sh stop     Apaga todo.
-#   llm_menu.sh status   Muestra qué está corriendo.
+#   llm-menu.sh start    Abre el menú e inicia.
+#   llm-menu.sh stop     Apaga todo.
+#   llm-menu.sh status   Muestra qué está corriendo.
 #
 # Si algo falla en silencio, mira:  ~/.cache/llm-servers/menu.log
 # ==============================================================================
@@ -31,12 +31,15 @@ SMALL_PORT=8081
 BIG_THREADS=6
 SMALL_THREADS=2
 SMALL_CTX=4096
-GPU_LAYERS=""         # vacío = que llama.cpp decida · 0 = solo CPU · 99 = todo a la Vega
+# GPU (Vega integrada). 0 = solo CPU y SIN inicializar Vulkan (recomendado: la Vega
+# comparte la RAM y suele dar "device lost"). Un número N = N capas a la Vega.
+# Vacío = que llama.cpp decida (puede fallar en APUs).
+GPU_LAYERS=0
 READY_TIMEOUT=600     # segundos máximos esperando que cargue (la 1ª vez incluye descarga)
 RAM_MARGIN_GIB=3      # margen para sistema + contexto al estimar si cabe en RAM
 
-# Tema de wofi: lo genera bk3_wofi.sh (configs/config-llm + themes/style-llm.css)
-# con la paleta del proyecto. Si no existen, wofi usa su tema por defecto.
+# Tu tema de wofi (mismo esquema que el pomodoro). Si no existen config-llm /
+# style-llm.css se usan los del pomodoro; si tampoco, wofi por defecto.
 WOFI_DIR="${WOFI_DIR:-$HOME/.local/bin/MinimalistDots/wofi}"
 # -----------------------------------------------------------------------------
 
@@ -66,7 +69,7 @@ notify() {
 # WOFI
 # ==============================================================================
 WOFI_CONF=""; WOFI_STYLE=""
-for name in llm; do
+for name in llm pomodoro; do
     [ -z "$WOFI_CONF" ]  && [ -f "$WOFI_DIR/configs/config-$name" ]    && WOFI_CONF="$WOFI_DIR/configs/config-$name"
     [ -z "$WOFI_STYLE" ] && [ -f "$WOFI_DIR/themes/style-$name.css" ]  && WOFI_STYLE="$WOFI_DIR/themes/style-$name.css"
 done
@@ -216,7 +219,11 @@ start_server() {
     local args=()
     if [[ "$ref" == hf:* ]]; then args+=(-hf "${ref#hf:}"); else args+=(-m "$ref"); fi
     args+=(--alias "$(friendly_name "$ref")" --host 127.0.0.1 --port "$port" -c "$ctx" -t "$threads")
-    [ -n "$GPU_LAYERS" ] && args+=(-ngl "$GPU_LAYERS")
+    if [ "$GPU_LAYERS" = "0" ]; then
+        args+=(-ngl 0 --device none)      # CPU pura: ni siquiera toca Vulkan
+    elif [ -n "$GPU_LAYERS" ]; then
+        args+=(-ngl "$GPU_LAYERS")
+    fi
     args+=("$@")
 
     rm -f "$pid_file"
