@@ -12,7 +12,7 @@ return {
     terminal        = "footclient",
     terminal_float  = "footclient --app-id=programing-terminal",
     fileManager     = "dolphin",
-    menu            = "wofi",
+    menu            = MINIMALISTDOTS .. "/scripts/md_launcher",
     browser         = "brave",
     mainMod         = "SUPER",
     editor          = "code",
@@ -21,7 +21,7 @@ return {
 -- =========================== --
 -- ==== Complex Execution ==== --
 -- =========================== --
-    cliphist = "cliphist list | wofi -c " .. MINIMALISTDOTS .. "/wofi/configs/config-clipboard -s " .. MINIMALISTDOTS .. "/wofi/themes/style-clipboard.css --dmenu | cliphist decode | wl-copy",
+    cliphist = "cliphist list | " .. MINIMALISTDOTS .. "/scripts/md_menu clipboard --raw | cliphist decode | wl-copy",
 
 -- ========================== --
 -- ==== Keybinds Scripts ==== --

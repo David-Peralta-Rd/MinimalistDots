@@ -13,11 +13,9 @@ DIRECTORIES=(
     "$MD_HYPR_DIR/hyprland"
     "$MD_SCRIPTS_DIR"
     "$MD_SERVICES_DIR"
-    "$MD_WOFI_CONFIGS"
-    "$MD_WOFI_THEMES"
-    "$MD_WOFI_LAUNCHER_DIR"
     "$HOME/.cache/hypr"
     "$HOME/models"          # modelos .gguf para llm_menu.sh
+    "$MD_QUICKSHELL"
 )
 
 # CREAMOS CARPETAS USANDO UN BUCLE

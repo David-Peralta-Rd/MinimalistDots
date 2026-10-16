@@ -50,8 +50,6 @@ ZSH_PKGS=(
 CORE_PKGS=(
     mpv
     git
-    eww
-    wofi
     sddm
     qt6ct
     swaync
@@ -140,7 +138,14 @@ SCREENRECORD_PKGS=(
 PROCESS_MANAGER_PKGS=(
     jq
     libnotify
-    rofi-wayland
+)
+
+# Quickshell reemplaza a wofi, eww y rofi: lanzador, menús, OSD, reloj y Pomodoro
+QUICKSHELL_PKGS=(
+    quickshell
+    qt6-declarative
+    ttf-jetbrains-mono-nerd   # fuente de Theme.qml (iconos Nerd Font)
+    noto-fonts-emoji          # emojis de los títulos de los menús
 )
 
 # bk7_99_network_optimization.sh necesita ethtool para ajustar la tarjeta de red
@@ -167,6 +172,7 @@ ALL_PKGS=(
     "${PROGRAMMING_PKGS[@]}"
     "${SCREENRECORD_PKGS[@]}"
     "${PROCESS_MANAGER_PKGS[@]}"
+    "${QUICKSHELL_PKGS[@]}"
     "${NETWORK_PKGS[@]}"
     "${LLM_PKGS[@]}"
 )

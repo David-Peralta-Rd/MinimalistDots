@@ -16,10 +16,9 @@ require("clipboard")
 require("export_keybinds")
 require("notifications")
 require("create_custom_config")
-require("wofi_theme")
 require("hypridle")
 require("wallpaper")
-require("eww_clock")
+require("desktop_clock")
 
 
 -- Custom

@@ -55,7 +55,7 @@ chmod +x "$MD_SCRIPTS_DIR"/*.sh
 # ============================================ #
 # ==== INSTALANDO PIEZAS (c4_backup_scripts) ==== #
 # ============================================ #
-# Cada pieza es independiente: zsh, gestor de procesos, wofi, tema de SDDM...
+# Cada pieza es independiente: zsh, gestor de procesos, quickshell, tema de SDDM...
 # Para agregar otra, basta con crear un bkN_*.sh nuevo en c4_backup_scripts/.
 # Si una falla se continúa con las demás y se informa al final.
 FAILED=()

@@ -11,7 +11,7 @@
 #
 # Si una ruta cambia, se cambia AQUÍ y en ningún otro lado.
 # Gracias a esto, cualquier componente puede ejecutarse solo:
-#   bash src/setup/scripts/components/c4_backup_scripts/bk3_wofi.sh
+#   bash src/setup/scripts/components/c4_backup_scripts/bk3_quickshell.sh
 # ==============================================================================
 
 if [ -n "${MD_ENV_LOADED:-}" ]; then
@@ -34,18 +34,11 @@ MD_BACKUP_ROOT="$HOME/.config/backups_dots"
 MD_BIN_DIR="$HOME/.local/bin/MinimalistDots"
 MD_SCRIPTS_DIR="$MD_BIN_DIR/scripts"
 MD_SERVICES_DIR="$MD_BIN_DIR/services"
-
-# Menús extra de Wofi (portapapeles, atajos, volumen)
-MD_WOFI_DIR="$MD_BIN_DIR/wofi"
-MD_WOFI_CONFIGS="$MD_WOFI_DIR/configs"
-MD_WOFI_THEMES="$MD_WOFI_DIR/themes"
-
-# Lanzador de aplicaciones de Wofi: lo regenera wofi_theme.lua en cada arranque de Hyprland
-MD_WOFI_LAUNCHER_DIR="$HOME/.config/wofi"
+MD_QUICKSHELL="$MD_BIN_DIR/quickshell"                                  # QML: menús, launcher, reloj, pomodoro
 
 export MD_UTILS_DIR MD_SETUP_DIR MD_SRC_DIR MD_COMPONENTS_DIR MD_DOTS_CONFIG MD_DOTS_BIN \
        MD_HYPR_DIR MD_BACKUP_ROOT MD_BIN_DIR MD_SCRIPTS_DIR MD_SERVICES_DIR \
-       MD_WOFI_DIR MD_WOFI_CONFIGS MD_WOFI_THEMES MD_WOFI_LAUNCHER_DIR
+       MD_QUICKSHELL
 
 # --- Idioma -------------------------------------------------------------------
 if [ -z "${T_BIENVENIDO:-}" ]; then

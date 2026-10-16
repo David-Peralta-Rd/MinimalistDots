@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# LLM local — menú wofi para levantar / apagar servidores llama.cpp
+# LLM local — menú (Quickshell, md_menu) para levantar / apagar servidores llama.cpp
 #   Chat / edición  -> puerto 8080
 #   Autocompletado  -> puerto 8081
 #
@@ -38,9 +38,6 @@ GPU_LAYERS=0
 READY_TIMEOUT=600     # segundos máximos esperando que cargue (la 1ª vez incluye descarga)
 RAM_MARGIN_GIB=3      # margen para sistema + contexto al estimar si cabe en RAM
 
-# Tu tema de wofi (mismo esquema que el pomodoro). Si no existen config-llm /
-# style-llm.css se usan los del pomodoro; si tampoco, wofi por defecto.
-WOFI_DIR="${WOFI_DIR:-$HOME/.local/bin/MinimalistDots/wofi}"
 # -----------------------------------------------------------------------------
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
@@ -66,20 +63,13 @@ notify() {
 
 
 # ==============================================================================
-# WOFI
+# MENÚ (md_menu, Quickshell)
 # ==============================================================================
-WOFI_CONF=""; WOFI_STYLE=""
-for name in llm pomodoro; do
-    [ -z "$WOFI_CONF" ]  && [ -f "$WOFI_DIR/configs/config-$name" ]    && WOFI_CONF="$WOFI_DIR/configs/config-$name"
-    [ -z "$WOFI_STYLE" ] && [ -f "$WOFI_DIR/themes/style-$name.css" ]  && WOFI_STYLE="$WOFI_DIR/themes/style-$name.css"
-done
+MD_MENU="$(dirname "$SELF")/md_menu"
 
 # menu <titulo>   (las opciones llegan por stdin; imprime la línea elegida)
 menu() {
-    local args=(--dmenu --insensitive --cache-file /dev/null --prompt "$1")
-    [ -n "$WOFI_CONF" ]  && args+=(-c "$WOFI_CONF")
-    [ -n "$WOFI_STYLE" ] && args+=(-s "$WOFI_STYLE")
-    wofi "${args[@]}" || true
+    "$MD_MENU" llm --prompt "$1" || true
 }
 
 
@@ -257,7 +247,7 @@ wait_ready() {
 # ==============================================================================
 check_deps() {
     local missing=()
-    for cmd in llama-server wofi curl; do
+    for cmd in llama-server qs curl; do
         command -v "$cmd" > /dev/null 2>&1 || missing+=("$cmd")
     done
     if [ "${#missing[@]}" -gt 0 ]; then
@@ -385,7 +375,7 @@ start() {
 toggle() {
     if [ -f "$PROMPT_FILE" ] && kill -0 "$(cat "$PROMPT_FILE" 2> /dev/null)" 2> /dev/null; then
         kill "$(cat "$PROMPT_FILE")" 2> /dev/null || true
-        pkill -x wofi 2> /dev/null || true
+        "$MD_MENU" --close
         rm -f "$PROMPT_FILE"
         return 0
     fi

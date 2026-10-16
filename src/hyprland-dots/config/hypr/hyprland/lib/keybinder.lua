@@ -69,7 +69,7 @@ function Keybinder.media(key, cmd, description, repeating)
     hl.bind(key, hl.dsp.exec_cmd(cmd), { locked = true, repeating = repeating or false })
 end
 
--- Exporta el JSON estructurado por categorías para que Rofi/Wofi lo consuma fácil
+-- Exporta el JSON estructurado por categorías para que los menús (md_menu) lo consuman fácil
 function Keybinder.export_json(path)
     path = path or (os.getenv("HOME") .. "/.cache/hypr/keybinds.json")
 
