@@ -7,7 +7,9 @@ Este documento define la hoja de ruta de la configuración. Cada decisión se ri
 ## 🟢 1. En Desarrollo / Próximo (Lo que SÍ se va a hacer)
 *Características esenciales para un entorno de trabajo funcional, rápido y estético.*
 
-- [-] **Menus (Migración)**: Reemplazar por completo todos los menús e interfaces antiguas de `wofi` y `eww` por componentes nativos y ultra-ligeros usando `quickshell`.
+- [✅] **Menus (Migración)** *(lanzador, portapapeles, atajos, fondos, procesos, OSD, reloj y Pomodoro ya en Quickshell; falta probar en tu sesión y retirar `~/.config/eww` y `~/.config/wofi` antiguos)*:: Reemplazar por completo todos los menús e interfaces antiguas de `wofi` y `eww` por componentes nativos y ultra-ligeros usando `quickshell`.
+
+- [-] **Nuevas notificaciones con estilo bordeado**: Integración de notificaciones ligeras a través de la terminal o demonios ultra-ligeros (`mako` o `dunst`). *Estado: Evaluando si rompe la estética limpia.*
 
 ---
 
@@ -16,7 +18,6 @@ Este documento define la hoja de ruta de la configuración. Cada decisión se ri
 
 - [ ] **Feat-01**: Optimización e indicadores específicos para Laptops (Gestión de batería, brillo de pantalla, estados de suspensión eficientes). *Estado: Postergado para mantener el desarrollo centrado en el core del sistema de escritorio.*
 - [ ] **Feat-02**: Script de cambio automático entre Modo Claro y Oscuro según la hora. *Estado: Postergado para evitar demonios (daemons) en segundo plano.*
-- [ ] **Feat-03**: Integración de notificaciones ligeras a través de la terminal o demonios ultra-ligeros (`mako` o `dunst`). *Estado: Evaluando si rompe la estética limpia.*
 
 ---
 
