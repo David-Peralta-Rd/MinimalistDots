@@ -63,7 +63,6 @@ CORE_PKGS=(
     reflector
     fastfetch
     hyprpolkitagent
-    partitionmanager
     xdg-desktop-portal-hyprland
 )
 
@@ -158,6 +157,21 @@ NETWORK_PKGS=(
 LLM_PKGS=(
     llama-cpp
     ggml-vulkan
+)
+
+GPARTED_PKGS=(
+    mtools
+    gparted
+    ntfs-3g
+    xfsprogs
+    udftools
+    jfsutils
+    dosfstools
+    exfatprogs
+    f2fs-tools
+    btrfs-progs
+    nilfs-utils
+    bcachefs-tools
 )
 
 
