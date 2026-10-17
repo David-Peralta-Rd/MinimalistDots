@@ -63,6 +63,7 @@ CORE_PKGS=(
     reflector
     fastfetch
     hyprpolkitagent
+    partitionmanager
     xdg-desktop-portal-hyprland
 )
 
