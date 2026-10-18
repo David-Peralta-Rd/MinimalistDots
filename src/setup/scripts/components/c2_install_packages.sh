@@ -148,6 +148,7 @@ QUICKSHELL_PKGS=(
     libnotify                 # notify-send (lo usan los scripts y las apps)
     wl-clipboard              # wl-copy: copiar desde el historial de notificaciones
     jq                        # lee el historial de notificaciones
+    mpg123                    # reproduce el sonido de aviso del Pomodoro (la conversión a mp3 usa el ffmpeg de arriba)
 )
 
 # bk7_99_network_optimization.sh necesita ethtool para ajustar la tarjeta de red

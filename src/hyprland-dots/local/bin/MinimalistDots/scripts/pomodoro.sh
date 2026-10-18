@@ -10,6 +10,10 @@
 #   pomodoro.sh stop       Apaga todo
 #   pomodoro.sh pause      Pausa / reanuda
 #   pomodoro.sh restart    Reinicia la fase actual (concentración o descanso)
+#   pomodoro.sh sound      Reproduce el sonido de aviso (lo usa el widget; sirve para probarlo)
+#
+# Al terminar la concentración el widget se agranda y se centra en pantalla para que
+# no se te pase el descanso, y suena el aviso (también al volver a concentración).
 # ==============================================================================
 set -euo pipefail
 
@@ -18,6 +22,19 @@ MENU="$SCRIPT_DIR/md_menu"
 QML="$HOME/.local/bin/MinimalistDots/quickshell/pomodoro.qml"
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/pomodoro-$UID"
 PROMPT_FILE="$STATE_DIR/prompt.pid"     # proceso que está mostrando las preguntas
+SOUND_PID_FILE="$STATE_DIR/sound.pid"   # reproductor activo (para cortarlo al detener)
+
+# ---------- SONIDO DE AVISO (se cambia solo aquí, no hay menú) ----------------
+# SOUND_URL    enlace directo a un audio (mp3, ogg, wav...). Se descarga UNA vez con curl a la
+#              caché; si no es mp3 se convierte a mp3 con ffmpeg. Si cambias la URL se vuelve
+#              a descargar solo.
+# SOUND_FILE   ruta a un audio tuyo; si existe, tiene prioridad sobre la URL.
+# Dejar ambos vacíos = sin sonido.
+SOUND_URL="https://upload.wikimedia.org/wikipedia/commons/3/36/Church_bells_-_Leverkusen,_2007.oga"
+SOUND_FILE=""
+SOUND_VOLUME=70            # 0-100
+SOUND_MAX_SECONDS=10       # el proceso de sonido se cierra solo al acabar o a estos segundos
+SOUND_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/MinimalistDots/pomodoro"
 
 mkdir -p "$STATE_DIR"
 
@@ -44,6 +61,108 @@ ask() {
     return 1
 }
 
+# ==============================================================================
+# SONIDO
+# ==============================================================================
+sound_log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >> "$SOUND_CACHE/sound.log" 2> /dev/null || true; }
+
+# ¿Es mp3? Por cabecera: "ID3" o sincronía MPEG (FF Ex / FF Fx)
+is_mp3() {
+    local head
+    head="$(head -c 3 "$1" 2> /dev/null | od -An -tx1 | tr -d ' \n')"
+    [[ "$head" == 494433* ]] || [[ "$head" =~ ^ff[ef] ]]
+}
+
+# Imprime la ruta del audio listo para reproducir (lo descarga/convierte si hace falta).
+ensure_sound() {
+    mkdir -p "$SOUND_CACHE"
+
+    if [ -n "$SOUND_FILE" ] && [ -f "$SOUND_FILE" ]; then
+        echo "$SOUND_FILE"
+        return 0
+    fi
+    [ -n "$SOUND_URL" ] || return 1
+
+    local key out raw tmp ext
+    key="$(printf '%s' "$SOUND_URL" | md5sum | cut -c1-8)"
+    out="$SOUND_CACHE/alarm-$key.mp3"
+    tmp="$SOUND_CACHE/alarm-$key.download"
+
+    if [ -s "$out" ]; then echo "$out"; return 0; fi
+    for raw in "$SOUND_CACHE/alarm-$key".raw.*; do
+        if [ -s "$raw" ]; then echo "$raw"; return 0; fi
+    done
+
+    if ! curl -fL --retry 3 --connect-timeout 15 --max-time 90 -sS \
+        -A "MinimalistDots-pomodoro/1.0" -o "$tmp" "$SOUND_URL" 2>> "$SOUND_CACHE/sound.log"; then
+        sound_log "no se pudo descargar $SOUND_URL"
+        rm -f "$tmp"
+        return 1
+    fi
+
+    if is_mp3 "$tmp"; then
+        mv -f "$tmp" "$out"
+    elif command -v ffmpeg > /dev/null 2>&1; then
+        # a mp3, recortado: no hace falta guardar más de lo que se va a reproducir
+        if ffmpeg -nostdin -loglevel error -y -i "$tmp" -vn -t "$((SOUND_MAX_SECONDS + 2))" \
+            -codec:a libmp3lame -q:a 4 "$out" 2>> "$SOUND_CACHE/sound.log"; then
+            rm -f "$tmp"
+        else
+            sound_log "ffmpeg no pudo convertir $SOUND_URL (¿es un audio?)"
+            rm -f "$tmp" "$out"
+            return 1
+        fi
+    else
+        # sin ffmpeg: se guarda tal cual y lo reproduce mpv/ffplay/vlc si existen
+        ext="${SOUND_URL##*.}"; ext="${ext%%\?*}"
+        [[ "$ext" =~ ^[A-Za-z0-9]{2,4}$ ]] || ext="audio"
+        out="$SOUND_CACHE/alarm-$key.raw.$ext"
+        sound_log "el audio no es mp3 y falta ffmpeg para convertirlo; se usa tal cual"
+        mv -f "$tmp" "$out"
+    fi
+    echo "$out"
+}
+
+# Rellena el array PLAYER con el comando según lo que haya instalado
+PLAYER=()
+build_player() {
+    local file="$1" vol="$SOUND_VOLUME"
+    PLAYER=()
+    if [[ "$file" == *.mp3 ]] && command -v mpg123 > /dev/null 2>&1; then
+        PLAYER=(mpg123 -q -f "$((32768 * vol / 100))" "$file")      # 32768 = 100 %
+    elif command -v mpv > /dev/null 2>&1; then
+        PLAYER=(mpv --no-video --really-quiet --no-terminal --volume="$vol" "$file")
+    elif command -v ffplay > /dev/null 2>&1; then
+        PLAYER=(ffplay -nodisp -autoexit -loglevel quiet -volume "$vol" "$file")
+    elif command -v cvlc > /dev/null 2>&1; then
+        PLAYER=(cvlc --play-and-exit --quiet "$file")
+    else
+        return 1
+    fi
+}
+
+stop_sound() {
+    local pid
+    pid="$(cat "$SOUND_PID_FILE" 2> /dev/null || true)"
+    if [ -n "$pid" ]; then kill "$pid" 2> /dev/null || true; fi
+    rm -f "$SOUND_PID_FILE"
+}
+
+# Reproduce el aviso y termina cuando acaba el audio (o a los SOUND_MAX_SECONDS).
+play_sound() {
+    local file pid
+    file="$(ensure_sound)" || return 0
+    build_player "$file" || { sound_log "no hay reproductor: instala mpg123"; return 0; }
+
+    stop_sound                                  # nunca dos avisos a la vez
+    timeout "$SOUND_MAX_SECONDS" "${PLAYER[@]}" > /dev/null 2>&1 &
+    pid=$!
+    echo "$pid" > "$SOUND_PID_FILE"
+    wait "$pid" 2> /dev/null || true
+    if [ "$(cat "$SOUND_PID_FILE" 2> /dev/null || true)" = "$pid" ]; then rm -f "$SOUND_PID_FILE"; fi
+}
+
+
 start() {
     if is_running; then
         notify "Pomodoro" "Ya está activo."
@@ -59,11 +178,14 @@ start() {
     sessions="$(ask "Sesiones" "4 sesiones" "1 sesión" "2 sesiones" "3 sesiones" "5 sesiones" "6 sesiones" "8 sesiones")" || return 0
 
     rm -f "$PROMPT_FILE"
+    (ensure_sound > /dev/null 2>&1 &)           # deja el sonido en caché antes del primer aviso
     MD_POMO_FOCUS="$focus" MD_POMO_BREAK="$rest" MD_POMO_SESSIONS="$sessions" \
+        MD_POMO_SCRIPT="$SCRIPT_DIR/pomodoro.sh" \
         setsid -f qs -p "$QML" > /dev/null 2>&1
 }
 
 stop() {
+    stop_sound
     if is_running; then
         ipc stop
         sleep 0.2
@@ -94,8 +216,9 @@ case "${1:-toggle}" in
     stop)     stop ;;
     pause)    is_running && ipc pause || true ;;
     restart)  is_running && ipc restart || true ;;
+    sound)    play_sound ;;
     *)
-        echo "Uso: $(basename "$0") {toggle|start|stop|pause|restart}" >&2
+        echo "Uso: $(basename "$0") {toggle|start|stop|pause|restart|sound}" >&2
         exit 1
         ;;
 esac
