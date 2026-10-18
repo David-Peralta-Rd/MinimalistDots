@@ -36,4 +36,7 @@ return {
     process_manager     = MINIMALISTDOTS .. "/scripts/process_manager.sh",
     pomodoro            = MINIMALISTDOTS .. "/scripts/pomodoro.sh toggle",
     llm_menu            = MINIMALISTDOTS .. "/scripts/llm_menu.sh toggle",
+    notifications       = MINIMALISTDOTS .. "/scripts/notifications_menu.sh history",
+    notifications_dnd   = MINIMALISTDOTS .. "/scripts/notifications_menu.sh dnd",
+    notifications_close = MINIMALISTDOTS .. "/scripts/notifications_menu.sh dismiss",
 }
