@@ -11,8 +11,8 @@ El objetivo es levantar un escritorio Wayland limpio y coherente —Hyprland, Qu
 - **Backup automático y dinámico**: antes de instalar, el script detecta *todo* lo que haya en `src/hyprland-dots/config/` (carpetas como hypr o foot, y archivos sueltos como `dolphinrc`), hace una copia de tu configuración actual con timestamp en `~/.config/backups_dots/<app>-backups/`, y luego despliega la nueva. Pide una única confirmación antes de tocar nada.
 - **Configuración de Hyprland en Lua**, modular y organizada en `general`, `animations`, `env`, `monitors`, `windowrules` y `keybinds`, con overrides personalizados en `~/.config/hypr/custom/` que **nunca se pierden** al reinstalar (el instalador los restaura desde el backup y se cargan automáticamente después de la config base).
 - **Paleta de colores unificada** ("gris frío y colores muted") definida en un único archivo (`src/setup/scripts/utils/u2_palette.sh`) y propagada en tiempo de instalación a Hyprland (`colors.lua`) y a Quickshell (`Theme.qml`). Los valores de Foot coinciden con la paleta y están fijos en `foot.ini`.
-- **Servicios de Hyprland en Lua** (`~/.local/bin/MinimalistDots/services/`): Polkit, entorno D-Bus, `footclient`, portapapeles (`cliphist`), notificaciones (SwayNC), `hypridle`, fondo de pantalla persistente, reloj de escritorio (Quickshell), exportación de atajos y generación de configs personalizados — todos activables/desactivables comentando una línea en `services/init.lua`.
-- **Interfaz 100 % Quickshell** (`~/.local/bin/MinimalistDots/quickshell/`, sin wofi, eww ni rofi): lanzador de aplicaciones (`SUPER+A`, con iconos y búsqueda por relevancia), portapapeles, visor de atajos, selector de fondos con miniaturas, gestor de procesos, OSD de volumen, reloj de escritorio y Pomodoro. Todos comparten `MdMenu.qml` y los colores de `Theme.qml`, que se genera desde la paleta.
+- **Servicios de Hyprland en Lua** (`~/.local/bin/MinimalistDots/services/`): Polkit, entorno D-Bus, `footclient`, portapapeles (`cliphist`), notificaciones (Quickshell), `hypridle`, fondo de pantalla persistente, reloj de escritorio (Quickshell), exportación de atajos y generación de configs personalizados — todos activables/desactivables comentando una línea en `services/init.lua`.
+- **Interfaz 100 % Quickshell** (`~/.local/bin/MinimalistDots/quickshell/`, sin wofi, eww ni rofi): lanzador de aplicaciones (`SUPER+A`, con iconos y búsqueda por relevancia), portapapeles, visor de atajos, selector de fondos con miniaturas, gestor de procesos, OSD de volumen, reloj de escritorio, Pomodoro y notificaciones con historial. Todos comparten `MdMenu.qml` y los colores de `Theme.qml`, que se genera desde la paleta.
 - **Scripts de usuario** (`~/.local/bin/MinimalistDots/scripts/`) para capturas de pantalla, grabación de pantalla, selector de fondo de pantalla, control de volumen, gestor de procesos y un **Pomodoro** minimalista (`SUPER+P`): pregunta concentración, descanso y sesiones y muestra un widget compacto abajo al centro (minutos restantes, sesión y una barra fina de progreso), semitransparente hasta que pasas el mouse por encima. El temporizador vive dentro del propio widget; botones en columna a la derecha (pausa/reanudar, reiniciar fase, detener), y también funcionan el clic sobre el número (pausa), clic derecho (reiniciar) y clic medio (detener). Pulsa `SUPER+P` otra vez para detenerlo.
 - **IA local con llama.cpp** (`SUPER+ALT+SHIFT+L`, `scripts/llm_menu.sh`): menú de Quickshell para elegir el modelo de chat (puerto 8080) y el de autocompletado (puerto 8081), con aviso si no caben en RAM y opción de repetir la última selección. Busca `.gguf` en `~/models`, `~/.cache/llama.cpp` y `~/.cache/huggingface/hub`, y ofrece descargar modelos recomendados (se editan en `PRESETS`). Pulsa el atajo otra vez para apagar los servidores y liberar la RAM. Log: `~/.cache/llm-servers/menu.log`.
 - **Zsh listo para usar**: autosugerencias, autocompletado, resaltado de sintaxis y un set de alias (sistema, pacman/paru, git, docker) configurados automáticamente sobre el paquete oficial de Arch (sin clonar repos manualmente).
@@ -141,3 +141,19 @@ Este proyecto está bajo la licencia [MIT](LICENSE). Eres libre de usar, copiar,
 - **Nuevo menú tipo dmenu**: añade una línea `write_menu_qml "nombre" "Título" ancho alto "$C_ACCENT_X" radio` en `bk3_quickshell.sh` y úsalo con `lista | md_menu nombre --prompt "Título"` (`--raw` si las líneas llevan TAB, como cliphist).
 - **Widgets propios** (reloj, Pomodoro...): crea un `.qml` en `src/hyprland-dots/local/bin/MinimalistDots/quickshell/`; el instalador copia todos los `.qml` de esa carpeta.
 - **Probar sin reinstalar**: `qs -p ~/.local/bin/MinimalistDots/quickshell/launcher.qml` (los errores salen en la terminal).
+
+## Notificaciones (Quickshell)
+
+`quickshell/notifd.qml` es el servidor de notificaciones (reemplaza a SwayNC): tarjetas minimalistas arriba a la derecha con borde según urgencia (rojo = crítica), barra de progreso (`notify-send -h int:value:40`), botones de acción y cierre con clic. Todas se guardan en `~/.local/state/MinimalistDots/notifications.jsonl`.
+
+| Atajo | Acción |
+| --- | --- |
+| `SUPER+N` | Historial: elige una entrada y se copia (resumen + cuerpo) al portapapeles |
+| `SUPER+SHIFT+N` | No molestar (se guardan en el historial sin mostrarse; las críticas sí salen) |
+| `SUPER+CTRL+N` | Cierra las notificaciones visibles |
+
+Solo puede haber un servidor de notificaciones: desinstala `swaync` (`paru -Rns swaync`) y borra `~/.config/swaync`. Ajustes (ancho, duración, máximo en pantalla) al inicio de `notifd.qml`.
+
+## IA local (`llm_menu.sh`)
+
+`ALT+SHIFT+L` elige modelos y levanta `llama-server`. Los modelos que no tengas se **descargan con aria2** (16 conexiones en paralelo; si no está instalado usa curl con una sola), de forma reanudable, con barra de progreso y comprobación de espacio a `~/models`. Si algo falla: `llm_menu.sh doctor` revisa llama-server, red, Hugging Face, disco y RAM; los logs están en `~/.cache/llm-servers/`.
