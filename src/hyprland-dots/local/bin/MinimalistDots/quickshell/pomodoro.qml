@@ -65,19 +65,20 @@ ShellRoot {
     function advance() {
         playSound();
         if (phase === "focus") {
-            if (session >= total) {
-                notify("Pomodoro completado 🎉", "Terminaste las " + total + " sesiones.");
-                Qt.quit();
-                return;
-            }
+            // después de CADA concentración hay descanso, también tras la última sesión
             phase = "break";
             collapsed = false;
             notify("Descanso", "Sesión " + session + " de " + total + " terminada.");
+        } else if (session >= total) {
+            notify("Pomodoro completado 🎉", "Terminaste las " + total + " sesiones.");
+            Qt.quit();
+            return;
         } else {
             session += 1;
             phase = "focus";
             notify("Sesión " + session + " de " + total, "A concentrarse.");
         }
+        console.log("pomodoro: fase=" + phase + " sesion=" + session + "/" + total + " descansoGrande=" + bigBreak);
         startPhase();
     }
 
@@ -295,6 +296,7 @@ ShellRoot {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Sesión " + root.session + " de " + root.total + " completada"
+                          + (root.session >= root.total ? " · último descanso" : "")
                     color: theme.subtext
                     font.family: theme.font
                     font.pixelSize: 14

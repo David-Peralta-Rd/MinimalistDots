@@ -11,6 +11,9 @@
 #   pomodoro.sh pause      Pausa / reanuda
 #   pomodoro.sh restart    Reinicia la fase actual (concentración o descanso)
 #   pomodoro.sh sound      Reproduce el sonido de aviso (lo usa el widget; sirve para probarlo)
+#   pomodoro.sh test       Prueba rápida: 6 s de concentración y 20 s de descanso (2 sesiones)
+#
+# Errores del widget (QML): ~/.cache/MinimalistDots/pomodoro/qs.log
 #
 # Al terminar la concentración el widget se agranda y se centra en pantalla para que
 # no se te pase el descanso, y suena el aviso (también al volver a concentración).
@@ -163,6 +166,15 @@ play_sound() {
 }
 
 
+# launch <concentración> <descanso> <sesiones> [segundos por "minuto"]
+launch() {
+    mkdir -p "$SOUND_CACHE"
+    : > "$SOUND_CACHE/qs.log"                   # aquí caen los errores de QML (antes se perdían)
+    MD_POMO_FOCUS="$1" MD_POMO_BREAK="$2" MD_POMO_SESSIONS="$3" MD_POMO_UNIT="${4:-60}" \
+        MD_POMO_SCRIPT="$SCRIPT_DIR/pomodoro.sh" \
+        setsid -f qs -p "$QML" >> "$SOUND_CACHE/qs.log" 2>&1
+}
+
 start() {
     if is_running; then
         notify "Pomodoro" "Ya está activo."
@@ -179,9 +191,7 @@ start() {
 
     rm -f "$PROMPT_FILE"
     (ensure_sound > /dev/null 2>&1 &)           # deja el sonido en caché antes del primer aviso
-    MD_POMO_FOCUS="$focus" MD_POMO_BREAK="$rest" MD_POMO_SESSIONS="$sessions" \
-        MD_POMO_SCRIPT="$SCRIPT_DIR/pomodoro.sh" \
-        setsid -f qs -p "$QML" > /dev/null 2>&1
+    launch "$focus" "$rest" "$sessions"
 }
 
 stop() {
@@ -191,6 +201,13 @@ stop() {
         sleep 0.2
         is_running && pkill -f "qs .*$QML" 2> /dev/null || true
     fi
+}
+
+# Prueba rápida para ver la tarjeta de descanso sin esperar 25 minutos
+run_test() {
+    stop
+    notify "Pomodoro (prueba)" "6 s de concentración y luego 20 s de descanso."
+    launch 6 20 2 1
 }
 
 # Mismo atajo: si hay preguntas abiertas las cancela; si está activo lo apaga; si no, lo inicia
@@ -217,8 +234,9 @@ case "${1:-toggle}" in
     pause)    is_running && ipc pause || true ;;
     restart)  is_running && ipc restart || true ;;
     sound)    play_sound ;;
+    test)     run_test ;;
     *)
-        echo "Uso: $(basename "$0") {toggle|start|stop|pause|restart|sound}" >&2
+        echo "Uso: $(basename "$0") {toggle|start|stop|pause|restart|sound|test}" >&2
         exit 1
         ;;
 esac
