@@ -52,7 +52,6 @@ CORE_PKGS=(
     git
     sddm
     qt6ct
-    swaync
     flatpak
     udisks2
     cliphist
@@ -146,6 +145,9 @@ QUICKSHELL_PKGS=(
     qt6-declarative
     ttf-jetbrains-mono-nerd   # fuente de Theme.qml (iconos Nerd Font)
     noto-fonts-emoji          # emojis de los títulos de los menús
+    libnotify                 # notify-send (lo usan los scripts y las apps)
+    wl-clipboard              # wl-copy: copiar desde el historial de notificaciones
+    jq                        # lee el historial de notificaciones
 )
 
 # bk7_99_network_optimization.sh necesita ethtool para ajustar la tarjeta de red
@@ -154,16 +156,31 @@ NETWORK_PKGS=(
 )
 
 # IA local (llm_menu.sh): llama-cpp trae llama-server; ggml-vulkan es el backend de GPU (AMD/Intel/NVIDIA vía Vulkan)
+# aria2 (varias conexiones) o, si falta, curl: llm_menu.sh descarga los modelos desde Hugging Face
 LLM_PKGS=(
     llama-cpp
     ggml-vulkan
+    curl
+    ca-certificates
+    aria2                     # descarga de modelos con varias conexiones (mucho más rápido)
 )
 
 PARTITIONMANAGER_PKGS=(
-    partitionmanager
+    parted
+    mtools
     kpmcore
+    ntfs-3g
+    jfsutils
+    xfsprogs
+    e2fsprogs
+    dosfstools
+    f2fs-tools
+    exfatprogs
+    util-linux
+    btrfs-progs
+    partitionmanager
+    polkit-kde-agent
 )
-
 
 # Para agregar una categoría nueva: declárala arriba y agrégala aquí.
 ALL_PKGS=(

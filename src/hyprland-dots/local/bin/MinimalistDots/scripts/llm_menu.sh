@@ -11,20 +11,27 @@
 #   llm-menu.sh stop     Apaga todo.
 #   llm-menu.sh status   Muestra qué está corriendo.
 #
-# Si algo falla en silencio, mira:  ~/.cache/llm-servers/menu.log
+#   llm-menu.sh doctor   Diagnóstico: llama-server, red, Hugging Face, disco y RAM.
+#
+# Los modelos que no tengas se descargan con curl (reanudable) a ~/models.
+# Si algo falla, mira:  ~/.cache/llm-servers/menu.log  y  download.log
 # ==============================================================================
 set -uo pipefail
 
 # ---------- Configuración ----------------------------------------------------
-# Carpetas donde buscar archivos .gguf ya descargados
-MODEL_DIRS=("$HOME/.cache/llama.cpp" "$HOME/.cache/huggingface/hub" "$HOME/models")
+# Dónde se guardan los modelos descargados y dónde buscar archivos .gguf
+DOWNLOAD_DIR="$HOME/models"
+MODEL_DIRS=("$DOWNLOAD_DIR" "$HOME/.cache/llama.cpp" "$HOME/.cache/huggingface/hub")
 
-# Modelos que llama-server puede descargar solo la primera vez (-hf).
-# Formato:  "Etiqueta|repo[:cuantización]|tamaño aprox. en GB"
+# Modelos que el script puede descargar solo (archivo exacto de Hugging Face).
+# Formato:  "Etiqueta|repo|archivo.gguf|tamaño aprox. en GB"
 PRESETS=(
-    "Qwen3-Coder 30B-A3B Q4_K_M|unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M|18.6"
-    "Qwen2.5-Coder 1.5B Q8_0 (autocompletado)|ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF|1.7"
+    "Qwen3-Coder 30B-A3B Q4_K_M|unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF|Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf|18.6"
+    "Qwen2.5-Coder 1.5B Q8_0 (autocompletado)|ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF|qwen2.5-coder-1.5b-q8_0.gguf|1.7"
 )
+HF_BASE="${HF_BASE:-https://huggingface.co}"   # puedes apuntarlo a un mirror
+# Conexiones en paralelo al descargar (máx. 16). Requiere aria2; sin él se usa curl (1 conexión).
+DL_CONNECTIONS=16
 
 BIG_PORT=8080
 SMALL_PORT=8081
@@ -35,7 +42,7 @@ SMALL_CTX=4096
 # comparte la RAM y suele dar "device lost"). Un número N = N capas a la Vega.
 # Vacío = que llama.cpp decida (puede fallar en APUs).
 GPU_LAYERS=0
-READY_TIMEOUT=600     # segundos máximos esperando que cargue (la 1ª vez incluye descarga)
+READY_TIMEOUT=600     # segundos máximos esperando que el modelo cargue en memoria
 RAM_MARGIN_GIB=3      # margen para sistema + contexto al estimar si cabe en RAM
 
 # -----------------------------------------------------------------------------
@@ -47,11 +54,15 @@ CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/llm-toggle"
 BIG_PID_FILE="$STATE_DIR/big.pid"
 SMALL_PID_FILE="$STATE_DIR/small.pid"
 PROMPT_FILE="$STATE_DIR/prompt.pid"   # proceso que está mostrando los menús
+DL_FILE="$STATE_DIR/download.pid"     # proceso que está descargando un modelo
+DL_LOG="$LOG_DIR/download.log"
 LAST_FILE="$CONF_DIR/last"
 MENU_LOG="$LOG_DIR/menu.log"
 NONE_LABEL="— Ninguno —"
 
 mkdir -p "$STATE_DIR" "$LOG_DIR" "$CONF_DIR"
+CURL_PID=""
+PROGRESS_ID=""
 
 log() { printf '%s %s\n' "$(date +%T)" "$*" >> "$MENU_LOG"; }
 
@@ -99,25 +110,32 @@ gib() { awk -v b="$1" 'BEGIN { printf "%.1f", b / 1073741824 }'; }
 
 mem_available_bytes() { awk '/^MemAvailable:/ { print $2 * 1024 }' /proc/meminfo; }
 
-# Una "ref" es una ruta a un .gguf  o  "hf:repo[:cuant]" (se descarga con -hf).
+# Una "ref" es una ruta a un .gguf  o  "dl:repo/archivo.gguf" (se descarga con curl).
 friendly_name() {
     local ref="$1" n
-    if [[ "$ref" == hf:* ]]; then
-        n="${ref#hf:}"; n="${n##*/}"; n="${n%%:*}"; n="${n%-GGUF}"
-    else
-        n="$(basename "$ref" .gguf)"; n="${n##*-GGUF_}"
-    fi
+    n="$(basename "$ref" .gguf)"
+    n="${n##*-GGUF_}"
     echo "$n"
 }
 
+dl_file() { local x="${1#dl:}"; echo "${x##*/}"; }
+dl_repo() { local x="${1#dl:}"; echo "${x%/*}"; }
+dl_path() { echo "$DOWNLOAD_DIR/$(dl_file "$1")"; }
+
+preset_bytes() {
+    local preset label repo file size
+    for preset in "${PRESETS[@]}"; do
+        IFS='|' read -r label repo file size <<< "$preset"
+        [ "dl:$repo/$file" = "$1" ] && { awk -v g="$size" 'BEGIN { printf "%d", g * 1073741824 }'; return; }
+    done
+    echo 0
+}
+
 ref_bytes() {
-    local ref="$1" prefix preset size
-    if [[ "$ref" == hf:* ]]; then
-        for preset in "${PRESETS[@]}"; do
-            IFS='|' read -r _ repo size <<< "$preset"
-            [ "hf:$repo" = "$ref" ] && { awk -v g="$size" 'BEGIN { printf "%d", g * 1073741824 }'; return; }
-        done
-        echo 0; return
+    local ref="$1" prefix
+    if [[ "$ref" == dl:* ]]; then
+        if [ -f "$(dl_path "$ref")" ]; then stat -L -c %s "$(dl_path "$ref")"; else preset_bytes "$ref"; fi
+        return
     fi
     if [[ "$ref" =~ ^(.*)-00001-of-[0-9]{5}\.gguf$ ]]; then
         prefix="${BASH_REMATCH[1]}"
@@ -142,8 +160,8 @@ add_entry() {
 }
 
 scan_models() {
-    local dir file base preset label repo size real
-    declare -A seen=()
+    local dir file base preset label repo gfile size real part extra
+    declare -A seen=() have_file=()
 
     for dir in "${MODEL_DIRS[@]}"; do
         [ -d "$dir" ] || continue
@@ -158,13 +176,18 @@ scan_models() {
             real="$(readlink -f "$file")"
             [ -n "${seen["$real"]+x}" ] && continue
             seen["$real"]=1
+            have_file["$base"]=1
             add_entry "$(friendly_name "$file")  [$(gib "$(ref_bytes "$file")") GB]" "$file"
         done < <(find -L "$dir" -maxdepth 6 -type f -name '*.gguf' -print0 2> /dev/null | sort -z)
     done
 
     for preset in "${PRESETS[@]}"; do
-        IFS='|' read -r label repo size <<< "$preset"
-        add_entry "⬇ $label  [~$size GB, se descarga]" "hf:$repo"
+        IFS='|' read -r label repo gfile size <<< "$preset"
+        [ -n "${have_file["$gfile"]+x}" ] && continue     # ya está descargado: aparece arriba
+        extra="se descarga"
+        part="$DOWNLOAD_DIR/$gfile.part"
+        [ -f "$part" ] && extra="descarga a medias: $(gib "$(stat -c %s "$part")") GB"
+        add_entry "⬇ $label  [~$size GB, $extra]" "dl:$repo/$gfile"
     done
 }
 
@@ -200,17 +223,18 @@ label_or_none() { if [ "$1" = "-" ]; then echo "$2"; else friendly_name "$1"; fi
 # ==============================================================================
 # ARRANQUE
 # ==============================================================================
-# start_server <pid_file> <ref> <puerto> <ctx> <hilos> <log> [args extra...]
+# start_server <pid_file> <ruta .gguf> <puerto> <ctx> <hilos> <log> [args extra...]
 # El PID se escribe desde el propio proceso (bash -c + exec), así siempre es el
 # de llama-server aunque setsid se bifurque.
 start_server() {
     local pid_file="$1" ref="$2" port="$3" ctx="$4" threads="$5" log="$6"
     shift 6
-    local args=()
-    if [[ "$ref" == hf:* ]]; then args+=(-hf "${ref#hf:}"); else args+=(-m "$ref"); fi
+    local args=(-m "$ref")
     args+=(--alias "$(friendly_name "$ref")" --host 127.0.0.1 --port "$port" -c "$ctx" -t "$threads")
     if [ "$GPU_LAYERS" = "0" ]; then
-        args+=(-ngl 0 --device none)      # CPU pura: ni siquiera toca Vulkan
+        args+=(-ngl 0)                    # CPU pura
+        # ni siquiera toca Vulkan (solo si esta versión de llama-server conoce --device)
+        supports_device_flag && args+=(--device none)
     elif [ -n "$GPU_LAYERS" ]; then
         args+=(-ngl "$GPU_LAYERS")
     fi
@@ -243,6 +267,134 @@ wait_ready() {
 
 
 # ==============================================================================
+# DESCARGA DE MODELOS (curl, reanudable)
+# No usamos `llama-server -hf`: depende de cómo se compiló llama.cpp (libcurl/OpenSSL),
+# falla en silencio según la red y no avisa del espacio en disco.
+# ==============================================================================
+supports_device_flag() {
+    if [ -z "${HAS_DEVICE_FLAG:-}" ]; then
+        if llama-server --help 2>&1 | grep -q -- '--device'; then HAS_DEVICE_FLAG=1; else HAS_DEVICE_FLAG=0; fi
+    fi
+    [ "$HAS_DEVICE_FLAG" = "1" ]
+}
+
+# Notificación de progreso: la va reemplazando (-r) y muestra una barra (hint "value")
+progress_notify() {
+    local id; local -a rep=()
+    [ -n "$PROGRESS_ID" ] && rep=(-r "$PROGRESS_ID")
+    id="$(notify-send -a "LLM local" -t 4000 -p ${rep[@]+"${rep[@]}"} -h "int:value:$3" "$1" "$2" 2> /dev/null)" || return 0
+    [ -n "$id" ] && PROGRESS_ID="$id"
+}
+
+# Bytes realmente descargados: aria2 reserva el archivo "a trozos" (disperso), por eso
+# se mide el espacio ocupado en disco y no el tamaño aparente.
+disk_bytes() { du -B1 "$1" 2> /dev/null | awk '{ print $1 + 0 }'; }
+
+remote_size() {
+    curl -sIL --max-time 30 "$1" 2>> "$DL_LOG" | tr -d '\r' \
+        | awk 'tolower($1) == "content-length:" { l = $2 } END { print l + 0 }'
+}
+
+# download_model <ref dl:...>  → 0 si el archivo quedó completo en $DOWNLOAD_DIR
+download_model() {
+    local ref="$1" repo file url dest part total have need free cur pct last=0 rc err
+    repo="$(dl_repo "$ref")"; file="$(dl_file "$ref")"
+    url="$HF_BASE/$repo/resolve/main/$file"
+    dest="$DOWNLOAD_DIR/$file"; part="$dest.part"
+
+    if ! mkdir -p "$DOWNLOAD_DIR" 2> /dev/null; then
+        notify "No se puede crear $DOWNLOAD_DIR" "Revisa los permisos de tu carpeta personal."
+        return 1
+    fi
+
+    total="$(remote_size "$url")"
+    [ "${total:-0}" -lt 1048576 ] && total="$(preset_bytes "$ref")"     # HEAD falló: usa el tamaño aproximado
+    have=0; [ -f "$part" ] && have="$(disk_bytes "$part")"
+    need=$((total - have)); [ "$need" -lt 0 ] && need=0
+
+    # ¿Cabe en el disco? (en un Linux minimalista suele ser lo primero que falla)
+    free="$(df --output=avail -B1 "$DOWNLOAD_DIR" 2> /dev/null | tail -n 1 | tr -d ' ')"
+    if [ -n "$free" ] && [ "$need" -gt 0 ] && [ "$free" -lt "$need" ]; then
+        notify "Sin espacio para descargar $file" "Hacen falta ~$(gib "$need") GB y hay $(gib "$free") GB libres en $DOWNLOAD_DIR."
+        return 1
+    fi
+
+    log "download: $url -> $dest (total ~$total, ya hay $have)"
+    printf '%s descarga %s\n' "$(date '+%F %T')" "$url" >> "$DL_LOG"
+    local tool="curl"
+    command -v aria2c > /dev/null 2>&1 && tool="aria2c"
+    notify "Descargando $(friendly_name "$file")" "$(gib "$total") GB desde Hugging Face ($( [ "$tool" = aria2c ] && echo "$DL_CONNECTIONS conexiones" || echo "1 conexión; instala aria2 para ir más rápido" )). Pulsa el atajo otra vez para cancelar."
+
+    if [ "$total" -gt 0 ] && [ "$have" -ge "$total" ] && [ ! -f "$part.aria2" ]; then
+        rc=0                              # el .part ya estaba completo
+    else
+        if [ "$tool" = "aria2c" ]; then
+            # Trozos de 8 MB repartidos en N conexiones; -c reanuda; sin preasignar el archivo
+            aria2c -c -x "$DL_CONNECTIONS" -s "$DL_CONNECTIONS" -k 8M \
+                --file-allocation=none --disk-cache=64M \
+                --max-tries=5 --retry-wait=3 --connect-timeout=20 \
+                --auto-file-renaming=false --allow-overwrite=true \
+                --summary-interval=0 --console-log-level=warn --download-result=hide \
+                -d "$DOWNLOAD_DIR" -o "$file.part" "$url" >> "$DL_LOG" 2>&1 &
+        else
+            curl -L --fail --retry 5 --retry-delay 3 --retry-all-errors --connect-timeout 20 \
+                -C - -sS -o "$part" "$url" >> "$DL_LOG" 2>&1 &
+        fi
+        CURL_PID=$!
+        while kill -0 "$CURL_PID" 2> /dev/null; do
+            sleep 3
+            if [ "$total" -gt 0 ]; then
+                cur="$(disk_bytes "$part")"
+                pct=$((cur * 100 / total))
+                if [ "$pct" -ge $((last + 10)) ]; then
+                    last=$pct
+                    progress_notify "Descargando $(friendly_name "$file")" "$pct % — $(gib "$cur") de $(gib "$total") GB" "$pct"
+                fi
+            fi
+        done
+        wait "$CURL_PID"; rc=$?
+        CURL_PID=""
+    fi
+
+    if [ "$rc" -ne 0 ]; then
+        err="$(tail -n 6 "$DL_LOG" 2> /dev/null | awk '!seen[$0]++' | tail -n 2 | tr '\n' ' ')"
+        notify "Falló la descarga de $file" "$tool terminó con código $rc. ${err:-Revisa tu conexión.} (log: $DL_LOG)"
+        return 1
+    fi
+
+    cur="$(stat -c %s "$part" 2> /dev/null || echo 0)"
+    if [ "$total" -ge 1048576 ] && [ "$cur" -lt $((total * 99 / 100)) ]; then
+        notify "Descarga incompleta de $file" "Tiene $(gib "$cur") de ~$(gib "$total") GB. Vuelve a intentarlo: continúa donde quedó."
+        return 1
+    fi
+    mv -f "$part" "$dest" || return 1
+    progress_notify "Modelo descargado" "$(friendly_name "$file")" 100
+    log "download ok: $dest"
+}
+
+# resolve_ref <ref> → deja la ruta local del .gguf en $RESOLVED (descargándolo si hace falta).
+# Va por variable global (no por $(...)) para que cancelar con el atajo funcione al instante.
+RESOLVED=""
+resolve_ref() {
+    local ref="$1"
+    if [[ "$ref" == dl:* ]]; then
+        RESOLVED="$(dl_path "$ref")"
+        [ -f "$RESOLVED" ] || download_model "$ref" || return 1
+    else
+        RESOLVED="$ref"
+    fi
+}
+
+cleanup() { rm -f "$PROMPT_FILE" "$DL_FILE"; }
+
+on_term() {
+    [ -n "$CURL_PID" ] && kill "$CURL_PID" 2> /dev/null
+    cleanup
+    exit 143
+}
+
+
+# ==============================================================================
 # COMANDOS
 # ==============================================================================
 check_deps() {
@@ -261,10 +413,59 @@ stop() {
     stop_server "$SMALL_PID_FILE"
 }
 
+# Diagnóstico para instalaciones nuevas: dice qué falta y por qué no descarga.
+doctor() {
+    local ok="✔" bad="✘" problems=0 preset label repo file size code free
+    echo "== LLM local: diagnóstico =="
+
+    if command -v llama-server > /dev/null 2>&1; then
+        echo "$ok llama-server: $(llama-server --version 2>&1 | grep -m1 -i 'version' || echo 'instalado')"
+        if supports_device_flag; then echo "$ok --device soportado (CPU pura con GPU_LAYERS=0)"
+        else echo "· --device no existe en esta versión (se omite solo)"; fi
+    else
+        echo "$bad llama-server no está instalado (paquete llama-cpp)"; problems=$((problems + 1))
+    fi
+
+    if command -v aria2c > /dev/null 2>&1; then echo "$ok aria2c: descargas con $DL_CONNECTIONS conexiones en paralelo"
+    else echo "· aria2c no instalado: se descarga con 1 conexión (instala el paquete aria2 para más velocidad)"; fi
+
+    for cmd in curl qs; do
+        if command -v "$cmd" > /dev/null 2>&1; then echo "$ok $cmd"
+        else echo "$bad falta $cmd"; problems=$((problems + 1)); fi
+    done
+
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$HF_BASE" 2>&1)"
+    if [ "$code" = "200" ] || [ "$code" = "301" ] || [ "$code" = "302" ]; then
+        echo "$ok Hugging Face responde (HTTP $code)"
+    else
+        echo "$bad No se puede llegar a $HF_BASE (HTTP ${code:-sin respuesta}). Revisa red, DNS, proxy o certificados (ca-certificates)."
+        problems=$((problems + 1))
+    fi
+
+    for preset in "${PRESETS[@]}"; do
+        IFS='|' read -r label repo file size <<< "$preset"
+        code="$(curl -sIL -o /dev/null -w '%{http_code}' --max-time 20 "$HF_BASE/$repo/resolve/main/$file" 2>&1)"
+        if [ "$code" = "200" ]; then echo "$ok $file existe en Hugging Face (~$size GB)"
+        else echo "$bad $file → HTTP ${code:-sin respuesta} (el archivo cambió de nombre o no hay red)"; problems=$((problems + 1)); fi
+    done
+
+    mkdir -p "$DOWNLOAD_DIR" 2> /dev/null
+    free="$(df --output=avail -B1 "$DOWNLOAD_DIR" 2> /dev/null | tail -n 1 | tr -d ' ')"
+    echo "· Espacio libre en $DOWNLOAD_DIR: $(gib "${free:-0}") GB"
+    echo "· RAM libre: $(gib "$(mem_available_bytes)") GB"
+    echo "· Logs: $MENU_LOG | $DL_LOG | $LOG_DIR/big.log | $LOG_DIR/small.log"
+
+    if [ "$problems" -eq 0 ]; then echo "Todo en orden."; else echo "Problemas encontrados: $problems"; fi
+    [ "$problems" -eq 0 ]
+}
+
 status() {
     local any=0
     if is_running "$BIG_PID_FILE";   then echo "chat         :$BIG_PORT   PID $(cat "$BIG_PID_FILE")";     any=1; fi
     if is_running "$SMALL_PID_FILE"; then echo "autocomplete :$SMALL_PORT   PID $(cat "$SMALL_PID_FILE")"; any=1; fi
+    if [ -f "$DL_FILE" ] && kill -0 "$(cat "$DL_FILE" 2> /dev/null)" 2> /dev/null; then
+        echo "descargando… (log: $DL_LOG)"; any=1
+    fi
     [ "$any" -eq 0 ] && echo "apagado"
     return 0
 }
@@ -278,7 +479,8 @@ start() {
     fi
 
     echo $$ > "$PROMPT_FILE"
-    trap 'rm -f "$PROMPT_FILE"' EXIT
+    trap cleanup EXIT
+    trap on_term TERM INT
 
     scan_models
 
@@ -290,8 +492,8 @@ start() {
         mapfile -t last < "$LAST_FILE"
         last_big="${last[0]:--}"; last_small="${last[1]:--}"; last_ctx="${last[2]:-16384}"
         last_ok=1
-        [ "$last_big" != "-" ]   && [[ "$last_big" != hf:* ]]   && [ ! -f "$last_big" ]   && last_ok=0
-        [ "$last_small" != "-" ] && [[ "$last_small" != hf:* ]] && [ ! -f "$last_small" ] && last_ok=0
+        [ "$last_big" != "-" ]   && [[ "$last_big" != dl:* ]]   && [ ! -f "$last_big" ]   && last_ok=0
+        [ "$last_small" != "-" ] && [[ "$last_small" != dl:* ]] && [ ! -f "$last_small" ] && last_ok=0
         if [ "$last_ok" -eq 1 ]; then
             repeat_label="↻ Repetir: $(label_or_none "$last_big" "sin chat") + $(label_or_none "$last_small" "sin autocompletado") (ctx $last_ctx)"
             manual_label="⚙ Elegir manualmente"
@@ -331,20 +533,33 @@ start() {
 
     printf '%s\n%s\n%s\n' "$big" "$small" "$ctx" > "$LAST_FILE"
 
-    # A partir de aquí ya no hay menús abiertos: pulsar el atajo apaga todo.
+    # --- Descargar lo que falte (pulsar el atajo mientras descarga lo cancela) ---
     rm -f "$PROMPT_FILE"
-    trap - EXIT
+    echo $$ > "$DL_FILE"
+    local big_path="-" small_path="-"
+    if [ "$big" != "-" ]; then
+        resolve_ref "$big" || return 1
+        big_path="$RESOLVED"
+    fi
+    if [ "$small" != "-" ]; then
+        resolve_ref "$small" || return 1
+        small_path="$RESOLVED"
+    fi
+
+    # A partir de aquí ya no hay menús ni descargas: pulsar el atajo apaga todo.
+    rm -f "$DL_FILE"
+    trap - EXIT TERM INT
 
     local -a ports=() pid_files=() names=() logs=()
-    notify "LLM local iniciando..." "Cargando modelos; la primera vez descarga."
+    notify "LLM local iniciando..." "Cargando modelos en memoria."
 
     if [ "$big" != "-" ]; then
-        start_server "$BIG_PID_FILE" "$big" "$BIG_PORT" "$ctx" "$BIG_THREADS" "$LOG_DIR/big.log" --jinja
+        start_server "$BIG_PID_FILE" "$big_path" "$BIG_PORT" "$ctx" "$BIG_THREADS" "$LOG_DIR/big.log" --jinja
         ports+=("$BIG_PORT"); pid_files+=("$BIG_PID_FILE"); logs+=("$LOG_DIR/big.log")
         names+=("Chat :$BIG_PORT → $(friendly_name "$big")")
     fi
     if [ "$small" != "-" ]; then
-        start_server "$SMALL_PID_FILE" "$small" "$SMALL_PORT" "$SMALL_CTX" "$SMALL_THREADS" "$LOG_DIR/small.log"
+        start_server "$SMALL_PID_FILE" "$small_path" "$SMALL_PORT" "$SMALL_CTX" "$SMALL_THREADS" "$LOG_DIR/small.log"
         ports+=("$SMALL_PORT"); pid_files+=("$SMALL_PID_FILE"); logs+=("$LOG_DIR/small.log")
         names+=("Autocomplete :$SMALL_PORT → $(friendly_name "$small")")
     fi
@@ -373,6 +588,12 @@ start() {
 
 # Mismo atajo: si hay menús abiertos los cancela; si hay servidores los apaga; si no, inicia.
 toggle() {
+    if [ -f "$DL_FILE" ] && kill -0 "$(cat "$DL_FILE" 2> /dev/null)" 2> /dev/null; then
+        kill "$(cat "$DL_FILE")" 2> /dev/null || true
+        notify "Descarga cancelada" "Lo ya descargado se conserva; continuará donde quedó."
+        return 0
+    fi
+
     if [ -f "$PROMPT_FILE" ] && kill -0 "$(cat "$PROMPT_FILE" 2> /dev/null)" 2> /dev/null; then
         kill "$(cat "$PROMPT_FILE")" 2> /dev/null || true
         "$MD_MENU" --close
@@ -393,8 +614,9 @@ case "${1:-toggle}" in
     start)  start ;;
     stop)   stop; notify "LLM local apagado" ;;
     status) status ;;
+    doctor) doctor ;;
     *)
-        echo "Uso: $(basename "$0") {toggle|start|stop|status}" >&2
+        echo "Uso: $(basename "$0") {toggle|start|stop|status|doctor}" >&2
         exit 1
         ;;
 esac

@@ -18,7 +18,7 @@ cat > "$TARGET" <<'EOF'
 -- Carga de librerías base (Keybinder, Rules, Services, helpers globales)
 require("hyprland.lib")
 
--- Carga de servicios (waybar, hypridle, swaync, etc.)
+-- Carga de servicios (notificaciones, hypridle, etc.)
 require("hyprland.services")
 
 -- Carga de animaciones

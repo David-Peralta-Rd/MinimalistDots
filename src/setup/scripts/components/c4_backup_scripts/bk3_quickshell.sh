@@ -15,6 +15,7 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #     osd-volume.qml   OSD de volumen
 #     clock.qml        reloj de escritorio
 #     pomodoro.qml     widget + temporizador del Pomodoro
+#     notifd.qml       servidor de notificaciones + historial (reemplaza a SwayNC)
 #
 #   Generados aquí (dependen de la paleta de u2_palette.sh)
 #     Theme.qml        colores
@@ -116,6 +117,7 @@ write_menu_qml "binds"      "⌨️  Atajos de Teclado" 650 480 "$C_ACCENT_GREEN
 write_menu_qml "pomodoro"   "🍅 Pomodoro"          300 340 "$C_ACCENT_RED"     10   # el script pone el título
 write_menu_qml "llm"        "🤖 IA local"          780 420 "$C_ACCENT_MAGENTA" 10   # nombres de modelo largos
 write_menu_qml "wallpaper"  "🖼  Fondo de pantalla" 560 520 "$C_ACCENT_BLUE"    12   # con miniaturas
+write_menu_qml "notifications" "🔔 Notificaciones" 760 520 "$C_ACCENT_YELLOW" 12   # historial (notifications_menu.sh)
 write_menu_qml "process"    "⚙️  Gestor"            640 480 "$C_ACCENT_RED"     12   # process_manager.sh
 
 # ==========================================================
