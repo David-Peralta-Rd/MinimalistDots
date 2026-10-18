@@ -290,9 +290,9 @@ cat >> "$HOME/.zshrc" <<'EOF'
     source "$HOME/.zshrc.d/plugins.zsh"
 # <<< MinimalistDots zsh <<<
 
-##########################################################################
-#### CONFIGURACION DE TOUCH PARA CREAR ARCHIVO CON UN TITULO ADENTRO #####
-##########################################################################
+# ======================================================================= #
+# === CONFIGURACION DE TOUCH PARA CREAR ARCHIVO CON UN TITULO ADENTRO === #
+# ======================================================================= #
 touch() {
     # Si no se pasan argumentos, ejecuta el touch original
     if [ $# -eq 0 ]; then
@@ -312,7 +312,7 @@ touch() {
         fi
     done
 }
-##########################################################################
+# ======================================================================= #
 EOF
 
 
