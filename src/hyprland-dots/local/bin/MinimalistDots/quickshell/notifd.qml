@@ -70,11 +70,10 @@ ShellRoot {
 
         onNotification: notification => {
             root.record(notification);
+
             // en "no molestar" solo se muestran las críticas; sin `tracked` se descarta
             if (root.dnd && notification.urgency !== NotificationUrgency.Critical) return;
 
-            const vals = server.trackedNotifications.values;
-            if (vals.length >= root.maxPopups) vals[0].expire();
             notification.tracked = true;
         }
     }
@@ -102,7 +101,8 @@ ShellRoot {
 
     // ---------- ventana ----------
     PanelWindow {
-        visible: list.count > 0
+        // depende del modelo (no de la vista): evita el círculo ventana -> ListView -> ventana
+        visible: server.trackedNotifications.values.length > 0
         anchors { top: true; right: true }
         margins { top: 12; right: 12 }
         implicitWidth: root.popupWidth
@@ -116,7 +116,9 @@ ShellRoot {
 
         ListView {
             id: list
-            anchors.fill: parent
+            // altura propia, independiente de la ventana: permite crear delegados aunque la ventana mida 1px
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 800
             model: server.trackedNotifications
             spacing: 8
             interactive: false
