@@ -289,6 +289,30 @@ cat >> "$HOME/.zshrc" <<'EOF'
 [[ -f "$HOME/.zshrc.d/plugins.zsh" ]] && \
     source "$HOME/.zshrc.d/plugins.zsh"
 # <<< MinimalistDots zsh <<<
+
+##########################################################################
+#### CONFIGURACION DE TOUCH PARA CREAR ARCHIVO CON UN TITULO ADENTRO #####
+##########################################################################
+touch() {
+    # Si no se pasan argumentos, ejecuta el touch original
+    if [ $# -eq 0 ]; then
+        command touch
+        return
+    fi
+
+    # Recorre todos los archivos que pases como argumento
+    for file in "$@"; do
+        if [ ! -f "$file" ]; then
+            # Si el archivo no existe, lo crea con el título
+            echo "# $file" > "$file"
+            echo "Archivo creado con encabezado: $file"
+        else
+            # Si ya existe, usa el touch original para actualizar la fecha
+            command touch "$file"
+        fi
+    done
+}
+##########################################################################
 EOF
 
 
