@@ -11,6 +11,7 @@ return {
 -- ======================== --
     terminal        = "footclient",
     terminal_float  = "footclient --app-id=programing-terminal",
+    terminal_float_opencode  = "footclient --app-id=programing-terminal-opencode",
     fileManager     = "dolphin",
     menu            = MINIMALISTDOTS .. "/scripts/md_launcher",
     browser         = "brave",

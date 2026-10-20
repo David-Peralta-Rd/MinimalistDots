@@ -70,6 +70,7 @@ kb:category("Productividad")
   :exec("SHIFT+N", vars.notifications_dnd, "Notificaciones: no molestar / Notifications: do not disturb")
   :exec("SHIFT+ALT+N", vars.notifications_close, "Notificaciones: cerrar las visibles / Notifications: dismiss visible")
   :exec("ALT+SHIFT+L", vars.llm_menu, "IA local: elegir modelos / apagar servidores / Local AI: pick models / stop servers")
+  :exec("SHIFT+F", vars.terminal_float_opencode, "Abrir terminal flotante opencode / Open floating terminal opencode")
 
 -- ---------------------------------------------------------
 -- NAVEGACIÓN Y ESPACIOS DE TRABAJO

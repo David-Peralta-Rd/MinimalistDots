@@ -21,3 +21,11 @@ Rules.forClass("programing-terminal"):custom({
     move = "monitor_w/1.33 monitor_h/1.16",
     float = true,
 })
+
+-- Reglas para terminal flotante de open code
+Rules.forClass("programing-terminal-opencode"):custom({
+    name = "move-programing-terminal-opencode",
+    size = "monitor_w/3.45 monitor_h/2.52",
+    move = "monitor_w*0.004 monitor_h/1.69",
+    float = true,
+})
