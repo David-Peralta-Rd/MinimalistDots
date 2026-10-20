@@ -12,6 +12,10 @@
 #   llm-menu.sh status   Muestra qué está corriendo.
 #
 #   llm-menu.sh doctor   Diagnóstico: llama-server, red, Hugging Face, disco y RAM.
+#   llm-menu.sh up [chat|fim|all]
+#                        Arranque SIN menús con los modelos de ~/.config/ai/models.env
+#                        (lo usa ai.sh / ai-up para agentes y Continue). Mismos PID,
+#                        logs y puertos que el menú: status y stop funcionan igual.
 #
 # Los modelos que no tengas se descargan con curl (reanudable) a ~/models.
 # Si algo falla, mira:  ~/.cache/llm-servers/menu.log  y  download.log
@@ -44,6 +48,23 @@ SMALL_CTX=4096
 GPU_LAYERS=0
 READY_TIMEOUT=600     # segundos máximos esperando que el modelo cargue en memoria
 RAM_MARGIN_GIB=3      # margen para sistema + contexto al estimar si cabe en RAM
+
+# ---------- Configuración compartida con el módulo de IA (ai.sh) --------------
+# ~/.config/ai/models.env (opcional) fija modelos, puertos, hilos y contexto para
+# `llm_menu.sh up`, y es lo mismo que usan Continue y los agentes. Si existe, sus
+# valores mandan sobre los de arriba. El menú sigue funcionando igual sin él.
+AI_ENV="${AI_ENV:-${XDG_CONFIG_HOME:-$HOME/.config}/ai/models.env}"
+if [ -f "$AI_ENV" ]; then
+    # shellcheck disable=SC1090
+    source "$AI_ENV"
+    BIG_PORT="${CHAT_PORT:-$BIG_PORT}"
+    BIG_THREADS="${THREADS:-$BIG_THREADS}"
+    SMALL_PORT="${FIM_PORT:-$SMALL_PORT}"
+    SMALL_THREADS="${FIM_THREADS:-$SMALL_THREADS}"
+    SMALL_CTX="${FIM_CTX:-$SMALL_CTX}"
+    GPU_LAYERS="${NGL:-$GPU_LAYERS}"
+fi
+CHAT_CTX="${CHAT_CTX:-16384}"
 
 # -----------------------------------------------------------------------------
 
@@ -586,6 +607,82 @@ start() {
     fi
 }
 
+# Arranque sin menús: modelos, puertos, hilos y contexto salen de models.env.
+# Imprime por la terminal (no usa notificaciones): pensado para ai-up y scripts.
+#   AI_FORCE=1 llm_menu.sh up chat   -> arranca aunque la RAM libre parezca justa
+up() {
+    local which="${1:-chat}" want_chat=0 want_fim=0 cmd
+    case "$which" in
+        chat) want_chat=1 ;;
+        fim)  want_fim=1 ;;
+        all)  want_chat=1; want_fim=1 ;;
+        *)    echo "Uso: $(basename "$0") up [chat|fim|all]" >&2; return 2 ;;
+    esac
+
+    for cmd in llama-server curl; do
+        command -v "$cmd" > /dev/null 2>&1 || { echo "Falta '$cmd' (paquete llama-cpp / curl)." >&2; return 1; }
+    done
+
+    local need=$((RAM_MARGIN_GIB * 1073741824)) avail
+    if [ "$want_chat" -eq 1 ] && ! is_running "$BIG_PID_FILE"; then
+        [ -f "${CHAT_MODEL:-}" ] || {
+            echo "No existe CHAT_MODEL: '${CHAT_MODEL:-sin definir}'. Edita $AI_ENV o descárgalo con el menú (SUPER+ALT+SHIFT+L)." >&2
+            return 1
+        }
+        need=$((need + $(ref_bytes "$CHAT_MODEL")))
+    fi
+    if [ "$want_fim" -eq 1 ] && ! is_running "$SMALL_PID_FILE"; then
+        [ -f "${FIM_MODEL:-}" ] || {
+            echo "No existe FIM_MODEL: '${FIM_MODEL:-sin definir}'. Edita $AI_ENV o descárgalo con el menú (SUPER+ALT+SHIFT+L)." >&2
+            return 1
+        }
+        need=$((need + $(ref_bytes "$FIM_MODEL")))
+    fi
+
+    avail="$(mem_available_bytes)"
+    if [ "$need" -gt "$avail" ] && [ "${AI_FORCE:-0}" != "1" ]; then
+        echo "Hacen falta ~$(gib "$need") GB y hay $(gib "$avail") GB libres. Cierra apps o baja CHAT_CTX en $AI_ENV (o AI_FORCE=1 para forzar)." >&2
+        return 1
+    fi
+
+    local -a ports=() pid_files=() names=() logs=()
+    if [ "$want_chat" -eq 1 ]; then
+        if is_running "$BIG_PID_FILE"; then
+            echo "chat ya está activo en :$BIG_PORT"
+        else
+            start_server "$BIG_PID_FILE" "$CHAT_MODEL" "$BIG_PORT" "$CHAT_CTX" "$BIG_THREADS" "$LOG_DIR/big.log" --jinja
+            ports+=("$BIG_PORT"); pid_files+=("$BIG_PID_FILE"); logs+=("$LOG_DIR/big.log")
+            names+=("chat :$BIG_PORT (ctx $CHAT_CTX, $BIG_THREADS hilos)")
+        fi
+    fi
+    if [ "$want_fim" -eq 1 ]; then
+        if is_running "$SMALL_PID_FILE"; then
+            echo "autocompletado ya está activo en :$SMALL_PORT"
+        else
+            start_server "$SMALL_PID_FILE" "$FIM_MODEL" "$SMALL_PORT" "$SMALL_CTX" "$SMALL_THREADS" "$LOG_DIR/small.log"
+            ports+=("$SMALL_PORT"); pid_files+=("$SMALL_PID_FILE"); logs+=("$LOG_DIR/small.log")
+            names+=("autocompletado :$SMALL_PORT (ctx $SMALL_CTX, $SMALL_THREADS hilos)")
+        fi
+    fi
+    [ "${#ports[@]}" -eq 0 ] && return 0
+
+    echo "Cargando modelos en memoria (el de 30B tarda un poco)..."
+    local i rc failed=0
+    for i in "${!ports[@]}"; do
+        wait_ready "${ports[$i]}" "${pid_files[$i]}"
+        rc=$?
+        case $rc in
+            0) echo "listo: ${names[$i]}" ;;
+            3) rm -f "${pid_files[$i]}"
+               echo "se cerró: ${names[$i]}. Últimas líneas del log:" >&2
+               tail -n 4 "${logs[$i]}" >&2 2> /dev/null || true
+               failed=1 ;;
+            *) echo "sin respuesta: ${names[$i]} (mira ${logs[$i]})" >&2; failed=1 ;;
+        esac
+    done
+    return "$failed"
+}
+
 # Mismo atajo: si hay menús abiertos los cancela; si hay servidores los apaga; si no, inicia.
 toggle() {
     if [ -f "$DL_FILE" ] && kill -0 "$(cat "$DL_FILE" 2> /dev/null)" 2> /dev/null; then
@@ -615,8 +712,9 @@ case "${1:-toggle}" in
     stop)   stop; notify "LLM local apagado" ;;
     status) status ;;
     doctor) doctor ;;
+    up)     up "${2:-chat}" ;;
     *)
-        echo "Uso: $(basename "$0") {toggle|start|stop|status|doctor}" >&2
+        echo "Uso: $(basename "$0") {toggle|start|stop|status|doctor|up [chat|fim|all]}" >&2
         exit 1
         ;;
 esac

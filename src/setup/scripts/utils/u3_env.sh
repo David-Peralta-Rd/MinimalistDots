@@ -35,10 +35,13 @@ MD_BIN_DIR="$HOME/.local/bin/MinimalistDots"
 MD_SCRIPTS_DIR="$MD_BIN_DIR/scripts"
 MD_SERVICES_DIR="$MD_BIN_DIR/services"
 MD_QUICKSHELL="$MD_BIN_DIR/quickshell"                                  # QML: menús, launcher, reloj, pomodoro
+MD_AI_SRC="$MD_DOTS_BIN/ai"                                             # plantillas y models.env de ejemplo (en el proyecto)
+MD_AI_DIR="$MD_BIN_DIR/ai"                                              # plantillas instaladas (ai.sh new, agente de logística)
+MD_AI_CONF="$HOME/.config/ai"                                           # models.env: modelos, puertos, hilos (lo lee llm_menu.sh)
 
 export MD_UTILS_DIR MD_SETUP_DIR MD_SRC_DIR MD_COMPONENTS_DIR MD_DOTS_CONFIG MD_DOTS_BIN \
        MD_HYPR_DIR MD_BACKUP_ROOT MD_BIN_DIR MD_SCRIPTS_DIR MD_SERVICES_DIR \
-       MD_QUICKSHELL
+       MD_QUICKSHELL MD_AI_SRC MD_AI_DIR MD_AI_CONF
 
 # --- Idioma -------------------------------------------------------------------
 if [ -z "${T_BIENVENIDO:-}" ]; then

@@ -9,7 +9,7 @@ Este documento define la hoja de ruta de la configuración. Cada decisión se ri
 
 - [✅] **Menus (Migración)** *(lanzador, portapapeles, atajos, fondos, procesos, OSD, reloj y Pomodoro ya en Quickshell; falta probar en tu sesión y retirar `~/.config/eww` y `~/.config/wofi` antiguos)*:: Reemplazar por completo todos los menús e interfaces antiguas de `wofi` y `eww` por componentes nativos y ultra-ligeros usando `quickshell`.
 
-- [-] **Nuevas notificaciones con estilo bordeado**: Integración de notificaciones ligeras a través de la terminal o demonios ultra-ligeros (`mako` o `dunst`). *Estado: Evaluando si rompe la estética limpia.*
+- [✅] **IA para desarrollo (agentes sobre modelos locales)**: `ai.sh` + `models.env` + plantillas, encima de `llm_menu.sh`; sin servicios de systemd ni demonios. Incluye OpenCode conectado al modelo local y `ai-new` con repo en GitHub (`gh`). *Estado: base lista (Fase 0); el agente concreto y MCP quedan para cuando se midan los modelos.*
 
 ---
 

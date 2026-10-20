@@ -163,6 +163,20 @@ alias dk-pl="docker pull"
 alias dk-clean="docker system prune -a -f"
 alias dk-run="docker compose run --entrypoint bash"
 
+
+# ============================================================
+# IA PARA DESARROLLO (scripts/ai.sh; ver ai.sh sin argumentos)
+# ============================================================
+
+alias ai-up="$HOME/.local/bin/MinimalistDots/scripts/ai.sh up"
+alias ai-down="$HOME/.local/bin/MinimalistDots/scripts/ai.sh down"
+alias ai-status="$HOME/.local/bin/MinimalistDots/scripts/ai.sh status"
+alias ai-doctor="$HOME/.local/bin/MinimalistDots/scripts/ai.sh doctor"
+alias ai-bench="$HOME/.local/bin/MinimalistDots/scripts/ai.sh bench"
+alias ai-new="$HOME/.local/bin/MinimalistDots/scripts/ai.sh new"
+alias ai-code="$HOME/.local/bin/MinimalistDots/scripts/ai.sh code"
+alias ai-config="$HOME/.local/bin/MinimalistDots/scripts/ai.sh config"
+
 EOF
 
 

@@ -17,6 +17,7 @@ El objetivo es levantar un escritorio Wayland limpio y coherente —Hyprland, Qu
 
   El sonido se configura solo al inicio de `pomodoro.sh` (`SOUND_URL`, o `SOUND_FILE` con un audio tuyo, `SOUND_VOLUME`): se descarga una vez con curl a `~/.cache/MinimalistDots/pomodoro`, se convierte a mp3 si hace falta y el proceso del reproductor termina solo al acabar el audio. Pruébalo con `pomodoro.sh sound`.
 - **IA local con llama.cpp** (`SUPER+ALT+SHIFT+L`, `scripts/llm_menu.sh`): menú de Quickshell para elegir el modelo de chat (puerto 8080) y el de autocompletado (puerto 8081), con aviso si no caben en RAM y opción de repetir la última selección. Busca `.gguf` en `~/models`, `~/.cache/llama.cpp` y `~/.cache/huggingface/hub`, y ofrece descargar modelos recomendados (se editan en `PRESETS`). Pulsa el atajo otra vez para apagar los servidores y liberar la RAM. Log: `~/.cache/llm-servers/menu.log`.
+- **IA para desarrollo** (`scripts/ai.sh`, alias `ai-up`, `ai-down`, `ai-doctor`, `ai-bench`, `ai-code`, `ai-new`...): capa de agentes encima del menú anterior. Enciende los modelos **sin menús** desde `~/.config/ai/models.env` (puertos, hilos, contexto y rutas en un solo archivo, el mismo que usan Continue y los agentes), diagnostica el equipo, mide los tokens/s reales con `llama-bench`, abre **OpenCode** ya conectado a tu modelo local y crea proyectos nuevos (plantillas + primer commit + repo en GitHub con `gh`). Sin servicios en segundo plano: todo es bajo demanda. Detalle en [IA para desarrollo](#ia-para-desarrollo-aish).
 - **Zsh listo para usar**: autosugerencias, autocompletado, resaltado de sintaxis y un set de alias (sistema, pacman/paru, git, docker) configurados automáticamente sobre el paquete oficial de Arch (sin clonar repos manualmente).
 - **Tema de SDDM** (Catppuccin Mocha/Blue) descargado e instalado automáticamente desde el último release de GitHub.
 - **Recarga en caliente**: si Hyprland ya está corriendo, el instalador ejecuta `hyprctl reload` al final y valida que no haya errores de configuración antes de terminar.
@@ -76,7 +77,8 @@ MiniTest/
 │   │   └── local/bin/MinimalistDots/   # Se copia a ~/.local/bin/MinimalistDots
 │   │       ├── services/               # Servicios en Lua (uno por archivo)
 │   │       ├── quickshell/             # QML: MdMenu, launcher, clock, pomodoro, osd-volume
-│   │       └── scripts/                # Scripts de usuario en Bash
+│   │       ├── ai/                     # Plantillas de proyecto, agente de logística y models.env de ejemplo
+│   │       └── scripts/                # Scripts de usuario en Bash (llm_menu.sh, ai.sh, pomodoro.sh...)
 │   └── setup/                          # EL INSTALADOR
 │       ├── lang/
 │       │   ├── load_lang.sh
@@ -94,7 +96,7 @@ MiniTest/
 │               ├── c3_backup_and_install.sh
 │               ├── c3_backup_hypr/     # bk1..bk5: hyprland.lua, hypridle, hyprlock, hyprpaper, colors.lua
 │               ├── c4_install_services_and_scripts.sh
-│               └── c4_backup_scripts/  # bk1..bk7: zsh, process_manager, quickshell, sddm_theme, docker, github, network
+│               └── c4_backup_scripts/  # bk1..bk8: zsh, process_manager, quickshell, sddm_theme, docker, github, network, ai
 ├── LICENSE
 └── README.md
 ```
@@ -159,3 +161,27 @@ Solo puede haber un servidor de notificaciones: desinstala `swaync` (`paru -Rns 
 ## IA local (`llm_menu.sh`)
 
 `ALT+SHIFT+L` elige modelos y levanta `llama-server`. Los modelos que no tengas se **descargan con aria2** (16 conexiones en paralelo; si no está instalado usa curl con una sola), de forma reanudable, con barra de progreso y comprobación de espacio a `~/models`. Si algo falla: `llm_menu.sh doctor` revisa llama-server, red, Hugging Face, disco y RAM; los logs están en `~/.cache/llm-servers/`.
+
+## IA para desarrollo (`ai.sh`)
+
+Prepara el equipo para trabajar con agentes **gratis, con la fuerza de tu propio equipo**. No añade demonios ni servicios de systemd: `llm_menu.sh` sigue siendo el único que arranca `llama-server` (mismos PID, logs y puertos), y `ai.sh` lo maneja sin menús.
+
+```bash
+ai-doctor        # revisa herramientas, modelos, puertos, gh y OpenCode (no cambia nada)
+ai-up chat       # enciende el modelo de chat/agente (ai-up fim | ai-up all)
+ai-status        # qué está corriendo
+ai-bench         # llama-bench con tus hilos; guarda el resultado en ~/.cache/llm-servers/
+ai-new mi-app    # proyecto nuevo: plantillas, primer commit y repo PRIVADO en GitHub (gh)
+ai-code          # (desde la carpeta del proyecto) enciende el modelo si hace falta y abre OpenCode
+ai-config        # regenera la config de OpenCode desde models.env (si cambias puertos o modelo)
+ai-down          # apaga todo y libera la RAM
+```
+
+`ai-new` acepta `--public` (repo público), `--local` (sin GitHub) y `-d "descripción"`. Usa tu sesión de `gh` y tu firma GPG, tal como las deja `bk6_github.sh`; sin sesión de `gh` el proyecto queda solo local y te lo avisa.
+
+- **`~/.config/ai/models.env`** lo crea el instalador **una sola vez** y nunca lo sobrescribe. Ahí van las rutas de tus `.gguf` (por defecto `~/models`, donde descarga el menú), los puertos (si Continue usa otros, cambia aquí y no en VS Code), hilos, contexto y capas de GPU. El menú `SUPER+ALT+SHIFT+L` también respeta puertos, hilos y GPU de ese archivo.
+- **API para agentes y Continue**: `llama-server` expone una API compatible con OpenAI en `http://127.0.0.1:8080/v1` (chat; el tool calling va activado con `--jinja`) y `:8081` (autocompletado).
+- **Plantillas** en `~/.local/bin/MinimalistDots/ai/templates/` (se reemplazan en cada instalación; copia y edita en tus proyectos): `project/` y `logistics-agent/CLAUDE.md`, un prompt de tech lead con los modos PLANEAR, REVISAR, APRENDER, RETOMAR y VENDER.
+- **OpenCode**: `bk8_ai.sh` lo instala (`opencode` de los repos o `opencode-bin` del AUR; un fallo no detiene el instalador) y genera `~/.config/opencode/opencode.json` con un proveedor `llamacpp` apuntando a tu `llama-server`. Si ya tienes ese archivo, solo se reescribe ese proveedor. Lee el `AGENTS.md` de cada proyecto. Claude Code no se instala: es opcional y de pago.
+- El instalador no descarga modelos: lo hace el menú.
+- Para agregar o cambiar algo: el comportamiento está en `scripts/ai.sh`, el instalador en `c4_backup_scripts/bk8_ai.sh` y los alias en `bk1_zsh.sh`.
