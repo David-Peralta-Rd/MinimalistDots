@@ -115,6 +115,7 @@ La tecla modificadora por defecto es `SUPER` (definida en `vars.lua`). Consulta 
 
 | Atajo | Acción |
 |-------|--------|
+| `SUPER+SHIFT+ALT+K` | Abrir Visuzalizador de atajos de teclado |
 | `SUPER+T` | Abrir terminal |
 | `SUPER+B` | Abrir navegador |
 | `SUPER+E` | Abrir gestor de archivos |
