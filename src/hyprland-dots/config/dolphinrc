@@ -1,32 +1,31 @@
-[General]
-Version=202
-RememberOpenedTabs=false
-ShowFullPath=false
-ShowSpaceInfo=false
-ShowZoomSlider=false
-EditableUrl=false
-FilterBar=false
-SplitView=false
-GlobalViewProps=true
-BrowseThroughArchives=true
-
-[MainWindow]
-MenuBar=Disabled
-StatusBar=Disabled
-ToolBarsMovable=Disabled
-
 [DetailsMode]
 ExpandableFolders=false
 PreviewSize=16
 UseSystemFont=true
 
+[General]
+BrowseThroughArchives=true
+EditableUrl=false
+FilterBar=false
+GlobalViewProps=true
+RememberOpenedTabs=false
+ShowFullPath=false
+ShowSpaceInfo=false
+ShowZoomSlider=false
+SplitView=false
+Version=202
+
 [IconsMode]
 PreviewSize=80
 UseSystemFont=true
 
-[PreviewSettings]
-Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail
-
 [KFileDialog Settings]
 Places Icons Auto-resize=false
 Places Icons Static Size=22
+
+[MainWindow]
+MenuBar=Disabled
+StatusBar=Disabled
+
+[PreviewSettings]
+Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail,imagethumbnail,jpegthumbnail
