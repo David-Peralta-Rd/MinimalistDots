@@ -102,7 +102,7 @@ ShellRoot {
 
     // ---------- ventana ----------
     PanelWindow {
-        visible: list.count > 0
+        visible: server.trackedNotifications.values.length > 0
         anchors { top: true; right: true }
         margins { top: 12; right: 12 }
         implicitWidth: root.popupWidth
