@@ -33,7 +33,7 @@ SOUND_PID_FILE="$STATE_DIR/sound.pid"   # reproductor activo (para cortarlo al d
 #              a descargar solo.
 # SOUND_FILE   ruta a un audio tuyo; si existe, tiene prioridad sobre la URL.
 # Dejar ambos vacíos = sin sonido.
-SOUND_URL="https://download1475.mediafire.com/p2e1615adi1gruf1I1GxzykKuwgz65H5AwrGxOBuLVJLkOmE3uM8RoK4mAA1mbkK-ItmQ5MghDXEFmpDxfNQ57wbB_RBUmC0x-6cSUl0D8F1w3iz6tWYKNcW9WEAUB7jugoaUIF42hhCQFDN3KUkjqvyWKKXXn5VwmM4iVIwk9-e1w/6chtw5jvqdqjss6/sound_garage_funky_loop.mp3"
+SOUND_URL="https://download1475.mediafire.com/cirn7tsn2klgi3OfPehbRNAhnBao4EQj-Re1tLo08QkgHbasLe3EtM0V91BmshvhEBI-rUF0pbHv1m0H8KVC1NZ0XyRuaVPx9MShSEyEazahNgEYrwvALEsnlm7Q0BSQEtrQEXThlpC9QGBSx3b43OZLB34H04sNjwOG9I5yoZJvkYU/6chtw5jvqdqjss6/sound_garage_funky_loop.mp3"
 SOUND_FILE=""
 SOUND_VOLUME=70            # 0-100
 SOUND_MAX_SECONDS=10       # el proceso de sonido se cierra solo al acabar o a estos segundos
