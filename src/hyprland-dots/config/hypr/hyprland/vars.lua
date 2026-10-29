@@ -22,7 +22,7 @@ return {
 -- =========================== --
 -- ==== Complex Execution ==== --
 -- =========================== --
-    cliphist = "sel=$(cliphist list | " .. MINIMALISTDOTS .. "/scripts/md_menu clipboard --raw) && printf '%s' \"$sel\" | cliphist decode | wl-copy",
+    cliphist = "sel=$(" .. MINIMALISTDOTS .. "/scripts/md_cliphist_list | " .. MINIMALISTDOTS .. "/scripts/md_menu clipboard --raw) && printf '%s' \"$sel\" | cliphist decode | wl-copy",
 
 -- ========================== --
 -- ==== Keybinds Scripts ==== --

@@ -31,6 +31,7 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #   md_launcher                             abre / cierra el lanzador de apps
 #   md_volume_osd "<texto>"                 muestra el OSD de volumen
 #   show_binds                              visor de atajos
+#   md_cliphist_list                        historial de cliphist con miniaturas de imágenes
 #
 # Formato de las líneas que recibe md_menu:
 #   "etiqueta"                 línea normal
@@ -243,7 +244,72 @@ formatted_list=$(jq -r '
 echo "$formatted_list" | "$MENU" binds >/dev/null || true
 EOT
 
+# --- md_cliphist_list: historial de cliphist con miniaturas para md_menu --raw ---
+# Las líneas de imagen salen como "línea<US>/ruta/miniatura" (US = \x1f); el resto, tal cual.
+# Las miniaturas (160px) se generan una sola vez por id y viven en
+# <cache de cliphist>/thumbs, así que "Borrar todo" también las elimina.
+# Solo las MD_CLIP_THUMBS imágenes más recientes (30 por defecto) tienen miniatura.
+# Usa magick/convert (ImageMagick) o ffmpeg; si no hay ninguno, lista sin miniaturas.
+cat > "$MD_SCRIPTS_DIR/md_cliphist_list" <<'EOT'
+#!/usr/bin/env bash
+set -uo pipefail
+
+MAX="${MD_CLIP_THUMBS:-30}"
+DIR="${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/thumbs"
+SEP=$'\x1f'
+re=$'^([0-9]+)\t\\[\\[ binary data .* (png|jpe?g|bmp|gif|webp|tiff?) [0-9]+x[0-9]+ \\]\\]$'
+
+TOOL=""
+if command -v magick &>/dev/null; then TOOL="magick"
+elif command -v convert &>/dev/null; then TOOL="convert"
+elif command -v ffmpeg &>/dev/null; then TOOL="ffmpeg"
+fi
+
+# mkthumb <línea de cliphist> <miniatura destino>
+mkthumb() {
+    local tmp="$2.tmp.png"
+    case "$TOOL" in
+        magick)  printf '%s\n' "$1" | cliphist decode | magick -[0] -thumbnail "160x160>" -strip "png:$tmp" 2>/dev/null ;;
+        convert) printf '%s\n' "$1" | cliphist decode | convert -[0] -thumbnail "160x160>" -strip "png:$tmp" 2>/dev/null ;;
+        ffmpeg)  printf '%s\n' "$1" | cliphist decode | ffmpeg -loglevel error -y -i pipe:0 -frames:v 1 -vf "scale=160:-2" "$tmp" 2>/dev/null ;;
+    esac
+    if [[ -s "$tmp" ]]; then mv -f "$tmp" "$2"; else rm -f "$tmp"; return 1; fi
+}
+
+cliphist list | {
+    declare -A seen=()
+    n=0
+    while IFS= read -r line; do
+        if (( n < MAX )) && [[ -n "$TOOL" && "$line" =~ $re ]]; then
+            id="${BASH_REMATCH[1]}"
+            th="$DIR/$id.png"
+            if [[ ! -s "$th" ]]; then
+                mkdir -p "$DIR"
+                mkthumb "$line" "$th" || th=""
+            fi
+            if [[ -n "$th" && -s "$th" ]]; then
+                seen[$id]=1
+                n=$((n + 1))
+                printf '%s%s%s\n' "$line" "$SEP" "$th"
+                continue
+            fi
+        fi
+        printf '%s\n' "$line"
+    done
+
+    # Limpieza: miniaturas de entradas que ya no están (o sobrantes)
+    if [[ -d "$DIR" ]]; then
+        shopt -s nullglob
+        for f in "$DIR"/*; do
+            b="${f##*/}"; b="${b%%.*}"
+            [[ -n "${seen[$b]:-}" && "$f" == *.png && "$f" != *.tmp.png ]] || rm -f "$f"
+        done
+    fi
+}
+EOT
+
 sed -i "s|__MD_QS_DIR__|${MD_QS_DIR}|g" \
     "$MD_SCRIPTS_DIR/md_menu" "$MD_SCRIPTS_DIR/md_launcher" "$MD_SCRIPTS_DIR/md_volume_osd"
 chmod +x "$MD_SCRIPTS_DIR/md_menu" "$MD_SCRIPTS_DIR/md_launcher" \
-         "$MD_SCRIPTS_DIR/md_volume_osd" "$MD_SCRIPTS_DIR/show_binds"
+         "$MD_SCRIPTS_DIR/md_volume_osd" "$MD_SCRIPTS_DIR/show_binds" \
+         "$MD_SCRIPTS_DIR/md_cliphist_list"

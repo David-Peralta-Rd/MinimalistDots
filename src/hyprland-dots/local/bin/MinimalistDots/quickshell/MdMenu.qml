@@ -107,7 +107,13 @@ ShellRoot {
         const lines = itemsFile.text().split("\n");
         if (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
         allItems = lines.map(l => {
-            if (rawMode) return { label: l, icon: "", extra: "", entry: null };
+            if (rawMode) {
+                // Modo raw: la línea completa es la etiqueta. Opcionalmente puede
+                // llevar una miniatura tras un separador \x1f ("línea\x1f/ruta/img")
+                const k = l.indexOf("\x1f");
+                if (k < 0) return { label: l, icon: "", extra: "", entry: null };
+                return { label: l.slice(0, k), icon: l.slice(k + 1), extra: "", entry: null };
+            }
             const p = l.split("\t");
             return { label: p[0], icon: p.length > 1 ? p[1] : "", extra: "", entry: null };
         });
@@ -330,7 +336,8 @@ ShellRoot {
                     required property var modelData
                     required property int index
                     width: ListView.view.width
-                    height: root.appsMode ? 36 : (root.hasIcons ? 56 : 28)
+                    // las filas con miniatura son más altas; las de solo texto, compactas
+                    height: root.appsMode ? 36 : (row.modelData.icon !== "" ? 56 : 28)
                     radius: 4
                     color: row.ListView.isCurrentItem ? theme.surface90 : "transparent"
 
