@@ -7,6 +7,8 @@ import Quickshell.Wayland
 //   dmenu    (por defecto): lee $MD_MENU_ITEMS, escribe la elección en $MD_MENU_OUT
 //   appsMode (launcher)   : lista las apps instaladas (.desktop) y las lanza
 // Teclas: Enter elige | Esc cierra | ↑/↓, Ctrl+j/k, Ctrl+n/p navegan
+//         Shift+Delete o Ctrl+d borra la entrada seleccionada (si deleteCmd está definido)
+//         Ctrl+Shift+Delete borra todo (pide confirmar pulsando dos veces)
 ShellRoot {
     id: root
 
@@ -20,6 +22,15 @@ ShellRoot {
     property bool atTop: false          // true: pegado arriba (launcher) en vez de centrado
     property int topMargin: 20
     property var terminalCmd: ["footclient"]   // para apps con Terminal=true
+
+    // Borrado (opcional). Si están vacíos, el menú se comporta como antes.
+    //   deleteCmd: comando de shell que recibe la línea completa por stdin (ej. "cliphist delete")
+    //   wipeCmd  : comando de shell que borra todo (ej. "cliphist wipe")
+    property string deleteCmd: ""
+    property string wipeCmd: ""
+    readonly property bool canDelete: !appsMode && deleteCmd !== ""
+    readonly property bool canWipe: !appsMode && wipeCmd !== ""
+    property bool confirmWipe: false
 
     // MD_MENU_RAW=1: la línea completa es la etiqueta (sin separar miniatura por TAB).
     // Necesario para cliphist, cuyas líneas son "id<TAB>contenido".
@@ -104,6 +115,45 @@ ShellRoot {
         refilter();
     }
 
+    // ---------- borrado ----------
+    // Borra una entrada: manda su línea completa a deleteCmd por stdin,
+    // la quita de la lista y deja el menú abierto en la misma posición.
+    function removeItem(item) {
+        if (!canDelete || !item) return;
+        // Los errores se guardan en /tmp/md_menu.log y avisan con notify-send
+        const script = 'printf "%s\\n" "$1" | { ' + deleteCmd + '; } 2>>/tmp/md_menu.log'
+            + ' || notify-send -a "Menú" "Error al borrar" "Revisa /tmp/md_menu.log"';
+        Quickshell.execDetached(["sh", "-c", script, "sh", item.label]);
+        const idx = list.currentIndex;
+        // Se compara por etiqueta (la línea de cliphist incluye su id, es única):
+        // con el click, modelData llega como copia y la comparación por identidad falla
+        const label = item.label;
+        allItems = allItems.filter(it => it.label !== label);
+        refilter();
+        list.currentIndex = Math.max(0, Math.min(idx, shown.length - 1));
+    }
+
+    // Borra todo. Primera pulsación: pide confirmación (3 s). Segunda: ejecuta.
+    function wipeAll() {
+        if (!canWipe) return;
+        if (!confirmWipe) {
+            confirmWipe = true;
+            wipeTimer.restart();
+            return;
+        }
+        wipeTimer.stop();
+        confirmWipe = false;
+        Quickshell.execDetached(["sh", "-c", wipeCmd]);
+        allItems = [];
+        refilter();
+    }
+
+    Timer {
+        id: wipeTimer
+        interval: 3000
+        onTriggered: root.confirmWipe = false
+    }
+
     // ---------- launcher ----------
     // DesktopEntries se escanea en segundo plano: por eso es un binding reactivo
     readonly property var appEntries: appsMode ? DesktopEntries.applications.values : []
@@ -186,12 +236,42 @@ ShellRoot {
                     font.bold: true
                 }
 
+                // ---- botón "borrar todo" ----
+                Rectangle {
+                    id: wipeBtn
+                    visible: root.canWipe
+                    anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                    width: wipeText.implicitWidth + 16
+                    height: 26
+                    radius: 5
+                    color: root.confirmWipe ? "#f7768e" : (wipeArea.containsMouse ? theme.surface90 : "transparent")
+
+                    Text {
+                        id: wipeText
+                        anchors.centerIn: parent
+                        text: root.confirmWipe ? "¿Seguro? Click otra vez" : "🧹 Borrar todo"
+                        color: root.confirmWipe ? "#1a1b26" : theme.text
+                        font.family: theme.font
+                        font.pixelSize: 12
+                        font.bold: root.confirmWipe
+                    }
+
+                    MouseArea {
+                        id: wipeArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.wipeAll()
+                    }
+                }
+
                 TextInput {
                     id: input
                     anchors {
                         left: promptLabel.visible ? promptLabel.right : parent.left
                         leftMargin: 10
-                        right: parent.right; rightMargin: 10
+                        right: wipeBtn.visible ? wipeBtn.left : parent.right
+                        rightMargin: 10
                         verticalCenter: parent.verticalCenter
                     }
                     color: theme.text
@@ -206,6 +286,7 @@ ShellRoot {
 
                     Keys.onPressed: event => {
                         const ctrl = event.modifiers & Qt.ControlModifier;
+                        const shift = event.modifiers & Qt.ShiftModifier;
                         if (event.key === Qt.Key_Escape) {
                             Qt.quit();
                         } else if (event.key === Qt.Key_Down || (ctrl && (event.key === Qt.Key_J || event.key === Qt.Key_N))) {
@@ -214,9 +295,15 @@ ShellRoot {
                         } else if (event.key === Qt.Key_Up || (ctrl && (event.key === Qt.Key_K || event.key === Qt.Key_P))) {
                             list.decrementCurrentIndex();
                             event.accepted = true;
+                        } else if (root.canWipe && ctrl && shift && event.key === Qt.Key_Delete) {
+                            root.wipeAll();
+                            event.accepted = true;
+                        } else if (root.canDelete && ((shift && event.key === Qt.Key_Delete) || (ctrl && event.key === Qt.Key_D))) {
+                            if (root.shown.length > 0) root.removeItem(root.shown[list.currentIndex]);
+                            event.accepted = true;
                         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                             if (root.shown.length > 0) root.activate(root.shown[list.currentIndex]);
-                            else if (!root.appsMode) root.choose(root.query);   // dmenu: valor propio
+                            else if (!root.appsMode && !root.rawMode) root.choose(root.query);   // dmenu: valor propio
                             event.accepted = true;
                         }
                     }
@@ -263,7 +350,7 @@ ShellRoot {
                     Text {
                         anchors {
                             top: parent.top; bottom: parent.bottom
-                            right: parent.right; rightMargin: 6
+                            right: parent.right; rightMargin: root.canDelete ? 38 : 6
                         }
                         anchors.left: thumb.visible ? thumb.right : parent.left
                         anchors.leftMargin: thumb.visible ? 10 : 6
@@ -281,6 +368,32 @@ ShellRoot {
                         hoverEnabled: true
                         onEntered: list.currentIndex = row.index
                         onClicked: root.activate(row.modelData)
+                    }
+
+                    // ---- botón borrar esta entrada (declarado después: queda encima) ----
+                    Rectangle {
+                        id: delBtn
+                        visible: root.canDelete && (row.ListView.isCurrentItem || delArea.containsMouse)
+                        anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                        width: 26
+                        height: 22
+                        radius: 4
+                        color: delArea.containsMouse ? "#f7768e" : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "🗑"
+                            font.pixelSize: 13
+                            color: theme.text
+                        }
+
+                        MouseArea {
+                            id: delArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.removeItem(row.modelData)
+                        }
                     }
                 }
             }

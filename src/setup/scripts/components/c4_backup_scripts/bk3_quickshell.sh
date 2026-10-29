@@ -11,6 +11,8 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #
 #   Archivos QML reales (en el proyecto: hyprland-dots/local/bin/MinimalistDots/quickshell/)
 #     MdMenu.qml       menú genérico (dmenu con búsqueda fuzzy, o lanzador de apps)
+#                      + borrado opcional: botón 🗑 por fila, Shift+Delete / Ctrl+D,
+#                        "Borrar todo" y Ctrl+Shift+Delete (si el menú define deleteCmd / wipeCmd)
 #     launcher.qml     lanzador de aplicaciones (SUPER+A)
 #     osd-volume.qml   OSD de volumen
 #     clock.qml        reloj de escritorio
@@ -19,7 +21,9 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #
 #   Generados aquí (dependen de la paleta de u2_palette.sh)
 #     Theme.qml        colores
-#     menu-<nombre>.qml  una instancia de MdMenu por menú (tamaño, acento, prompt)
+#     menu-<nombre>.qml  una instancia de MdMenu por menú (tamaño, acento, prompt, extras)
+#                      OJO: se generan aquí, así que cualquier menu-*.qml que esté en la
+#                      carpeta del proyecto se sobrescribe. Los cambios van en este script.
 #
 # Y en $MD_SCRIPTS_DIR los wrappers:
 #   md_menu <nombre> [--prompt X] [--raw]   equivale a  wofi --dmenu  (lista por stdin)
@@ -32,6 +36,11 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #   "etiqueta"                 línea normal
 #   "etiqueta<TAB>/ruta/img"   línea con miniatura (solo se imprime la etiqueta)
 #   con --raw la línea entera es la etiqueta (cliphist)
+#
+# Menú clipboard (cliphist):
+#   deleteCmd = "cliphist delete"   recibe por stdin la línea completa de la entrada
+#   wipeCmd   = borra la carpeta de caché de cliphist; la db se recrea sola en la
+#               próxima copia (cliphist store la crea si no existe)
 #
 # Requiere: quickshell (comando `qs`) y jq.
 
@@ -94,10 +103,14 @@ EOT
 
 # ==========================================================
 # Instancias de MdMenu: una por menú
-# write_menu_qml <nombre> <prompt> <ancho> <alto> <color-acento> <radio-borde>
+# write_menu_qml <nombre> <prompt> <ancho> <alto> <color-acento> <radio-borde> [líneas-QML-extra]
+#
+# Las líneas extra se pasan en una variable con comillas simples para que bash
+# no expanda nada ($HOME, ${XDG_CACHE_HOME}, etc.): el shell las evalúa al
+# ejecutarse el comando, no al instalar.
 # ==========================================================
 write_menu_qml() {
-    local name="$1" prompt="$2" width="$3" height="$4" accent="$5" radius="$6"
+    local name="$1" prompt="$2" width="$3" height="$4" accent="$5" radius="$6" extra="${7:-}"
     cat > "$MD_QS_DIR/menu-$name.qml" <<EOT
 import QtQuick
 
@@ -108,11 +121,21 @@ MdMenu {
     menuHeight: $height
     menuRadius: $radius
     accent: "$(hex_norm "$accent")"
+$extra
 }
 EOT
 }
 
-write_menu_qml "clipboard"  "📋 Portapapeles"      700 420 "$C_ACCENT_BLUE"    10   # cliphist
+# Extras del menú clipboard: borrado individual y borrado total
+clipboard_extra=''
+read -r -d '' clipboard_extra <<'EOX' || true
+
+    // Borrado desde el propio menú
+    deleteCmd: "cliphist delete"
+    wipeCmd: 'rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/cliphist"'
+EOX
+
+write_menu_qml "clipboard"  "📋 Portapapeles"      700 420 "$C_ACCENT_BLUE"    10 "$clipboard_extra"   # cliphist
 write_menu_qml "binds"      "⌨️  Atajos de Teclado" 650 480 "$C_ACCENT_GREEN"   12   # keybinds.json
 write_menu_qml "pomodoro"   "🍅 Pomodoro"          300 340 "$C_ACCENT_RED"     10   # el script pone el título
 write_menu_qml "llm"        "🤖 IA local"          780 420 "$C_ACCENT_MAGENTA" 10   # nombres de modelo largos
@@ -135,7 +158,7 @@ set -euo pipefail
 QS_DIR="__MD_QS_DIR__"
 
 if [[ "${1:-}" == "--close" ]]; then
-    pkill -f "$QS_DIR/menu-" 2>/dev/null || true
+    pkill -f "qs .*$QS_DIR/menu-" 2>/dev/null || true
     exit 0
 fi
 
