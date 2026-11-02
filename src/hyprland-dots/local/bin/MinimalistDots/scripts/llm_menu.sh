@@ -8,11 +8,12 @@
 #   llm-menu.sh toggle   (por defecto) Atajo: si hay servidores los apaga; si hay
 #                        un menú abierto lo cancela; si no, abre el menú.
 #   llm-menu.sh start    Abre el menú e inicia.
-#   llm-menu.sh stop     Apaga todo.
+#   llm-menu.sh stop [chat|fim|all]
+#                        Apaga todo (o solo el chat / el autocompletado).
 #   llm-menu.sh status   Muestra qué está corriendo.
 #
 #   llm-menu.sh doctor   Diagnóstico: llama-server, red, Hugging Face, disco y RAM.
-#   llm-menu.sh up [chat|fim|all]
+#   llm-menu.sh up [chat|fim|all] [ruta.gguf]
 #                        Arranque SIN menús con los modelos de ~/.config/ai/models.env
 #                        (lo usa ai.sh / ai-up para agentes y Continue). Mismos PID,
 #                        logs y puertos que el menú: status y stop funcionan igual.
@@ -27,11 +28,56 @@ set -uo pipefail
 DOWNLOAD_DIR="$HOME/models"
 MODEL_DIRS=("$DOWNLOAD_DIR" "$HOME/.cache/llama.cpp" "$HOME/.cache/huggingface/hub")
 
+# Categorías del menú (el orden de esta lista es el orden en pantalla).
+CAT_CODE="Programación"
+CAT_THINK="Razonamiento / pensamiento"
+CAT_GEN="General y texto"
+CAT_LIGHT="Ligeros (poca RAM)"
+CAT_FIM="Autocompletado (FIM)"
+CAT_LOCAL="Otros descargados"
+CATEGORIES=("$CAT_CODE" "$CAT_THINK" "$CAT_GEN" "$CAT_LIGHT" "$CAT_FIM")
+
 # Modelos que el script puede descargar solo (archivo exacto de Hugging Face).
-# Formato:  "Etiqueta|repo|archivo.gguf|tamaño aprox. en GB"
+# Formato:  "Categoría|Etiqueta|repo|archivo.gguf|tamaño aprox. en GB|nota corta"
+# Para añadir uno nuevo basta con una línea más. `llm_menu.sh doctor` comprueba que
+# cada archivo exista en Hugging Face. Regla práctica: el modelo pesa ~su tamaño en RAM
+# (+1-3 GB de contexto), así que con 16 GB de RAM apunta a ≤ 9 GB.
 PRESETS=(
-    "Qwen3-Coder 30B-A3B Q4_K_M|unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF|Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf|18.6"
-    "Qwen2.5-Coder 1.5B Q8_0 (autocompletado)|ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF|qwen2.5-coder-1.5b-q8_0.gguf|1.7"
+    # --- Programación (chat / edición / agentes) ---
+    "$CAT_CODE|Qwen2.5-Coder 7B Instruct Q4_K_M|bartowski/Qwen2.5-Coder-7B-Instruct-GGUF|Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf|4.7|el mejor equilibrio calidad/RAM"
+    "$CAT_CODE|DeepSeek-Coder 6.7B Instruct Q4_K_M|TheBloke/deepseek-coder-6.7B-instruct-GGUF|deepseek-coder-6.7b-instruct.Q4_K_M.gguf|4.1|clásico, 87 lenguajes"
+    "$CAT_CODE|Qwen2.5-Coder 3B Instruct Q4_K_M|bartowski/Qwen2.5-Coder-3B-Instruct-GGUF|Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf|1.9|rápido, tareas sencillas"
+    "$CAT_CODE|Qwen2.5-Coder 14B Instruct Q4_K_M|bartowski/Qwen2.5-Coder-14B-Instruct-GGUF|Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf|9.0|más listo, ~10 GB de RAM"
+    "$CAT_CODE|DeepSeek-Coder-V2-Lite 16B MoE Q4_K_M|bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF|DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M.gguf|10.4|MoE: rápido para su tamaño"
+    "$CAT_CODE|Qwen3-Coder 30B-A3B Q4_K_M|unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF|Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf|18.6|el más capaz, MUY pesado"
+
+    # --- Razonamiento / pensamiento (piensan paso a paso; tardan más en responder) ---
+    "$CAT_THINK|Qwen3 8B Q4_K_M|unsloth/Qwen3-8B-GGUF|Qwen3-8B-Q4_K_M.gguf|5.0|razona + chat, muy versátil"
+    "$CAT_THINK|DeepSeek-R1-Distill-Qwen 7B Q4_K_M|bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF|DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf|4.7|mates y lógica"
+    "$CAT_THINK|Qwen3 14B Q4_K_M|unsloth/Qwen3-14B-GGUF|Qwen3-14B-Q4_K_M.gguf|9.0|razonamiento fuerte"
+    "$CAT_THINK|DeepSeek-R1-Distill-Qwen 14B Q4_K_M|bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF|DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf|9.0|mates, lógica, análisis"
+    "$CAT_THINK|Phi-4 14B Q4_K_M|bartowski/phi-4-GGUF|phi-4-Q4_K_M.gguf|9.1|muy bueno en STEM"
+    "$CAT_THINK|gpt-oss 20B MXFP4|ggml-org/gpt-oss-20b-GGUF|gpt-oss-20b-mxfp4.gguf|12.1|MoE (3.6B activos), pesado en RAM"
+
+    # --- General y texto (conversación, redacción, resúmenes, traducción) ---
+    "$CAT_GEN|Qwen2.5 7B Instruct Q4_K_M|bartowski/Qwen2.5-7B-Instruct-GGUF|Qwen2.5-7B-Instruct-Q4_K_M.gguf|4.7|buen español, multilingüe"
+    "$CAT_GEN|Llama 3.1 8B Instruct Q4_K_M|bartowski/Meta-Llama-3.1-8B-Instruct-GGUF|Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf|4.9|generalista muy probado"
+    "$CAT_GEN|Mistral 7B Instruct v0.3 Q4_K_M|bartowski/Mistral-7B-Instruct-v0.3-GGUF|Mistral-7B-Instruct-v0.3-Q4_K_M.gguf|4.4|redacción y resúmenes"
+    "$CAT_GEN|Gemma 2 9B it Q4_K_M|bartowski/gemma-2-9b-it-GGUF|gemma-2-9b-it-Q4_K_M.gguf|5.8|texto muy natural"
+    "$CAT_GEN|Gemma 3 12B it Q4_K_M|unsloth/gemma-3-12b-it-GGUF|gemma-3-12b-it-Q4_K_M.gguf|7.3|texto y multilingüe de calidad"
+    "$CAT_GEN|Qwen2.5 14B Instruct Q4_K_M|bartowski/Qwen2.5-14B-Instruct-GGUF|Qwen2.5-14B-Instruct-Q4_K_M.gguf|9.0|generalista grande"
+
+    # --- Ligeros (para PCs justos de RAM o para respuestas instantáneas) ---
+    "$CAT_LIGHT|Qwen3 4B Instruct 2507 Q4_K_M|unsloth/Qwen3-4B-Instruct-2507-GGUF|Qwen3-4B-Instruct-2507-Q4_K_M.gguf|2.5|sorprendente para su tamaño"
+    "$CAT_LIGHT|Gemma 3 4B it Q4_K_M|unsloth/gemma-3-4b-it-GGUF|gemma-3-4b-it-Q4_K_M.gguf|2.5|texto y multilingüe"
+    "$CAT_LIGHT|Llama 3.2 3B Instruct Q4_K_M|bartowski/Llama-3.2-3B-Instruct-GGUF|Llama-3.2-3B-Instruct-Q4_K_M.gguf|2.0|rápido para tareas simples"
+    "$CAT_LIGHT|Phi-3.5 mini 3.8B Q4_K_M|bartowski/Phi-3.5-mini-instruct-GGUF|Phi-3.5-mini-instruct-Q4_K_M.gguf|2.4|razona bien para ser pequeño"
+    "$CAT_LIGHT|Llama 3.2 1B Instruct Q4_K_M|bartowski/Llama-3.2-1B-Instruct-GGUF|Llama-3.2-1B-Instruct-Q4_K_M.gguf|0.8|mínimo, solo tareas triviales"
+
+    # --- Autocompletado (modelo base para :8081, NO son de chat) ---
+    "$CAT_FIM|Qwen2.5-Coder 1.5B Q8_0|ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF|qwen2.5-coder-1.5b-q8_0.gguf|1.7|recomendado: rápido y preciso"
+    "$CAT_FIM|Qwen2.5-Coder 0.5B Q8_0|ggml-org/Qwen2.5-Coder-0.5B-Q8_0-GGUF|qwen2.5-coder-0.5b-q8_0.gguf|0.7|ultraligero"
+    "$CAT_FIM|Qwen2.5-Coder 3B Q8_0|ggml-org/Qwen2.5-Coder-3B-Q8_0-GGUF|qwen2.5-coder-3b-q8_0.gguf|3.3|más preciso, más lento"
 )
 HF_BASE="${HF_BASE:-https://huggingface.co}"   # puedes apuntarlo a un mirror
 # Conexiones en paralelo al descargar (máx. 16). Requiere aria2; sin él se usa curl (1 conexión).
@@ -144,9 +190,9 @@ dl_repo() { local x="${1#dl:}"; echo "${x%/*}"; }
 dl_path() { echo "$DOWNLOAD_DIR/$(dl_file "$1")"; }
 
 preset_bytes() {
-    local preset label repo file size
+    local preset cat label repo file size note
     for preset in "${PRESETS[@]}"; do
-        IFS='|' read -r label repo file size <<< "$preset"
+        IFS='|' read -r cat label repo file size note <<< "$preset"
         [ "dl:$repo/$file" = "$1" ] && { awk -v g="$size" 'BEGIN { printf "%d", g * 1073741824 }'; return; }
     done
     echo 0
@@ -170,19 +216,35 @@ ref_bytes() {
 # ==============================================================================
 # DESCUBRIR MODELOS
 # ==============================================================================
-MODEL_LABELS=(); MODEL_REFS=()
+MODEL_LABELS=(); MODEL_REFS=(); MODEL_CATS=(); MODEL_LOCAL=()
+declare -A PRESET_CAT=()     # archivo.gguf -> categoría (para clasificar lo ya descargado)
 
+# add_entry <etiqueta> <ref> <categoría> <local 1|0>
 add_entry() {
-    local label="$1" ref="$2" n=2 base="$1" l
+    local label="$1" ref="$2" cat="$3" islocal="$4" n=2 base="$1" l
     for l in "${MODEL_LABELS[@]+"${MODEL_LABELS[@]}"}"; do
         if [ "$l" = "$label" ]; then label="$base ($n)"; n=$((n + 1)); fi
     done
-    MODEL_LABELS+=("$label"); MODEL_REFS+=("$ref")
+    MODEL_LABELS+=("$label"); MODEL_REFS+=("$ref"); MODEL_CATS+=("$cat"); MODEL_LOCAL+=("$islocal")
+}
+
+# Aviso según la RAM TOTAL del equipo (no la libre, que cambia): un modelo que ocupa
+# más del ~65 % de la RAM acaba en swap y el PC se arrastra.
+mem_total_bytes() { awk '/^MemTotal:/ { print $2 * 1024 }' /proc/meminfo; }
+ram_warn() {
+    local bytes="$1" total
+    total="$(mem_total_bytes)"
+    if [ "$bytes" -gt $((total * 65 / 100)) ]; then echo " ⚠ pesado para tu RAM"; fi
 }
 
 scan_models() {
-    local dir file base preset label repo gfile size real part extra
+    local dir file base preset cat label repo gfile size note real part extra bytes
     declare -A seen=() have_file=()
+
+    for preset in "${PRESETS[@]}"; do
+        IFS='|' read -r cat label repo gfile size note <<< "$preset"
+        PRESET_CAT["$gfile"]="$cat"
+    done
 
     for dir in "${MODEL_DIRS[@]}"; do
         [ -d "$dir" ] || continue
@@ -198,39 +260,91 @@ scan_models() {
             [ -n "${seen["$real"]+x}" ] && continue
             seen["$real"]=1
             have_file["$base"]=1
-            add_entry "$(friendly_name "$file")  [$(gib "$(ref_bytes "$file")") GB]" "$file"
+            bytes="$(ref_bytes "$file")"
+            add_entry "✔ $(friendly_name "$file")  [$(gib "$bytes") GB]$(ram_warn "$bytes")" "$file" \
+                "${PRESET_CAT["$base"]:-$CAT_LOCAL}" 1
         done < <(find -L "$dir" -maxdepth 6 -type f -name '*.gguf' -print0 2> /dev/null | sort -z)
     done
 
     for preset in "${PRESETS[@]}"; do
-        IFS='|' read -r label repo gfile size <<< "$preset"
+        IFS='|' read -r cat label repo gfile size note <<< "$preset"
         [ -n "${have_file["$gfile"]+x}" ] && continue     # ya está descargado: aparece arriba
-        extra="se descarga"
+        extra=""
         part="$DOWNLOAD_DIR/$gfile.part"
-        [ -f "$part" ] && extra="descarga a medias: $(gib "$(stat -c %s "$part")") GB"
-        add_entry "⬇ $label  [~$size GB, $extra]" "dl:$repo/$gfile"
+        [ -f "$part" ] && extra=", a medias: $(gib "$(stat -c %s "$part")") GB"
+        bytes="$(awk -v g="$size" 'BEGIN { printf "%d", g * 1073741824 }')"
+        add_entry "⬇ $label  [~$size GB$extra] — $note$(ram_warn "$bytes")" "dl:$repo/$gfile" "$cat" 0
     done
 }
 
-# pick_model <titulo>  → imprime la ref elegida ("-" = ninguno). Falla si se cancela.
-pick_model() {
-    local choice i
-    choice="$({ echo "$NONE_LABEL"; printf '%s\n' "${MODEL_LABELS[@]}"; } | menu "$1")"
-    [ -z "$choice" ] && return 1
-    if [ "$choice" = "$NONE_LABEL" ]; then echo "-"; return 0; fi
-    for i in "${!MODEL_LABELS[@]}"; do
-        if [ "${MODEL_LABELS[$i]}" = "$choice" ]; then
-            echo "${MODEL_REFS[$i]}"; return 0
-        fi
+# Categorías que realmente tienen modelos, en el orden definido arriba.
+# Imprime "nombre|cuántos"
+list_categories() {
+    local c i n
+    for c in "${CATEGORIES[@]}" "$CAT_LOCAL"; do
+        n=0
+        for i in "${!MODEL_CATS[@]}"; do [ "${MODEL_CATS[$i]}" = "$c" ] && n=$((n + 1)); done
+        [ "$n" -gt 0 ] && echo "$c|$n"
     done
-    return 1
+}
+
+# pick_model <titulo> [categoría preferida]
+# Menú de dos niveles: categoría → modelo. Imprime la ref elegida ("-" = ninguno).
+# Falla si se cancela. "← Volver" desde la lista regresa a las categorías.
+pick_model() {
+    local title="$1" first="${2:-}" choice cat n i count
+    local back="← Volver a categorías" all_label="Todos los modelos" dl_label="Ya descargados"
+    local -a lines items
+    while true; do
+        # --- nivel 1: categorías ---
+        lines=("$NONE_LABEL")
+        # la categoría que más pega con este puesto va primero
+        if [ -n "$first" ]; then
+            while IFS='|' read -r cat n; do
+                [ "$cat" = "$first" ] && lines+=("$cat  ($n)")
+            done < <(list_categories)
+        fi
+        while IFS='|' read -r cat n; do
+            [ "$cat" = "$first" ] && continue
+            lines+=("$cat  ($n)")
+        done < <(list_categories)
+        count=0; for i in "${!MODEL_LOCAL[@]}"; do [ "${MODEL_LOCAL[$i]}" = 1 ] && count=$((count + 1)); done
+        [ "$count" -gt 0 ] && lines+=("$dl_label  ($count)")
+        lines+=("$all_label  (${#MODEL_LABELS[@]})")
+
+        choice="$(printf '%s\n' "${lines[@]}" | menu "$title")"
+        [ -z "$choice" ] && return 1
+        if [ "$choice" = "$NONE_LABEL" ]; then echo "-"; return 0; fi
+
+        # --- nivel 2: modelos de esa categoría ---
+        items=()
+        for i in "${!MODEL_LABELS[@]}"; do
+            if [[ "$choice" == "$all_label"* ]]; then items+=("$i")
+            elif [[ "$choice" == "$dl_label"* ]]; then [ "${MODEL_LOCAL[$i]}" = 1 ] && items+=("$i")
+            elif [[ "$choice" == "${MODEL_CATS[$i]}  ("* ]]; then items+=("$i")
+            fi
+        done
+        [ "${#items[@]}" -eq 0 ] && continue
+
+        choice="$({ echo "$back"; for i in "${items[@]}"; do echo "${MODEL_LABELS[$i]}"; done; } \
+            | menu "$title")"
+        [ -z "$choice" ] && return 1
+        [ "$choice" = "$back" ] && continue
+        for i in "${!MODEL_LABELS[@]}"; do
+            if [ "${MODEL_LABELS[$i]}" = "$choice" ]; then
+                echo "${MODEL_REFS[$i]}"; return 0
+            fi
+        done
+        return 1
+    done
 }
 
 pick_context() {
     local choice
-    choice="$(printf '%s\n' "16K — equilibrado" "8K — menos RAM, más rápido" "32K — más contexto, más RAM" \
+    choice="$(printf '%s\n' "16K — equilibrado" "8K — menos RAM, más rápido" "4K — mínima RAM" "32K — más contexto, más RAM" \
         | menu "Contexto del chat")"
     case "$choice" in
+        4K*)  echo 4096 ;;
         8K*)  echo 8192 ;;
         16K*) echo 16384 ;;
         32K*) echo 32768 ;;
@@ -430,13 +544,31 @@ check_deps() {
 }
 
 stop() {
-    stop_server "$BIG_PID_FILE"
-    stop_server "$SMALL_PID_FILE"
+    case "${1:-all}" in
+        chat) stop_server "$BIG_PID_FILE" ;;
+        fim)  stop_server "$SMALL_PID_FILE" ;;
+        *)    stop_server "$BIG_PID_FILE"; stop_server "$SMALL_PID_FILE" ;;
+    esac
+}
+
+# Lista los modelos ya descargados que sirven para chat (sin los de autocompletado),
+# en el orden de las categorías. Una línea por modelo:  categoría|ruta|nombre|bytes
+# Lo usa ai.sh para preguntar qué modelo abrir con OpenCode.
+list_local() {
+    local c i
+    scan_models
+    for c in "${CATEGORIES[@]}" "$CAT_LOCAL"; do
+        [ "$c" = "$CAT_FIM" ] && continue
+        for i in "${!MODEL_REFS[@]}"; do
+            [ "${MODEL_LOCAL[$i]}" = 1 ] && [ "${MODEL_CATS[$i]}" = "$c" ] || continue
+            printf '%s|%s|%s|%s\n' "$c" "${MODEL_REFS[$i]}" "$(friendly_name "${MODEL_REFS[$i]}")" "$(ref_bytes "${MODEL_REFS[$i]}")"
+        done
+    done
 }
 
 # Diagnóstico para instalaciones nuevas: dice qué falta y por qué no descarga.
 doctor() {
-    local ok="✔" bad="✘" problems=0 preset label repo file size code free
+    local ok="✔" bad="✘" problems=0 preset cat label repo file size note code free
     echo "== LLM local: diagnóstico =="
 
     if command -v llama-server > /dev/null 2>&1; then
@@ -464,7 +596,7 @@ doctor() {
     fi
 
     for preset in "${PRESETS[@]}"; do
-        IFS='|' read -r label repo file size <<< "$preset"
+        IFS='|' read -r cat label repo file size note <<< "$preset"
         code="$(curl -sIL -o /dev/null -w '%{http_code}' --max-time 20 "$HF_BASE/$repo/resolve/main/$file" 2>&1)"
         if [ "$code" = "200" ]; then echo "$ok $file existe en Hugging Face (~$size GB)"
         else echo "$bad $file → HTTP ${code:-sin respuesta} (el archivo cambió de nombre o no hay red)"; problems=$((problems + 1)); fi
@@ -527,8 +659,8 @@ start() {
     fi
 
     if [ -z "$big" ]; then
-        big="$(pick_model "Modelo de CHAT / EDICIÓN (:$BIG_PORT)")" || return 0
-        small="$(pick_model "Modelo de AUTOCOMPLETADO (:$SMALL_PORT)")" || return 0
+        big="$(pick_model "Modelo de CHAT / EDICIÓN (:$BIG_PORT)" "$CAT_CODE")" || return 0
+        small="$(pick_model "Modelo de AUTOCOMPLETADO (:$SMALL_PORT)" "$CAT_FIM")" || return 0
         ctx=16384
         if [ "$big" != "-" ]; then
             ctx="$(pick_context)" || return 0
@@ -612,6 +744,7 @@ start() {
 #   AI_FORCE=1 llm_menu.sh up chat   -> arranca aunque la RAM libre parezca justa
 up() {
     local which="${1:-chat}" want_chat=0 want_fim=0 cmd
+    [ -n "${2:-}" ] && CHAT_MODEL="$2"       # modelo concreto (ai.sh code); si no, el de models.env
     case "$which" in
         chat) want_chat=1 ;;
         fim)  want_fim=1 ;;
@@ -666,7 +799,7 @@ up() {
     fi
     [ "${#ports[@]}" -eq 0 ] && return 0
 
-    echo "Cargando modelos en memoria (el de 30B tarda un poco)..."
+    echo "Cargando el modelo en memoria (los grandes tardan un poco)…"
     local i rc failed=0
     for i in "${!ports[@]}"; do
         wait_ready "${ports[$i]}" "${pid_files[$i]}"
@@ -709,12 +842,13 @@ toggle() {
 case "${1:-toggle}" in
     toggle) toggle ;;
     start)  start ;;
-    stop)   stop; notify "LLM local apagado" ;;
+    stop)   stop "${2:-all}"; if [ "${2:-all}" = all ]; then notify "LLM local apagado"; fi ;;
     status) status ;;
     doctor) doctor ;;
-    up)     up "${2:-chat}" ;;
+    up)     up "${2:-chat}" "${3:-}" ;;
+    list-local) list_local ;;
     *)
-        echo "Uso: $(basename "$0") {toggle|start|stop|status|doctor|up [chat|fim|all]}" >&2
+        echo "Uso: $(basename "$0") {toggle|start|stop [chat|fim|all]|status|doctor|up [chat|fim|all] [modelo.gguf]|list-local}" >&2
         exit 1
         ;;
 esac

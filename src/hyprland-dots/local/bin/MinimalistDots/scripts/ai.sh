@@ -12,8 +12,11 @@
 #   ai.sh status              Qué está corriendo
 #   ai.sh doctor              Revisa herramientas, modelos, puertos y memoria (no cambia nada)
 #   ai.sh bench [chat|fim]    llama-bench con tus hilos (tokens/s reales); guarda el resultado
-#   ai.sh code [args]         Enciende el chat si hace falta y abre OpenCode contra tu modelo local
-#   ai.sh config              (Re)genera ~/.config/opencode/opencode.json desde models.env
+#   ai.sh code [args]         PREGUNTA qué modelo usar (los .gguf ya descargados, por categoría,
+#                             o una API de ~/.config/ai/api_models.conf), enciende el local si
+#                             hace falta y abre OpenCode. Con -m proveedor/modelo no pregunta.
+#   ai.sh config              (Re)genera el proveedor local en ~/.config/opencode/opencode.json
+#                             (sin modelo por defecto)
 #   ai.sh new <nombre> [--public] [--local] [-d "descripción"]
 #                             Proyecto nuevo (AGENTS.md, SPEC.md, tasks.md...), primer commit y repo
 #                             en GitHub con gh (privado por defecto; --local = sin GitHub)
@@ -203,73 +206,223 @@ cmd_new() {
 
 
 # ==============================================================================
-# CONFIG (OpenCode apuntando al llama-server local)
+# CONFIG (OpenCode: proveedor local "llamacpp" y proveedores de API)
 # ==============================================================================
+OC_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/opencode.json"
+API_CONF="${AI_API_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/ai/api_models.conf}"
+
+# Alias que usa llama-server para un .gguf (idéntico al de llm_menu.sh: friendly_name)
+model_alias() { local n; n="$(basename "$1" .gguf)"; echo "${n##*-GGUF_}"; }
+
+# oc_edit <filtro jq> [args de jq...]  → aplica el filtro a opencode.json sin tocar el resto.
+oc_edit() {
+    local filter="$1" tmp; shift
+    command -v jq > /dev/null 2>&1 || die "falta jq para editar $OC_CFG."
+    [ -f "$OC_CFG" ] || cmd_config > /dev/null || die "no se pudo crear $OC_CFG"
+    jq empty "$OC_CFG" > /dev/null 2>&1 || die "$OC_CFG no es JSON puro (¿lleva comentarios?); no lo toco."
+    tmp="$(mktemp)"
+    if jq "$@" "$filter" "$OC_CFG" > "$tmp"; then
+        mv "$tmp" "$OC_CFG"
+    else
+        rm -f "$tmp"; die "jq falló; $OC_CFG quedó intacto."
+    fi
+}
+
+# Proveedor local: solo el modelo elegido. Además quita el "model" por defecto si apuntaba
+# al llama.cpp local (era el que abría siempre el modelo gigante): el modelo se elige al abrir.
+oc_set_local() {
+    local id="$1"
+    oc_edit '
+        .["$schema"] //= "https://opencode.ai/config.json"
+        | if ((.model // "") | startswith("llamacpp/")) then del(.model) else . end
+        | .provider.llamacpp = {
+            npm: "@ai-sdk/openai-compatible", name: "llama.cpp (local)",
+            options: {baseURL: $url},
+            models: {($id): {name: $id, limit: {context: $ctx, output: 4096}}}
+          }' --arg id "$id" --arg url "http://127.0.0.1:${CHAT_PORT}/v1" --argjson ctx "${CHAT_CTX:-16384}"
+}
+
+# Proveedor de API con endpoint propio (compatible con OpenAI). La clave NO se guarda en el
+# archivo: opencode la lee de la variable de entorno ({env:VAR}).
+oc_set_api() {
+    local prov="$1" mid="$2" url="$3" envvar="$4"
+    oc_edit '
+        .["$schema"] //= "https://opencode.ai/config.json"
+        | .provider[$p] = ((.provider[$p] // {}) * {
+            npm: "@ai-sdk/openai-compatible", name: $p,
+            options: ({baseURL: $url} + (if $env != "" then {apiKey: ("{env:" + $env + "}")} else {} end)),
+            models: {($m): {name: $m}}
+          })' --arg p "$prov" --arg m "$mid" --arg url "$url" --arg env "$envvar"
+}
+
 cmd_config() {
     load_env
     [ -n "${CHAT_MODEL:-}" ] || die "define CHAT_MODEL en $AI_ENV"
-    local n model_id url cfg
-    n="$(basename "$CHAT_MODEL" .gguf)"
-    model_id="${n##*-GGUF_}"                        # mismo nombre (--alias) que usa llm_menu.sh
-    url="http://127.0.0.1:${CHAT_PORT}/v1"
-    cfg="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/opencode.json"
-    mkdir -p "$(dirname "$cfg")"
-
-    if [ ! -f "$cfg" ]; then
-        cat > "$cfg" << EOF
+    local id; id="$(model_alias "$CHAT_MODEL")"
+    mkdir -p "$(dirname "$OC_CFG")"
+    if [ ! -f "$OC_CFG" ]; then
+        # Sin "model" por defecto: ai-code pregunta qué modelo usar cada vez.
+        cat > "$OC_CFG" << EOT
 {
   "\$schema": "https://opencode.ai/config.json",
-  "model": "llamacpp/$model_id",
   "provider": {
     "llamacpp": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "llama.cpp (local)",
-      "options": { "baseURL": "$url" },
+      "options": { "baseURL": "http://127.0.0.1:${CHAT_PORT}/v1" },
       "models": {
-        "$model_id": {
-          "name": "$model_id",
-          "limit": { "context": ${CHAT_CTX:-32768}, "output": 4096 }
+        "$id": {
+          "name": "$id",
+          "limit": { "context": ${CHAT_CTX:-16384}, "output": 4096 }
         }
       }
     }
   }
 }
-EOF
-        echo "creado $cfg"
+EOT
+        echo "creado $OC_CFG"
         return 0
     fi
-
-    # Ya existe: solo se reescribe el proveedor "llamacpp"; el resto de tu configuración no se toca.
-    command -v jq > /dev/null 2>&1 || die "$cfg ya existe y falta jq para actualizarlo; añade el proveedor 'llamacpp' a mano ($url)."
-    jq empty "$cfg" > /dev/null 2>&1 || die "$cfg no es JSON puro (¿lleva comentarios?); no lo toco. Proveedor a añadir: llamacpp -> $url"
-    local tmp; tmp="$(mktemp)"
-    if jq --arg id "$model_id" --arg url "$url" --argjson ctx "${CHAT_CTX:-32768}" '
-            .["$schema"] //= "https://opencode.ai/config.json"
-            | .model //= ("llamacpp/" + $id)
-            | .provider.llamacpp = {
-                npm: "@ai-sdk/openai-compatible", name: "llama.cpp (local)",
-                options: {baseURL: $url},
-                models: {($id): {name: $id, limit: {context: $ctx, output: 4096}}}
-              }' "$cfg" > "$tmp"; then
-        mv "$tmp" "$cfg"
-        echo "actualizado el proveedor 'llamacpp' en $cfg"
-    else
-        rm -f "$tmp"; die "jq falló; $cfg quedó intacto."
-    fi
+    command -v jq > /dev/null 2>&1 || die "$OC_CFG ya existe y falta jq para actualizarlo."
+    oc_set_local "$id"
+    echo "actualizado el proveedor 'llamacpp' en $OC_CFG (sin modelo por defecto)"
 }
 
 
 # ==============================================================================
-# CODE (enciende el modelo si hace falta y abre OpenCode)
+# CODE (pregunta qué modelo usar y abre OpenCode)
 # ==============================================================================
+# Menú: Quickshell (md_menu) si hay sesión gráfica; si no, lista numerada en la terminal.
+pick_from_stdin() {
+    local title="$1" md="$HERE/md_menu"
+    local -a opts=(); local l i n
+    while IFS= read -r l; do opts+=("$l"); done
+    if [ -x "$md" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && command -v qs > /dev/null 2>&1; then
+        printf '%s\n' "${opts[@]}" | "$md" llm --prompt "$title" || true
+        return 0
+    fi
+    [ -r /dev/tty ] || return 0
+    echo "== $title ==" > /dev/tty
+    for i in "${!opts[@]}"; do printf '%2d) %s\n' "$((i + 1))" "${opts[$i]}" > /dev/tty; done
+    printf 'Número (Enter = cancelar): ' > /dev/tty
+    read -r n < /dev/tty || return 0
+    [[ "$n" =~ ^[0-9]+$ ]] && [ "$n" -ge 1 ] && [ "$n" -le "${#opts[@]}" ] && printf '%s\n' "${opts[$((n - 1))]}"
+    return 0
+}
+
+chat_healthy() { curl -fsS -m 2 "http://127.0.0.1:${CHAT_PORT}/health" > /dev/null 2>&1; }
+
+# Alias del modelo que sirve ahora mismo el llama-server del chat ("" si no hay)
+running_alias() {
+    local j; j="$(curl -fsS -m 3 "http://127.0.0.1:${CHAT_PORT}/v1/models" 2> /dev/null)" || return 0
+    if command -v jq > /dev/null 2>&1; then jq -r '.data[0].id // empty' <<< "$j" 2> /dev/null
+    else grep -o '"id" *: *"[^"]*"' <<< "$j" | head -n 1 | sed 's/.*: *"\(.*\)"/\1/'; fi
+}
+
+gb() { awk -v b="$1" 'BEGIN { printf "%.1f", b / 1073741824 }'; }
+
 cmd_code() {
     command -v opencode > /dev/null 2>&1 || die "opencode no está instalado (sudo pacman -S opencode)."
     load_env
-    if ! curl -fsS -m 2 "http://127.0.0.1:${CHAT_PORT}/health" > /dev/null 2>&1; then
-        "$LLM_MENU" up chat || die "no se pudo encender el modelo de chat."
+    CHAT_CTX="${CHAT_CTX:-16384}"
+
+    # Si ya pasas -m/--model a mano, no pregunta nada: solo enciende el local si el modelo es llamacpp/…
+    local i j m=""
+    for ((i = 1; i <= $#; i++)); do
+        case "${!i}" in
+            -m|--model) j=$((i + 1)); m="${!j:-}" ;;
+            --model=*)  m="${!i#--model=}" ;;
+        esac
+    done
+    if [ -n "$m" ]; then
+        if [[ "$m" == llamacpp/* ]] && ! chat_healthy; then
+            "$LLM_MENU" up chat || die "no se pudo encender el modelo de chat."
+        fi
+        exec opencode "$@"
     fi
-    [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/opencode/opencode.json" ] || cmd_config
-    exec opencode "$@"
+
+    # ---- construir las opciones ----
+    local -a kinds=() labels=() datas=()
+    local -A size_of=()
+    local cur line cat ref name bytes warn total
+    cur="$(chat_healthy && running_alias || true)"
+    total="$(awk '/^MemTotal:/ { print $2 * 1024 }' /proc/meminfo)"
+
+    if [ -n "$cur" ]; then
+        kinds+=(run); labels+=("● Seguir con el que ya está encendido: $cur  (:$CHAT_PORT)"); datas+=("$cur")
+    fi
+    while IFS='|' read -r cat ref name bytes; do
+        [ -n "$ref" ] || continue
+        size_of["$name"]="$bytes"
+        warn=""; [ "$bytes" -gt $((total * 65 / 100)) ] && warn="  ⚠ pesado para tu RAM"
+        kinds+=(local); labels+=("[$cat] $name  ($(gb "$bytes") GB)$warn"); datas+=("$ref")
+    done < <("$LLM_MENU" list-local)
+    if [ -f "$API_CONF" ]; then
+        local lbl mdl url envv
+        while IFS='|' read -r lbl mdl url envv; do
+            [[ -z "${lbl// }" || "$lbl" == \#* ]] && continue
+            kinds+=(api); labels+=("☁ API · $lbl  ($mdl)"); datas+=("$mdl|${url:-}|${envv:-}")
+        done < "$API_CONF"
+    fi
+    # Siempre al final: OpenCode sin -m, para elegir allí entre los proveedores que ya autenticaste.
+    kinds+=(free); labels+=("☁ Otro proveedor…  (elegir dentro de OpenCode con /models)"); datas+=("")
+    [ "${#labels[@]}" -gt 1 ] || die "no hay modelos: descarga alguno con SUPER+ALT+SHIFT+L o define APIs en $API_CONF"
+
+    local choice
+    choice="$(printf '%s\n' "${labels[@]}" | pick_from_stdin "OpenCode: ¿qué modelo usar?")"
+    [ -n "$choice" ] || { echo "cancelado."; return 0; }
+    local idx=-1
+    for i in "${!labels[@]}"; do [ "${labels[$i]}" = "$choice" ] && { idx="$i"; break; }; done
+    [ "$idx" -ge 0 ] || die "opción no reconocida."
+
+    case "${kinds[$idx]}" in
+        run)
+            oc_set_local "${datas[$idx]}"
+            exec opencode -m "llamacpp/${datas[$idx]}" "$@"
+            ;;
+        local)
+            ref="${datas[$idx]}"; name="$(model_alias "$ref")"
+            if [ "$cur" != "$name" ]; then
+                # ¿cabe? (si hay otro modelo encendido, su RAM se libera al cambiarlo)
+                local need avail freed=0
+                [ -n "$cur" ] && freed="${size_of[$cur]:-0}"
+                need=$((${size_of[$name]:-0} + 3 * 1073741824))
+                avail=$(($(awk '/^MemAvailable:/ { print $2 * 1024 }' /proc/meminfo) + freed))
+                if [ "$need" -gt "$avail" ]; then
+                    choice="$(printf '%s\n' "Continuar de todos modos" "Cancelar" \
+                        | pick_from_stdin "Hacen falta ~$(gb "$need") GB y hay $(gb "$avail") GB libres")"
+                    [ "$choice" = "Continuar de todos modos" ] || { echo "cancelado."; return 0; }
+                    export AI_FORCE=1
+                fi
+                "$LLM_MENU" stop chat                 # libera el modelo anterior (no hace nada si no hay)
+                "$LLM_MENU" up chat "$ref" || die "no se pudo encender $name."
+            fi
+            oc_set_local "$name"
+            exec opencode -m "llamacpp/$name" "$@"
+            ;;
+        free)
+            # Sin -m: OpenCode abre con su último modelo y /models (o ctrl+x m) lista los
+            # proveedores conectados con "opencode auth login". Aquí no se toca ni el servidor
+            # local ni opencode.json.
+            [ -n "$cur" ] && echo "nota: el modelo local '$cur' sigue en RAM (ai-down lo apaga)." >&2
+            echo "en OpenCode escribe /models para elegir proveedor y modelo." >&2
+            exec opencode "$@"
+            ;;
+        api)
+            local mdl url envv prov mid
+            IFS='|' read -r mdl url envv <<< "${datas[$idx]}"
+            prov="${mdl%%/*}"; mid="${mdl#*/}"
+            if [ -n "$url" ]; then
+                [ -z "$envv" ] || [ -n "${!envv:-}" ] \
+                    || die "falta la clave: exporta $envv en tu shell (p. ej. en ~/.zshrc) y vuelve a abrir la terminal."
+                oc_set_api "$prov" "$mid" "$url" "$envv"
+            elif [ -n "$envv" ] && [ -z "${!envv:-}" ]; then
+                echo "aviso: $envv no está definida; si no hiciste 'opencode auth login' para $prov, fallará." >&2
+            fi
+            [ -n "$cur" ] && echo "nota: el modelo local '$cur' sigue en RAM (ai-down lo apaga)." >&2
+            exec opencode -m "$mdl" "$@"
+            ;;
+    esac
 }
 
 

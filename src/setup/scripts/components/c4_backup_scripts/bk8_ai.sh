@@ -13,12 +13,15 @@ source "$SCRIPT_DIR/../../utils/u3_env.sh"
 #                                               de logística. Se reemplazan en cada instalación.
 #   ~/.config/ai/models.env                     rutas de modelos, puertos, hilos y contexto.
 #                                               Se crea UNA vez y nunca se sobrescribe.
+#   ~/.config/ai/api_models.conf                APIs (Anthropic, OpenAI, OpenRouter...) que ai-code
+#                                               ofrece junto a los modelos locales. Igual: una vez.
 #
 # El script principal es scripts/ai.sh (lo copia c4 con los demás .sh) y sus alias
 # de Zsh (ai-up, ai-down, ai-doctor, ai-bench, ai-new) los escribe bk1_zsh.sh.
 #
 # Además instala OpenCode (agente de terminal; binario propio, sin Node) y le genera
-# ~/.config/opencode/opencode.json apuntando a tu llama-server (ai.sh config). Se instala
+# ~/.config/opencode/opencode.json con el proveedor llamacpp, SIN modelo por defecto:
+# ai-code pregunta qué modelo abrir (ai.sh config). Se instala
 # aquí y no en c2 porque si el paquete no existe en tus repos, un fallo aislado no debe
 # romper la instalación de todos los demás paquetes.
 #
@@ -45,6 +48,13 @@ if [ ! -f "$MD_AI_CONF/models.env" ]; then
 else
     echo "$T_AI_MODELS_EXISTE"
 fi
+
+# api_models.conf: APIs que ai-code ofrece junto a los modelos locales. También se crea una vez.
+if [ ! -f "$MD_AI_CONF/api_models.conf" ]; then
+    cp "$MD_AI_SRC/config/api_models.conf.example" "$MD_AI_CONF/api_models.conf"
+    echo "${T_AI_API_CREADO:-API_MODELS.CONF CREADO:} $MD_AI_CONF/api_models.conf"
+fi
+cp -f "$MD_AI_SRC/config/api_models.conf.example" "$MD_AI_DIR/api_models.conf.example"
 
 chmod +x "$MD_SCRIPTS_DIR/ai.sh" 2> /dev/null || true
 

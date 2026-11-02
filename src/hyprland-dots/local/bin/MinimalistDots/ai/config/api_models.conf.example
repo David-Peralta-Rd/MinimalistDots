@@ -1,0 +1,22 @@
+# ~/.config/ai/api_models.conf
+#
+# Modelos de API que ai-code ofrece junto a los locales (entradas "☁ API · ...").
+# Una línea por modelo:
+#
+#   Etiqueta | proveedor/modelo | URL base (opcional) | VARIABLE_DE_ENTORNO (opcional)
+#
+# - Proveedores que OpenCode ya conoce (anthropic, openai, openrouter, ...): deja vacía la
+#   URL. La clave se guarda UNA vez con  opencode auth login  o en la variable de entorno
+#   que indique el proveedor (ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY...).
+# - Cualquier servicio compatible con la API de OpenAI (DeepSeek, Groq, Together, un
+#   llama.cpp en otra máquina...): pon la URL base y el NOMBRE de la variable donde está
+#   tu clave (exportada en ~/.zshrc). La clave nunca se escribe en opencode.json.
+# - Los ids de modelo cambian con el tiempo: ajústalos a los de tu cuenta
+#   (lista: opencode models).
+# - Las líneas que empiezan por # se ignoran.
+
+Anthropic Claude Sonnet|anthropic/claude-sonnet-4-5||ANTHROPIC_API_KEY
+OpenAI GPT|openai/gpt-5||OPENAI_API_KEY
+OpenRouter Qwen3 Coder|openrouter/qwen/qwen3-coder||OPENROUTER_API_KEY
+# DeepSeek (endpoint propio)|deepseek/deepseek-chat|https://api.deepseek.com/v1|DEEPSEEK_API_KEY
+# llama.cpp en otro PC|remoto/qwen|http://192.168.1.50:8080/v1|
