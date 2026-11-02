@@ -49,7 +49,7 @@ PRESETS=(
     "$CAT_CODE|Qwen2.5-Coder 3B Instruct Q4_K_M|bartowski/Qwen2.5-Coder-3B-Instruct-GGUF|Qwen2.5-Coder-3B-Instruct-Q4_K_M.gguf|1.9|rápido, tareas sencillas"
     "$CAT_CODE|Qwen2.5-Coder 14B Instruct Q4_K_M|bartowski/Qwen2.5-Coder-14B-Instruct-GGUF|Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf|9.0|más listo, ~10 GB de RAM"
     "$CAT_CODE|DeepSeek-Coder-V2-Lite 16B MoE Q4_K_M|bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF|DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M.gguf|10.4|MoE: rápido para su tamaño"
-    "$CAT_CODE|Qwen3-Coder 30B-A3B Q4_K_M|unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF|Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf|18.6|el más capaz, MUY pesado"
+    "$CAT_CODE|Qwen3-Coder 30B-A3B Q4_K_M|unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF|Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf|18.6|el más capaz; ~21 GB con contexto 16K"
 
     # --- Razonamiento / pensamiento (piensan paso a paso; tardan más en responder) ---
     "$CAT_THINK|Qwen3 8B Q4_K_M|unsloth/Qwen3-8B-GGUF|Qwen3-8B-Q4_K_M.gguf|5.0|razona + chat, muy versátil"
@@ -216,6 +216,19 @@ ref_bytes() {
 # ==============================================================================
 # DESCUBRIR MODELOS
 # ==============================================================================
+# ¿Sirve como agente (OpenCode)? Un agente necesita "tool calling" fiable: llamar a read/write/bash
+# de verdad y no escribir el JSON como texto. ORIENTATIVO (por familia de modelo, no medido en
+# tu equipo): confírmalo con un curl con "tools" contra el servidor. Lo único probado:
+# Qwen2.5-Coder 7B NO devuelve tool_calls. Sin etiqueta = no se sabe.
+agent_tag() {
+    case "${1,,}" in
+        qwen2.5-coder-7b-instruct*|deepseek-coder*|deepseek-r1-distill*) echo " · NO sirve de agente" ;;
+        qwen3-*|gpt-oss-*|meta-llama-3.1-*|mistral-7b-instruct-v0.3*|qwen2.5-7b-instruct*|qwen2.5-14b-instruct*)
+            echo " · agente ✔" ;;
+        *) echo "" ;;
+    esac
+}
+
 MODEL_LABELS=(); MODEL_REFS=(); MODEL_CATS=(); MODEL_LOCAL=()
 declare -A PRESET_CAT=()     # archivo.gguf -> categoría (para clasificar lo ya descargado)
 
@@ -261,7 +274,7 @@ scan_models() {
             seen["$real"]=1
             have_file["$base"]=1
             bytes="$(ref_bytes "$file")"
-            add_entry "✔ $(friendly_name "$file")  [$(gib "$bytes") GB]$(ram_warn "$bytes")" "$file" \
+            add_entry "✔ $(friendly_name "$file")  [$(gib "$bytes") GB]$(agent_tag "$base")$(ram_warn "$bytes")" "$file" \
                 "${PRESET_CAT["$base"]:-$CAT_LOCAL}" 1
         done < <(find -L "$dir" -maxdepth 6 -type f -name '*.gguf' -print0 2> /dev/null | sort -z)
     done
@@ -273,7 +286,7 @@ scan_models() {
         part="$DOWNLOAD_DIR/$gfile.part"
         [ -f "$part" ] && extra=", a medias: $(gib "$(stat -c %s "$part")") GB"
         bytes="$(awk -v g="$size" 'BEGIN { printf "%d", g * 1073741824 }')"
-        add_entry "⬇ $label  [~$size GB$extra] — $note$(ram_warn "$bytes")" "dl:$repo/$gfile" "$cat" 0
+        add_entry "⬇ $label  [~$size GB$extra] — $note$(agent_tag "$gfile")$(ram_warn "$bytes")" "dl:$repo/$gfile" "$cat" 0
     done
 }
 
@@ -552,7 +565,7 @@ stop() {
 }
 
 # Lista los modelos ya descargados que sirven para chat (sin los de autocompletado),
-# en el orden de las categorías. Una línea por modelo:  categoría|ruta|nombre|bytes
+# en el orden de las categorías. Una línea por modelo:  categoría|ruta|nombre|bytes|etiqueta-agente
 # Lo usa ai.sh para preguntar qué modelo abrir con OpenCode.
 list_local() {
     local c i
@@ -561,7 +574,8 @@ list_local() {
         [ "$c" = "$CAT_FIM" ] && continue
         for i in "${!MODEL_REFS[@]}"; do
             [ "${MODEL_LOCAL[$i]}" = 1 ] && [ "${MODEL_CATS[$i]}" = "$c" ] || continue
-            printf '%s|%s|%s|%s\n' "$c" "${MODEL_REFS[$i]}" "$(friendly_name "${MODEL_REFS[$i]}")" "$(ref_bytes "${MODEL_REFS[$i]}")"
+            printf '%s|%s|%s|%s|%s\n' "$c" "${MODEL_REFS[$i]}" "$(friendly_name "${MODEL_REFS[$i]}")" \
+                "$(ref_bytes "${MODEL_REFS[$i]}")" "$(agent_tag "$(basename "${MODEL_REFS[$i]}")")"
         done
     done
 }
