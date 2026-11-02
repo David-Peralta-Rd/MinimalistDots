@@ -7,9 +7,21 @@ Este documento define la hoja de ruta de la configuración. Cada decisión se ri
 ## 🟢 1. En Desarrollo / Próximo (Lo que SÍ se va a hacer)
 *Características esenciales para un entorno de trabajo funcional, rápido y estético.*
 
-- [✅] **Menus (Migración)** *(lanzador, portapapeles, atajos, fondos, procesos, OSD, reloj y Pomodoro ya en Quickshell; falta probar en tu sesión y retirar `~/.config/eww` y `~/.config/wofi` antiguos)*:: Reemplazar por completo todos los menús e interfaces antiguas de `wofi` y `eww` por componentes nativos y ultra-ligeros usando `quickshell`.
+- [-] **Análisis de arquitectura del proyecto (organización de carpetas, archivos y configuración)**: `Revisar:` Si el proyecto sigue siendo escalable, las configuraciones están divididas?, los archivos de Quickshell son **demasiados**?, vale la pena dividir por subcategorias las secciones de scripts y Quickshell?, Agregar a cada apartado de configuración un archivo maestro que se conecte a todo por cada apartado?
 
-- [✅] **IA para desarrollo (agentes sobre modelos locales)**: `ai.sh` + `models.env` + plantillas, encima de `llm_menu.sh`; sin servicios de systemd ni demonios. Incluye OpenCode conectado al modelo local y `ai-new` con repo en GitHub (`gh`). *Estado: base lista (Fase 0); el agente concreto y MCP quedan para cuando se midan los modelos.*
+- [-] **Implementación de selector de lenguajes (Configurar cada script para que tenga diálogos en diferentes lenguajes)**: `Agregar:` La idea principal es que cada script como portapapeles, llm_menu, notificaciones, etc. Sus diálogos puedan ser variables para configurar un selector de idioma. Este selector debe ser usado con cache o memoria, solo aplicara cambios en los reinicio del equipo (*se podría considerar crearle un servicio.lua*), debe funcionar en terminal y como interfaz en Quickshell. Lo importante es que no sea un proceso que se mantenga todo el tiempo activo o que funcione en tiempo real.
+
+- [-] **Hacer escalable la selección de idiomas del proyecto (configurar: "src/setup/lang/load_lang.sh")**: `Optimización:` Se busca que **load_lang.sh** pueda analizar los lenguajes dentro de *"src/setup/lang/options"* y mostrarlos de manera automática, sin necesidad de modificaciones manuales en el script, teniendo una capacidad de mostrar 7 lenguajes en un script interactivo con buscador para facilitar la búsqueda de un lenguaje.
+
+- [-] **Nuevo scrip llamado "bk9_language_selector.sh" (Dentro de: "src/setup/scripts/components/c4_backup_scripts")**: `Uso principal:` Esto va a estar conectado con la **Implementación de selector de lenguajes"**, lo que hará este script es dentro de "~/.local/bin/MinimalistDots" una carpeta llamada "language_options", crear todos los archivos de lenguaje para el Quickshell o script de terminal usado, la idea es que esto sea escalable y cualquier persona pueda agregar un nuevo idioma configurando las variables de los archivos y traduciendo los diálogos(Nota importante: Los nombres de las variables de estos archivos serán en español, esto se hará asi para que el autor del proyecto **David Peralta** pueda construir y escalar el proyecto rápidamente, los dialogs dentro de esas variables si ya serán correspondientes al idioma que se desee tener.)
+**Pasos necesarios para que esto funcione:**
+  1. - Agregar la carpeta de "language_options" al script de creación de carpetas: **"src/setup/scripts/components/c1_new_folders.sh"**.
+  2. - Crear el Quickshell dentro del script: **"src/setup/script/components/c4_backups_scripts/bk3_quickshell.sh"** *(Nota importante: Esta ubicación puede cambiar si en la configuración de arquitectura se divide la creación de los menus Quickshell)*.
+  3. - Medir si es necesario tener configuraciones dentro de: **"src/setup/scripts/utils/u3_env.sh"**.
+
+- [-] **Configuración del estilo definitivo (Marca de MinimalistDots y configuraciones visuales)**: `Construir:` Crear una identidad visual del MinimalistDots, para asi asegurarnos que todos los menus y estilos de configuración sigan el mismo modelo visual.
+
+`Problema que resuelve:` Algunos menus quickshell o servicios tienen estilo de minimalismo, conservando los colores de MinimalistDots, pero llevando un estilo de minimalismo divido, que no es feo, pero puede ser mejor y tener una identidad única.
 
 ---
 
