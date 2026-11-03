@@ -1,0 +1,101 @@
+# LÍNEA BASE ("golden") — derivada ESTÁTICAMENTE del código (no se ejecutó el instalador)
+#
+# Qué produce una instalación limpia de MinimalistDots y dónde.
+# Orden: paths relativos a $HOME. Los "generados" vienen de heredocs del instalador.
+# Sirve para los ítems 1 y 3: el comportamiento observable NO debe cambiar (mismas rutas/archivos).
+
+# --- ~/.config (desplegado por c3_backup_and_install.sh) ---
+.config/dolphinrc
+.config/foot/foot.ini
+.config/hypr/hyprland/general.lua
+.config/hypr/hyprland/animations.lua
+.config/hypr/hyprland/env.lua
+.config/hypr/hyprland/monitors.lua
+.config/hypr/hyprland/windowrules.lua
+.config/hypr/hyprland/keybinds.lua
+.config/hypr/hyprland/vars.lua
+.config/hypr/hyprland/lib/init.lua
+.config/hypr/hyprland/lib/keybinder.lua
+.config/hypr/hyprland/lib/rules.lua
+.config/hypr/hyprland/lib/services.lua
+.config/hypr/hyprland/services/init.lua
+# generados por c3_backup_hypr/bk*.sh:
+.config/hypr/hyprland.lua            (bk1)
+.config/hypr/hypridle.conf           (bk2)
+.config/hypr/hyprlock.conf           (bk3)
+.config/hypr/hyprpaper.conf          (bk4)
+.config/hypr/hyprland/colors.lua     (bk5)
+
+# --- ~/.local/bin/MinimalistDots/services (copiado por c4: sync *.lua) ---
+.local/bin/MinimalistDots/services/polkit.lua
+.local/bin/MinimalistDots/services/footclient.lua
+.local/bin/MinimalistDots/services/dbus_env.lua
+.local/bin/MinimalistDots/services/clipboard.lua
+.local/bin/MinimalistDots/services/export_keybinds.lua
+.local/bin/MinimalistDots/services/notifications.lua
+.local/bin/MinimalistDots/services/create_custom_config.lua
+.local/bin/MinimalistDots/services/hypridle.lua
+.local/bin/MinimalistDots/services/wallpaper.lua
+.local/bin/MinimalistDots/services/desktop_clock.lua
+.local/bin/MinimalistDots/services/load_direction.lua
+
+# --- ~/.local/bin/MinimalistDots/scripts (copiado por c4: sync *.sh + generados) ---
+.local/bin/MinimalistDots/scripts/volume.sh
+.local/bin/MinimalistDots/scripts/select_wallpaper.sh
+.local/bin/MinimalistDots/scripts/screenshot.sh
+.local/bin/MinimalistDots/scripts/screenrecord.sh
+.local/bin/MinimalistDots/scripts/pomodoro.sh
+.local/bin/MinimalistDots/scripts/notifications_menu.sh
+.local/bin/MinimalistDots/scripts/llm_menu.sh
+.local/bin/MinimalistDots/scripts/ai.sh
+.local/bin/MinimalistDots/scripts/process_manager.sh    (bk2, heredoc)
+.local/bin/MinimalistDots/scripts/md_menu               (bk3, heredoc)
+.local/bin/MinimalistDots/scripts/md_launcher           (bk3, heredoc)
+.local/bin/MinimalistDots/scripts/md_volume_osd         (bk3, heredoc)
+.local/bin/MinimalistDots/scripts/show_binds            (bk3, heredoc)
+.local/bin/MinimalistDots/scripts/md_cliphist_list      (bk3, heredoc)
+
+# --- ~/.local/bin/MinimalistDots/quickshell (copiado por bk3: *.qml + generados) ---
+.local/bin/MinimalistDots/quickshell/MdMenu.qml
+.local/bin/MinimalistDots/quickshell/launcher.qml
+.local/bin/MinimalistDots/quickshell/clock.qml
+.local/bin/MinimalistDots/quickshell/osd-volume.qml
+.local/bin/MinimalistDots/quickshell/notifd.qml
+.local/bin/MinimalistDots/quickshell/pomodoro.qml
+.local/bin/MinimalistDots/quickshell/Theme.qml            (bk3, generado desde paleta)
+.local/bin/MinimalistDots/quickshell/menu-clipboard.qml    (bk3)
+.local/bin/MinimalistDots/quickshell/menu-binds.qml        (bk3)
+.local/bin/MinimalistDots/quickshell/menu-pomodoro.qml     (bk3)
+.local/bin/MinimalistDots/quickshell/menu-llm.qml          (bk3)
+.local/bin/MinimalistDots/quickshell/menu-wallpaper.qml    (bk3)
+.local/bin/MinimalistDots/quickshell/menu-notifications.qml (bk3)
+.local/bin/MinimalistDots/quickshell/menu-process.qml      (bk3)
+
+# --- ~/.local/bin/MinimalistDots/ai (bk8) ---
+.local/bin/MinimalistDots/ai/models.env.example
+.local/bin/MinimalistDots/ai/api_models.conf.example
+.local/bin/MinimalistDots/ai/templates/project/AGENTS.md
+.local/bin/MinimalistDots/ai/templates/project/CLAUDE.md
+.local/bin/MinimalistDots/ai/templates/project/SPEC.md
+.local/bin/MinimalistDots/ai/templates/project/tasks.md
+.local/bin/MinimalistDots/ai/templates/project/README.md
+.local/bin/MinimalistDots/ai/templates/project/docs/adr/0001-template.md
+
+# --- ~/.config/ai (bk8; se crean UNA vez y nunca se sobrescriben) ---
+.config/ai/models.env
+.config/ai/api_models.conf
+
+# --- Zsh (bk1) ---
+.aliaszsh
+.zshrc.d/plugins.zsh
+# .zshrc (editado, bloque delimitado "# >>> MinimalistDots zsh >>>")
+
+# --- Sistema (no son dotfiles; a título informativo) ---
+# /etc/sudoers.d/sudo_timeout_<user>            (c0)
+# /usr/share/sddm/themes/catppuccin-mocha-blue  (bk4)
+# /etc/sddm.conf.d/catppuccin.conf              (bk4)
+# /etc/sysctl.d/99-network-optimization.conf    (bk7)
+# /usr/local/bin/md-network-tune                (bk7)
+# /etc/systemd/system/md-network-tune@.service  (bk7)
+# /etc/udev/rules.d/99-md-network-tune.rules    (bk7)
+# ~/.config/opencode/opencode.json              (bk8, solo proveedor llamacpp)
