@@ -27,6 +27,7 @@ Este documento define la hoja de ruta de la configuración. Cada decisión se ri
 
 `Problema que resuelve:` Algunos menus quickshell o servicios tienen estilo de minimalismo, conservando los colores de MinimalistDots, pero llevando un estilo de minimalismo divido, que no es feo, pero puede ser mejor y tener una identidad única.
 
+
 ---
 
 ## 🟡 2. El "Icebox" (Lo que podría hacerse en el momento adecuado)
