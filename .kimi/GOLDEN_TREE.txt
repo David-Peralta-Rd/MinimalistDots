@@ -33,6 +33,7 @@
 .local/bin/MinimalistDots/services/footclient.lua
 .local/bin/MinimalistDots/services/dbus_env.lua
 .local/bin/MinimalistDots/services/clipboard.lua
+.local/bin/MinimalistDots/services/language.lua
 .local/bin/MinimalistDots/services/export_keybinds.lua
 .local/bin/MinimalistDots/services/notifications.lua
 .local/bin/MinimalistDots/services/create_custom_config.lua
@@ -50,6 +51,8 @@
 .local/bin/MinimalistDots/scripts/notifications_menu.sh
 .local/bin/MinimalistDots/scripts/llm_menu.sh
 .local/bin/MinimalistDots/scripts/ai.sh
+.local/bin/MinimalistDots/scripts/_lang.sh
+.local/bin/MinimalistDots/scripts/language_selector.sh
 .local/bin/MinimalistDots/scripts/process_manager.sh    (bk2, heredoc)
 .local/bin/MinimalistDots/scripts/md_menu               (bk3, heredoc)
 .local/bin/MinimalistDots/scripts/md_launcher           (bk3, heredoc)
@@ -59,6 +62,7 @@
 
 # --- ~/.local/bin/MinimalistDots/quickshell (copiado por bk3: *.qml + generados) ---
 .local/bin/MinimalistDots/quickshell/MdMenu.qml
+.local/bin/MinimalistDots/quickshell/Language.qml
 .local/bin/MinimalistDots/quickshell/launcher.qml
 .local/bin/MinimalistDots/quickshell/clock.qml
 .local/bin/MinimalistDots/quickshell/osd-volume.qml
@@ -72,6 +76,14 @@
 .local/bin/MinimalistDots/quickshell/menu-wallpaper.qml    (bk3)
 .local/bin/MinimalistDots/quickshell/menu-notifications.qml (bk3)
 .local/bin/MinimalistDots/quickshell/menu-process.qml      (bk3)
+.local/bin/MinimalistDots/quickshell/menu-language.qml     (bk3)
+
+# --- ~/.local/bin/MinimalistDots/language_options (bk9; preserva idiomas adicionales) ---
+.local/bin/MinimalistDots/language_options/lg1_Espanol_es.cfg
+.local/bin/MinimalistDots/language_options/lg2_English_en.cfg
+.local/bin/MinimalistDots/language_options/lg3_Francais_fr.cfg
+.local/bin/MinimalistDots/language_options/lg4_Deutsch_de.cfg
+.local/bin/MinimalistDots/language_options/lg5_Portugues_pt.cfg
 
 # --- ~/.local/bin/MinimalistDots/ai (bk8) ---
 .local/bin/MinimalistDots/ai/models.env.example
@@ -87,6 +99,12 @@
 # --- ~/.config/ai (bk8; se crean UNA vez y nunca se sobrescriben) ---
 .config/ai/models.env
 .config/ai/api_models.conf
+
+# --- Caché de idioma (bk9; active_lang conserva el valor previo al reinstalar) ---
+.cache/MinimalistDots/language/pending_lang
+.cache/MinimalistDots/language/active_lang
+.cache/MinimalistDots/language/strings.json
+.cache/MinimalistDots/language/strings.lua
 
 # --- Zsh (bk1) ---
 .aliaszsh

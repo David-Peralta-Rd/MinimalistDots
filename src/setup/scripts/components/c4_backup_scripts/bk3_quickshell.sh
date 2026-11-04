@@ -143,6 +143,7 @@ write_menu_qml "llm"        "🤖 IA local"          780 420 "$C_ACCENT_MAGENTA"
 write_menu_qml "wallpaper"  "🖼  Fondo de pantalla" 560 520 "$C_ACCENT_BLUE"    12   # con miniaturas
 write_menu_qml "notifications" "🔔 Notificaciones" 760 520 "$C_ACCENT_YELLOW" 12   # historial (notifications_menu.sh)
 write_menu_qml "process"    "⚙️  Gestor"            640 480 "$C_ACCENT_RED"     12   # process_manager.sh
+write_menu_qml "language"   ""                      560 420 "$C_ACCENT_CYAN"   12   # el selector pone el título
 
 # ==========================================================
 # WRAPPERS EJECUTABLES

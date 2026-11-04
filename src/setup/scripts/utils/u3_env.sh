@@ -38,10 +38,14 @@ MD_QUICKSHELL="$MD_BIN_DIR/quickshell"                                  # QML: m
 MD_AI_SRC="$MD_DOTS_BIN/ai"                                             # plantillas y models.env de ejemplo (en el proyecto)
 MD_AI_DIR="$MD_BIN_DIR/ai"                                              # plantillas instaladas (ai.sh new, agente de logística)
 MD_AI_CONF="$HOME/.config/ai"                                           # models.env: modelos, puertos, hilos (lo lee llm_menu.sh)
+MD_LANGUAGE_SRC="$MD_DOTS_BIN/language_options"                         # catálogos del entorno en el proyecto
+MD_LANGUAGE_DIR="$MD_BIN_DIR/language_options"                          # catálogos instalados
+MD_LANGUAGE_STATE="${XDG_CACHE_HOME:-$HOME/.cache}/MinimalistDots/language"
 
 export MD_UTILS_DIR MD_SETUP_DIR MD_SRC_DIR MD_COMPONENTS_DIR MD_DOTS_CONFIG MD_DOTS_BIN \
        MD_HYPR_DIR MD_BACKUP_ROOT MD_BIN_DIR MD_SCRIPTS_DIR MD_SERVICES_DIR \
-       MD_QUICKSHELL MD_AI_SRC MD_AI_DIR MD_AI_CONF
+       MD_QUICKSHELL MD_AI_SRC MD_AI_DIR MD_AI_CONF \
+       MD_LANGUAGE_SRC MD_LANGUAGE_DIR MD_LANGUAGE_STATE
 
 # --- Idioma -------------------------------------------------------------------
 if [ -z "${T_BIENVENIDO:-}" ]; then

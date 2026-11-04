@@ -16,6 +16,7 @@ DIRECTORIES=(
     "$HOME/.cache/hypr"
     "$HOME/models"          # modelos .gguf para llm_menu.sh
     "$MD_QUICKSHELL"
+    "$MD_LANGUAGE_DIR"
 )
 
 # CREAMOS CARPETAS USANDO UN BUCLE
