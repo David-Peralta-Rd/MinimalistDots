@@ -1,8 +1,8 @@
-# 🎨 Identidad visual de MinimalistDots — Dirección y tokens (borrador para aprobar)
+# 🎨 Identidad visual de MinimalistDots — Dirección y tokens aprobados
 
-> Síntesis de lo que pidió David + propuesta concreta. NO es la spec final: es la dirección
-> que Kimi debe convertir en `Theme.qml` + `MdMenu.qml` (ítem 5) **solo después** de que David la
-> apruebe en la Fase 1. Lo que aquí es "propuesto" puede ajustarse.
+> Dirección pedida por David y especificación aprobada en la Fase 1. Se aplicará de forma
+> centralizada en `u2_palette.sh`, `Theme.qml` y `MdMenu.qml` durante el ítem 5. Las capacidades
+> dependientes de versiones de Quickshell o SDDM permanecen marcadas "verificar".
 
 ---
 
@@ -62,9 +62,9 @@ Regla de acentos: **un solo acento por contexto** (verde para "activo/positivo",
 - **Mantener `JetBrainsMono Nerd Font`** como única fuente (ya se instala con
   `ttf-jetbrains-mono-nerd`; añadir otra viola el Filtro de Admisión).
 - Jerarquía por peso y tamaño, no por familia:
-  - Títulos de menú/prompt: `bold`, 14–16px.
-  - Cuerpo / filas: `regular`, 12–13px.
-  - Metadatos / subtexto: `regular`, 10–11px, `letterSpacing: 1`.
+  - Títulos de menú/prompt: `bold`, `15px`.
+  - Cuerpo / filas: `regular`, `13px`.
+  - Metadatos / subtexto: `regular`, `10px`, `letterSpacing: 1`.
 - Los **números/tiempos** (reloj, pomodoro) siguen en mono y en grande: es parte de la marca
   "precisa y silenciosa".
 
@@ -72,7 +72,7 @@ Regla de acentos: **un solo acento por contexto** (verde para "activo/positivo",
 
 ## 4. Radios, bordes, sombras, espaciado (escala unificada)
 
-> Hoy están dispersos (radios 7/8/10/12/22, bordes 1/2). El ítem 5 los lleva a UNA escala.
+> Hoy están dispersos (radios 2/3/4/5/6/7/8/10/12/22, bordes 1/2). El ítem 5 los lleva a UNA escala.
 
 | Elemento | Radio | Borde | Sombra |
 |----------|-------|-------|--------|
@@ -83,14 +83,14 @@ Regla de acentos: **un solo acento por contexto** (verde para "activo/positivo",
 | Botón | `8` | — | — |
 | Barra de progreso | `3` (altura 4–6px) | — | — |
 
-- **Bordes**: `1px`, color `rgba(255,255,255,0.08)` (inactivo) / acento (activo). Nada de bordes
-  de `2px` salvo el "activo" de los menús si se quiere resaltar.
+- **Bordes**: `1px`, color `rgba(255,255,255,0.08)` (inactivo) / acento (activo). La escala
+  aprobada no usa bordes de `2px`.
 - **Sombras (solo QML)**: una sombra suave y en capas — `color: rgba(0,0,0,0.45)`,
   `radius ~24`, `samples` altos, offsets pequeños (y≈6–8). Hyprland sigue con `shadow.enabled=false`
   (decisión minimalista ya tomada): las sombras son solo para los elementos flotantes de Quickshell.
 - **Translucidez**: fondo de menús ~`0.92` de opacidad (ya existen `bg90`/`bg92`) sobre un
   desenfoque sutil. No más translúcido que eso: legibilidad primero.
-- **Espaciado**: márgenes de tarjeta `12–16px`, entre elementos `8–10px`, entre secciones `14px`.
+- **Espaciado**: padding de tarjeta `14px`, entre elementos `8–10px`, entre secciones `14px`.
   "Aire" constante y medido.
 
 ---
@@ -153,8 +153,9 @@ perímetro de la tarjeta (siguiendo las esquinas redondeadas):
 - **Notificación que NO desaparece (`timeoutMs == 0`, p. ej. críticas)**: el borde queda
   **totalmente contorneado** — anillo completo y estático, sin barrido — como señal de "esta no se
   va sola". No hay animación: el contorno permanece.
-- **Al pasar el mouse**: el temporizador ya se pausa hoy; el contorno se pausa con él (no sigue
-  avanzando mientras lo miras).
+- **Al pasar el mouse**: el contorno y el temporizador se pausan conservando el tiempo restante.
+  Hoy el `Timer` se detiene, pero al salir del hover reinicia la espera completa
+  (`notifd.qml:154-158`); el rediseño corrige esa diferencia.
 - **Color del contorno**: acento según estado — normal `accent` (azul/verde suave), crítica
   `accentRed`. **Grosor fino (1–2px)** coherente con el borde hairline. Nada de colores nuevos:
   reutiliza `Theme`.
@@ -166,14 +167,16 @@ desincronice). Debe leer el radio y el color desde `Theme`.
 
 ### 7.2 Más minimalista y adaptativo al contenido
 
-**Problema actual**: ancho fijo `360` y padding generoso; se ve grande aunque muestre poco.
+**Estado actual verificado**: ancho fijo `360` (`notifd.qml:17-21`) y padding vertical total `24`.
+El alto por contenido ya existe (`:160-164`) y icono, resumen, cuerpo, progreso y acciones ya
+colapsan en gran parte (`:184-205,237-311`); la fila superior de aplicación/cierre es la excepción.
 
 **Nuevo** — tamaño adaptativo al texto:
-- **Ancho**: dentro de un rango (p. ej. `220–340`) según el contenido, no fijo.
-- **Alto**: `implicitHeight` del contenido + padding compacto (~`10px` vertical, no `24`).
-- **Secciones ausentes colapsan del todo** (ya se ocultan, pero siguen reservando espacio):
-  sin icono → sin hueco lateral; sin cuerpo → una sola línea; sin acciones → sin fila extra.
-- **Tipografía compacta**: resumen `12px`, cuerpo `11px`, app `9–10px`.
+- **Ancho**: dentro del rango `220–340` según el contenido, no fijo.
+- **Alto**: conservar `implicitHeight` del contenido, reduciendo el padding vertical total a ~`20`.
+- **Colapso completo**: eliminar también el hueco de la fila superior cuando no haya aplicación;
+  conservar el colapso existente de icono, cuerpo, progreso y acciones.
+- **Tipografía compacta**: resumen `12px`, cuerpo `11px`, app `10px`.
 
 > El historial (`notifications_menu.sh`) **no cambia**: sigue leyendo el mismo
 > `~/.local/state/MinimalistDots/notifications.jsonl`.
@@ -193,17 +196,17 @@ desincronice). Debe leer el radio y el color desde `Theme`.
 
 ---
 
-## 9. Qué debe aprobar David (Fase 1) antes de tocar QML
+## 9. Decisiones aprobadas por David (Fase 1)
 
-- [ ] Los hex exactos de la paleta (sección 2) — ¿le gusta el negro `#121315` o prefiere conservar
-      el tinte frío actual?
-- [ ] El radio base `14` para menús/tarjetas.
-- [ ] El borde hairline `1px` `rgba(255,255,255,0.08)`.
-- [ ] Sombras suaves solo en QML (Hyprland sigue sin sombras).
-- [ ] Mantener JetBrains Mono como única fuente (no añadir Inter/SF-like).
-- [ ] El logo queda **vacío por ahora** (el slot existe en `Theme.logo`, sin archivo hasta que David
-      pase el diseño).
-- [ ] El contorno de consumo de las notificaciones (7.1): barrido según `timeoutMs`, anillo
-      estático completo para las que no expiran, pausa al hacer hover.
-- [ ] El tamaño adaptativo y compacto de las notificaciones (7.2): ancho en rango, alto por
-      contenido, secciones vacías colapsadas.
+- [x] Los hex exactos de la paleta (sección 2), con negro neutro `#121315`.
+- [x] El radio base `14` para menús/tarjetas.
+- [x] El borde hairline `1px` `rgba(255,255,255,0.08)` y borde activo de `1px`.
+- [x] Sombras suaves solo en QML; Hyprland sigue sin sombras ni blur.
+- [x] JetBrains Mono Nerd Font como única familia, sin añadir Inter/SF-like.
+- [x] El logo queda **vacío por ahora**: se prepara `Theme.logo`, sin archivo ni placeholder.
+- [x] El contorno de consumo: barrido según `timeoutMs`, anillo estático completo para las que no
+      expiran y pausa conservando el tiempo restante al hacer hover.
+- [x] El tamaño adaptativo: ancho `220–340`, alto por contenido, padding compacto y colapso total
+      de secciones vacías.
+- [x] SDDM conserva sus rutas y se alinea la presentación del tema instalado, sin añadir otro tema.
+- [x] Hyprlock conserva sus textos bilingües en este ciclo; solo cambia su presentación.

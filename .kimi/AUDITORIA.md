@@ -35,7 +35,7 @@ src/setup/scripts/components/
     bk4_sddm_theme.sh                   # descarga Catppuccin Mocha/Blue  ⚠ no usa la paleta
     bk5_docker.sh
     bk6_github.sh
-    bk7_99_network_optimization.sh      # prefijo 99- para ordenar al final
+    bk7_99_network_optimization.sh      # 99- es la prioridad sysctl; bk7 se ejecuta antes de bk8
     bk8_ai.sh                           # plantillas + models.env/api_models.conf (una vez) + opencode
 src/setup/lang/
   load_lang.sh                          # ⚠ menú y case ESCRITOS A MANO (ítem 3)
@@ -55,7 +55,7 @@ config/
     lib/    init.lua  keybinder.lua  rules.lua  services.lua
     services/init.lua                   # lista de require(...) = "archivo maestro" de servicios
 local/bin/MinimalistDots/
-  services/                             # 11 .lua (uno por servicio)
+  services/                             # 11 .lua: 10 servicios + helper load_direction
     polkit.lua footclient.lua dbus_env.lua clipboard.lua export_keybinds.lua
     notifications.lua create_custom_config.lua hypridle.lua wallpaper.lua
     desktop_clock.lua load_direction.lua
@@ -66,7 +66,7 @@ local/bin/MinimalistDots/
     pomodoro.sh notifications_menu.sh llm_menu.sh ai.sh
   ai/                                   # plantillas + examples (no es i18n)
     config/models.env.example  config/api_models.conf.example
-    templates/project/{AGENTS.md,CLAUDE.md,SPEC.md,tasks.md,README.md,docs/adr/0001-template.md}
+    templates/project/{AGENTS.md,CLAUDE.md,SPEC.md,tasks.md,README.md,.gitignore,docs/adr/0001-template.md}
 ```
 
 ---
@@ -141,6 +141,10 @@ pomodoro, MdMenu). No requieren subcarpetas.
 - Migrar rutas de usuario es justo lo que las restricciones prohíben sin plan de migración.
 - La filosofía "menos es más" premia la estructura plana actual.
 
+El bucle de piezas usa orden léxico de glob, no orden numérico general
+(`c4_install_services_and_scripts.sh:62-68`). Con `bk1`…`bk9` coincide con el esperado; un futuro
+`bk10` quedaría antes de `bk2`. No se cambia en este ciclo porque no afecta al nuevo `bk9`.
+
 ### ¿Falta un "archivo maestro por apartado"? — En su mayoría ya existe
 
 | Apartado | Maestro actual | Estado |
@@ -151,133 +155,139 @@ pomodoro, MdMenu). No requieren subcarpetas.
 | Config Hyprland | `hyprland.lua` (generado) | ✅ ya lo es |
 | Paleta | `u2_palette.sh` | ✅ ya lo es |
 | Scripts de usuario | ❌ ninguno | Falta: el ítem 2 lo introduce de forma natural (un loader de idioma compartido = el "maestro" de textos) |
-| Menús Quickshell | `bk3_quickshell.sh` (`write_menu_qml`) | ✅ ya centralizado, aunque "mezcla" generación de QML + wrappers (ver problema P3) |
+| Menús Quickshell | `bk3_quickshell.sh` (`write_menu_qml`) | ✅ ya centralizado, aunque mezcla generación de QML + wrappers (ver problema P4) |
 
 ---
 
 ## 4. Problemas encontrados, ordenados por impacto
 
-### P1 — Identidad visual dividida entre dos paletas (ítem 5) · impacto ALTO
-El proyecto dice tener "paleta única" (`u2_palette.sh`, gris frío + muted), pero conviven **tres
-fuentes de color**:
-- **Hyprland + Quickshell + Foot**: paleta correcta (`#1e222a`, verde `#7ec7a2`, azul `#7aa2f7`…).
-- **`hyprlock.conf`** (`bk3_hyprlock.sh`): colores Catppuccin Mocha `rgba(1e1e2ecc)`, `cdd6f4`,
-  `89b4fa`, `f38ba8`, `313244`, `585b70`. No coinciden.
-- **SDDM** (`bk4_sddm_theme.sh`): tema Catppuccin Mocha/Blue. No coincide.
-- **Dentro de `MdMenu.qml`**: color de acento por defecto `#89b4fa` (azul Catppuccin) y colores
-  del botón "borrar todo" `#f7768e` / `#1a1b26` (paleta TokyoNight). Hardcodeados, no usan `Theme`.
-- Esto es exactamente el "minimalismo dividido" que describe el BACKLOG ítem 5.
+### P1 — Identidad visual dividida entre varias fuentes de color (ítem 5) · impacto ALTO
+El proyecto dice tener "paleta única" (`u2_palette.sh`, gris frío + muted), pero conviven varias
+fuentes de color:
+- **Hyprland + Quickshell + Foot**: paleta principal (`#1e222a`, verde `#7ec7a2`, azul `#7aa2f7`…).
+  Foot coincide manualmente, pero no se genera desde la paleta (`foot.ini:15-42`).
+- **`hyprlock.conf`** (`bk3_hyprlock.sh:12-68`): colores Catppuccin Mocha fijos.
+- **SDDM** (`bk4_sddm_theme.sh:8-16`): tema Catppuccin Mocha/Blue.
+- **`MdMenu.qml:19,253,259,388`**: `#89b4fa`, `#f7768e` y `#1a1b26` hardcodeados, fuera de `Theme`.
 
-**Dirección ya decidida por David (ver `.kimi/IDENTIDAD_VISUAL.md`)**: minimalismo macOS sin los
-tres puntos — base **gris + negro** neutra, acentos muted suavizados, bordes hairline `1px`
-`rgba(255,255,255,0.08)`, radios unificados (14/12/10/8), sombras suaves solo en QML, y un **slot de
-logo cacheado vacío por ahora** en `~/.cache/MinimalistDots/brand/logo.svg` (consumido vía
-`Theme.logo`). El ítem 5 debe: (1) unificar todo en `Theme.qml`+`MdMenu.qml`, (2) eliminar los
-hardcodes de color, (3) neutralizar `u2_palette.sh` hacia gris+negro, (4) regenerar `hyprlock.conf`
-desde la paleta y (5) alinear/reemplazar el tema SDDM (Catppuccin) con la marca.
+**Dirección aprobada por David** (`.kimi/IDENTIDAD_VISUAL.md`): base gris + negro neutra, acentos
+muted, bordes hairline, radios unificados, sombras suaves solo en QML y slot de logo vacío en
+`~/.cache/MinimalistDots/brand/`. El ítem 5 unifica paleta y tokens, actualiza Foot y Hyprlock,
+alinea SDDM y elimina los hardcodes.
 
-### P2 — El entorno instalado no tiene sistema de idioma (ítems 2 y 4) · impacto ALTO
-Cero soporte i18n fuera del instalador. Ver `INVENTARIO_TEXTOS.md` para la lista completa
-(`scripts/*.sh`, `quickshell/*.qml`, `bk2_process_manager.sh`, `bk3_quickshell.sh`).
+### P2 — El entorno instalado no tiene sistema de idioma compartido (ítems 2 y 4) · impacto ALTO
+No existe selector, caché ni loader para los textos propios del entorno. El reloj ya usa
+`Qt.locale()` y el lanzador recibe nombres localizados de `.desktop`, pero eso no constituye un
+sistema i18n del proyecto. El inventario incluye scripts, QML, wrappers, Lua y textos generados.
 
-### P3 — `bk3_quickshell.sh` mezcla 3 responsabilidades · impacto MEDIO
-Un solo archivo hace: (a) copiar QML, (b) generar `Theme.qml`, (c) generar 7 `menu-*.qml`,
-(d) generar 5 wrappers de shell (`md_menu`, `md_launcher`, `md_volume_osd`, `show_binds`,
-`md_cliphist_list`). El BACKLOG ítem 1 anticipa que esto puede dividirse. Recomendación: mantenerlo
-salvo que el ítem 5/4 lo exija; dividir solo si se extrae la generación de menús (paso pequeño).
+Varios textos también sirven como protocolo (`notifications_menu.sh:40,51,55-57`,
+`llm_menu.sh:128,309,328-345`, `ai.sh:128-131,348-353`, `bk2_process_manager.sh:30-46`). La
+localización debe separar identificadores/salidas de máquina estables de las etiquetas visibles.
 
-### P4 — `load_lang.sh` hardcodeado (ítem 3) · impacto MEDIO (esperado)
-Menú + `case` escritos a mano (5 idiomas). Añadir idioma exige editar 2 sitios. Es justo lo que el
-ítem 3 corrige. Los 5 `.cfg` tienen la misma estructura `T_*` (~88 líneas), así que el refactor es
-solo del script, no de los datos.
+### P3 — La protección de archivos del usuario tiene excepciones · impacto ALTO
+- `create_custom_config.lua:22-44,47-57` reescribe `custom/services/init.lua` en cada inicio.
+- Un fallo de una pieza `c3_backup_hypr/bk*.sh` puede impedir la restauración posterior de
+  `custom/` (`c3_backup_and_install.sh:85-99`).
+- `sync_files` borra todos los `*.lua`/`*.sh` directos del destino, incluidos archivos añadidos por
+  el usuario (`c4_install_services_and_scripts.sh:15-37`).
+- `bk3_quickshell.sh:53-64` no elimina QML obsoletos al reinstalar.
 
-### P5 — Textos de `keybinds.lua` bilingües a fuego · impacto BAJO-MEDIO
-Cada descripción es "Abrir navegador / Open browser". Es una decisión deliberada, pero si el ítem 2
-quiere "diálogos en el idioma elegido", estos también lo necesitan (se exponen en `show_binds`
-vía `keybinds.json`). Aclarar con David si se localizan o se dejan bilingües.
+Quedan fuera de los cinco ítems salvo que David apruebe una corrección aparte. `bk9` no debe
+reproducir estos comportamientos: preservará idiomas adicionales y el estado activo existente.
 
-### P6 — `hyprlock.conf` con textos a fuego · impacto BAJO
-`text = Hola, $USER` y `placeholder_text = Ingresa contraseña / Enter password...`. Candidatos a
-i18n si se quiere coherencia (requiere regenerar el `.conf` desde un loader).
+### P4 — `bk3_quickshell.sh` mezcla 4 operaciones · impacto MEDIO
+Un solo archivo: (a) copia QML, (b) genera `Theme.qml`, (c) genera 7 `menu-*.qml` y (d) genera 5
+wrappers (`bk3_quickshell.sh:56-64,79-103,113-145,152-315`). Recomendación aprobada: mantenerlo;
+la generación ya está centralizada y dividir no elimina complejidad por sí solo.
 
-### P7 — Verificación estática limitada en este entorno · impacto en el MÉTODO
+### P5 — `load_lang.sh` hardcodeado y con validación insuficiente (ítem 3) · impacto MEDIO
+Menú + `case` escritos a mano (`load_lang.sh:27-46`). Añadir idioma exige editar dos sitios. Los 5
+`.cfg` definen 71 claves `T_*` cada uno; cuatro tienen 88 líneas y el inglés 89.
+
+La caché y `SELECTED_LANG` deben validarse contra basenames descubiertos antes de `source`
+(`load_lang.sh:15-27,49-58`). Una opción inválida selecciona inglés (`:42`): se conserva ese
+comportamiento para no alterar el ítem 3 fuera del alcance aprobado.
+
+### P6 — Textos de atajos bilingües y generados en Lua · impacto MEDIO
+No solo son las descripciones de `keybinds.lua:9-83`: también hay categorías y textos generados en
+`lib/keybinder.lua:12-19,40-55,67-68`. Todos llegan a `keybinds.json` y `show_binds`. La propuesta
+aprobada usa claves internas estables y exporta categorías/descripciones en el idioma activo.
+
+### P7 — La descripción inicial de `notifd.qml` era imprecisa · impacto MEDIO
+El ancho fijo `360` sí existe (`notifd.qml:17-21`), pero el alto por contenido ya existe (`:160-164`)
+y la mayoría de secciones vacías ya colapsan (`:184-205,237-311`). La fila superior es la excepción.
+El hover detiene el temporizador, pero reinicia la espera completa al salir en vez de conservar el
+tiempo restante (`:154-158`). El rediseño debe partir de este comportamiento real.
+
+### P8 — `hyprlock.conf` con textos bilingües a fuego · impacto BAJO
+`bk3_hyprlock.sh:41,63` genera `Hola, $USER` y `Ingresa contraseña / Enter password...`. Quedan
+bilingües en este ciclo por decisión de alcance; el ítem 5 solo unifica su presentación.
+
+### P9 — Verificación estática limitada en este entorno · impacto en el MÉTODO
 Faltan `shellcheck`, `shfmt`, `qmllint`, `node`. Solo hay `bash -n`, `luac -p`, `lua` y `qs`.
-Kimi debe marcar "verificar" y no afirmar sobre versiones de Quickshell/Hyprland que no pueda probar.
+No se ejecuta el instalador ni Quickshell en el equipo. Lo que dependa de versiones concretas de
+Hyprland, Quickshell o SDDM queda marcado "verificar".
 
 ---
 
-## 5. Decisiones pendientes — con recomendación (Fase 0, una sola tanda)
+## 5. Decisiones aprobadas por David (Fase 0 cerrada)
 
-> Kimi debe plantearlas a David y validar estas recomendaciones, no darlas por aprobadas.
+### (a) El idioma del instalador siembra el del entorno
+La correspondencia se hace por locale estable, no por `N` ni por basename. Si no hay equivalente,
+usa `es`. La siembra la ejecuta `bk9_language_selector.sh` durante `c4`, no `load_lang.sh` al
+mostrar el menú; cancelar `c3` no cambia el idioma del entorno. Los catálogos `T_*` del instalador
+y `MD_TXT_*` del entorno permanecen independientes.
 
-### (a) ¿El idioma del instalador siembra el del entorno, o son independientes?
-**Recomendación: que lo siembre.** El instalador, al elegir idioma, escribe además el archivo de
-caché del entorno (`~/.local/bin/MinimalistDots/language_options/current_lang`) con el idioma
-elegido (mapeando `lgN_xx.cfg` → el archivo equivalente de `language_options/`). Si no hay
-equivalente, usa `es`.
-- Por qué: coherencia total (el usuario no elige dos veces) y un solo punto de verdad al instalar.
-- Los dos sistemas de archivos siguen siendo independientes (el del instalador usa `T_*` en
-  `/tmp`; el del entorno usa `language_options/` en el home), solo se conecta en el momento de
-  instalar. Esto respeta el Filtro de Admisión (no añade proceso ni demonio).
+### (b) Convención sin paréntesis y significado de N
+Formato aprobado: `lgN_Nombre_del_idioma_es-CO.cfg`; también se admite locale de solo idioma
+(`lg1_Espanol_es.cfg`). Los paréntesis se eliminan para simplificar comandos, parsing y escritura
+manual, no porque rompan globs (no lo hacen).
 
-### (b) Convención `lgN_NOMBRE-(siglas)` y significado de N
-**Recomendación: quitar los paréntesis.** Propongo `lgN_Nombre_del_idioma_es-CO.cfg` (separador
-`_` en vez de `(...)`). Los paréntesis obligan a entrecomillar en bash, rompen globs y ordenado, y
-complican QML y el buscador. El guion del locale (`es-CO`) es seguro en nombres de archivo; solo los
-paréntesis son el problema.
-- **N = clave de orden de aparición, manual.** Se usa solo para ordenar la lista inicial; se muestra
-  SIN el prefijo `lgN_`. Si dos archivos repiten N, desempate por nombre completo (orden léxico).
-  El script NO asume que N sea único ni contiguo.
-- Alternativa (si David insiste en paréntesis): mantenerlos pero documentar que toda manipulación
-  debe entrecomillar. No recomendada.
+`N` es un entero positivo y clave manual de orden; no debe ser único ni contiguo. Orden numérico por
+`N` y desempate léxico por nombre completo. La numeración visible se genera sin exponer `lgN_`.
 
-### (c) "Mostrar 7 idiomas": ¿viewport o tope?
-**Recomendación: es el viewport (máximo visible a la vez), NO un tope de idiomas soportados.**
-Todo el ítem 3 es "escalable" (añadir idiomas sin tocar código); un tope de 7 lo contradiría.
-7 = líneas visibles a la vez, con desplazamiento y buscador que filtra por siglas o nombre.
+### (c) "Mostrar 7 idiomas" es el viewport
+Siete entradas visibles a la vez, con desplazamiento/paginación y buscador por nombre o siglas. No
+es un límite de idiomas soportados.
 
-### (d) Cómo se aplica "solo al reiniciar" (caché, quién lee, cuándo)
-**Recomendación:**
-- **Se guarda**: `~/.local/bin/MinimalistDots/language_options/current_lang` (o
-  `~/.cache/MinimalistDots/lang` si se prefiere fuera del bin). Contiene el nombre de archivo del
-  idioma activo (ej. `es`).
-- **Quién lee y cuándo**:
-  - **Scripts bash**: al arrancar, hacen `source` de un loader único (p. ej.
-    `scripts/_lang.sh`) que lee `current_lang` y hace `source` del archivo de
-    `language_options/` correspondiente. Cero proceso residente.
-  - **QML**: leen el idioma en el arranque del proceso `qs` (al abrir el menú/widget). Opción A:
-    `qs` lee un archivo resuelto generado en el login; Opción B: `MdMenu`/widgets leen el archivo
-    de `language_options/` por `Quickshell.env` o un `FileView` (ya usan `FileView` en MdMenu).
-  - **`servicio.lua`** (opcional, recomendado): un servicio Hyprland one-shot enganchado a
-    `hyprland.start` (igual que `export_keybinds.lua`) que (re)genera un `strings.qml` o un
-    `lang.json` resuelto desde `language_options/` + `current_lang`. **No** es un proceso siempre
-    activo: corre una vez por login dentro del hook ya existente. Esto cumple "no en tiempo real".
-- **Qué ve el usuario si cambia sin reiniciar**: el idioma anterior (los procesos ya lanzados
-  conservan el viejo) y un aviso "reinicie sesión para aplicar" (notify-send). Los procesos nuevos
-  tras reiniciar leen el nuevo valor.
+### (d) "Solo al reiniciar" exige separar pendiente y activo
+Leer una elección mutable al arrancar cada script o `qs` aplicaría el cambio antes de reiniciar.
+Por eso el diseño aprobado separa:
+- `language_options/`: catálogos.
+- `~/.cache/MinimalistDots/language/pending_lang`: elección que hará el selector.
+- `active_lang`: idioma que consumen los scripts.
+- `strings.json` y `strings.lua`: instantáneas resueltas para QML y la exportación de atajos.
 
-### (e) Variable que falta en un idioma
-**Recomendación: español (`es`) como respaldo/base.** Cada archivo de `language_options/` solo
-define las variables que traduce; el loader carga primero `es` y luego el idioma elegido, de modo
-que toda clave ausente cae en español. Coincide con la decisión del autor (variables en español) y
-evita pantallas vacías.
+El selector solo cambia el pendiente y avisa que se aplicará al reiniciar sesión. Un `language.lua`
+one-shot promueve pendiente → activo al iniciar sesión y regenera las instantáneas. Scripts y QML
+leen solo el activo, de modo que incluso las invocaciones nuevas conservan el idioma anterior hasta
+el reinicio. QML usa `FileView`; `Quickshell.env()` solo consulta entorno, no archivos.
 
-### (f) Los 5 `.cfg` actuales: ¿se renombran o conviven?
-**Recomendación: se renombran a la convención nueva** en el ítem 3 (p. ej. `lg1_Espanol_es-ES.cfg`,
-`lg2_English_en-US.cfg`, …), en el mismo cambio. No conviven dos convenciones: el `load_lang.sh`
-nuevo debe leer UNA sola. El mapeo `lgN_xx.cfg` antiguo solo lo usa el instalador, que se reescribe
-en el mismo paso (no rompe a usuarios ya instalados: el entorno instalado no usa esos `.cfg`).
+El servicio one-shot es necesario para esta semántica estricta; no es un demonio ni un watcher. El
+orden entre activación, exportación de atajos y arranque de `qs` queda marcado "verificar".
+
+### (e) Español como respaldo por clave
+El resolvedor carga primero `es` y después el idioma activo. Una clave ausente hereda español. Si
+también falta en español, es un error del catálogo base, no una cadena vacía válida. Si falta todo
+el idioma activo o es inválido, se usa `es` con aviso.
+
+### (f) Los 5 `.cfg` actuales se renombran
+Se usa una sola convención en el ítem 3: `lg1_Espanol_es.cfg`, `lg2_English_en.cfg`,
+`lg3_Francais_fr.cfg`, `lg4_Deutsch_de.cfg`, `lg5_Portugues_pt.cfg`. README y referencias se
+actualizan en el mismo cambio. No requiere migración del entorno instalado: estos archivos son del
+instalador y `/tmp/.current_lang` es temporal.
 
 ---
 
-## 6. Criterio del Filtro de Admisión aplicado a cada pieza nueva (borrador, a validar)
+## 6. Criterio del Filtro de Admisión aplicado a cada pieza nueva (aprobado en Fase 1)
 
-| Pieza nueva | ¿Se puede vivir sin ella? | ¿< 5 MB y ~0 CPU/RAM? | ¿Mantenimiento manual? | Veredicto preliminar |
+| Pieza nueva | ¿Se puede vivir sin ella? | ¿< 5 MB y ~0 CPU/RAM? | ¿Mantenimiento manual? | Veredicto |
 |-------------|---------------------------|------------------------|------------------------|----------------------|
 | Loader de idioma en scripts (`_lang.sh`) | No (es la base del ítem 2) | ✅ ~1 KB, corre 1 vez por invocación | No (automático) | ✅ ADMITIR |
 | `language_options/` + `bk9_language_selector.sh` | No (ídem) | ✅ textos, ~KBs | Solo traducir un archivo al añadir idioma (es el objetivo) | ✅ ADMITIR |
-| `servicio.lua` one-shot de idioma | Sí se puede prescindir (los QML podrían leer directo) | ✅ one-shot en `hyprland.start` | No | ⚠️ OPCIONAL (elegir el camino más simple que cumpla) |
-| Cache `current_lang` | No (define qué idioma) | ✅ un archivo de bytes | No | ✅ ADMITIR |
-| Tokens visuales en `Theme.qml`/`MdMenu.qml` | No (ítem 5) | ✅ reusa lo existente | No | ✅ ADMITIR |
+| `language.lua` one-shot de idioma | No, si "solo al reiniciar" es estricto | ✅ one-shot en el inicio de sesión; sin residente | No | ✅ ADMITIR |
+| Caché `pending_lang`/`active_lang` e instantáneas | No (separan elección y aplicación) | ✅ archivos pequeños regenerados una vez por sesión | No | ✅ ADMITIR |
+| `Language.qml` + `menu-language.qml` | No (consumo QML y selector sin duplicar lectores) | ✅ un lector y una instancia fina; sin watcher | No | ✅ ADMITIR |
+| Tokens visuales en `Theme.qml`/`MdMenu.qml` | No (ítem 5) | ✅ reutiliza lo existente | No | ✅ ADMITIR |
 
 ---

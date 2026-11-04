@@ -180,9 +180,62 @@ Leyenda de tipo:
 
 ---
 
+## Adiciones verificadas en la Fase 0
+
+### Textos omitidos en archivos ya inventariados
+
+- `notifications_menu.sh:73`: cuerpo `Reinicia la sesión o ejecuta: qs -p $QML`.
+- `MdMenu.qml:131` y `pomodoro.qml:48-50`: nombres de aplicación `Menú` y `Pomodoro`.
+- `notifd.qml:22,38`: `Historial` es un identificador interno de aplicación, no texto visible; debe
+  permanecer sincronizado con `notifications_menu.sh:23,76` aunque los avisos se traduzcan.
+- `bk2_process_manager.sh:20,22,27`: etiquetas visibles `Class`, `PID`, `RAM` y `CPU`.
+- `bk3_quickshell.sh:166`: uso `md_menu <nombre> [--prompt texto] [--raw]`.
+
+### `keybinds.lua` y `lib/keybinder.lua`
+
+Además de las descripciones explícitas de `keybinds.lua:10-73`:
+
+- Categorías visibles en `keybinds.lua:9,21,38,47,55,67,78`.
+- `(sin descripción)` y `General` en `lib/keybinder.lua:12-19`.
+- `Enfocar ventana`, `Mover ventana`, `Workspaces`, `Ir al escritorio` y
+  `Mover ventana al escritorio` en `lib/keybinder.lua:40-55`.
+- Categoría `Multimedia` de los atajos de hardware en `lib/keybinder.lua:67-68`.
+
+Los valores `left/right/up/down` son argumentos del dispatcher y texto visible a la vez
+(`lib/keybinder.lua:40-45`): la clave interna debe separarse de su traducción.
+
+### `llm_menu.sh`
+
+- Notas de presets y etiquetas visibles: `:47-80,223-250,282-289`.
+- Prompts `Contexto del chat`, `LLM local`, modelos y aviso de RAM: `:358,667,676-677,697`.
+- Salida `status`: `:629-637`.
+- Cuerpos de notificaciones de arranque, errores y apagado: `:721-752,837,850,859`.
+- Salida CLI completa de `up`: `:759-827`.
+- La notificación `Descargando…` está en `:474`; `:471` escribe en el log.
+
+### `ai.sh`
+
+- Ayuda de cabecera impresa por el `awk` final: `:3-26,426-437`.
+- Formatos `[ok]`, `[MISSING]`, `[warn]`: `:53-59`.
+- Errores de `bench`: `:121,123-124,131`.
+- Validaciones de `new`: `:155-165`.
+- Mensajes de edición/configuración de OpenCode: `:220-227,269,292,295,297`.
+- Dependencias, opciones, cancelaciones y errores de `code`: `:334,346,351-352,358,362-363,367,370,388,392,413,416`.
+
 ## Nota para el ítem 2
-- La mayoría son `notify-send`/`menu`/`qml`. Conviene una tabla de variables en español
-  (`NOTIF_*`, `MENU_*`, `POMO_*`, `LLM_*`, `SHOT_*`, `REC_*`, …) en `language_options/`.
-- `llm_menu.sh` y `ai.sh` concentran ~la mitad del texto; son los más costosos de convertir.
-- `keybinds.lua` y `hyprlock.conf` son casos especiales: el primero es Lua, el segundo se genera
-  con heredoc (necesitan un paso de "resolver variables" distinto al de los scripts bash).
+
+- La mayoría son `notify-send`/`menu`/`qml`. Los catálogos usan variables `MD_TXT_*` con nombres
+  descriptivos en español, compartidas por los consumidores Bash, QML y Lua.
+- `llm_menu.sh` y `ai.sh` concentran gran parte del texto y se ejecutan en pasos independientes.
+- Los valores internos y las etiquetas visibles deben separarse. En particular:
+  - `MdMenu.qml:184-187` devuelve `item.label`.
+  - `notifications_menu.sh:40,51,55-57` reconoce acciones por su etiqueta.
+  - `llm_menu.sh:128,309,328-345` compara categorías y opciones.
+  - `ai.sh:128-131` interpreta `llm_menu.sh status`; `status` conserva identificadores estables.
+  - `ai.sh:348-353` consume `list-local`, cuyos campos de máquina no se traducen indiscriminadamente.
+  - `bk2_process_manager.sh:30-46` reconoce categorías y extrae `PID`.
+- `process_manager.sh` y los cinco wrappers se generan con heredocs entrecomillados
+  (`bk2_process_manager.sh:13`, `bk3_quickshell.sh:152,196,211,220,253`). Las variables del entorno
+  deben resolverse al ejecutar el archivo generado, no al instalarlo.
+- `hyprlock.conf` también usa heredoc entrecomillado y conserva `$USER`/`$(date …)` para ejecución
+  posterior (`bk3_hyprlock.sh:12,31,41,69`). Sus textos quedan bilingües en este ciclo.

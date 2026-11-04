@@ -1,8 +1,10 @@
 # LÍNEA BASE ("golden") — derivada ESTÁTICAMENTE del código (no se ejecutó el instalador)
 #
-# Qué produce una instalación limpia de MinimalistDots y dónde.
+# Archivos deterministas que produce una instalación limpia de MinimalistDots y dónde.
 # Orden: paths relativos a $HOME. Los "generados" vienen de heredocs del instalador.
 # Sirve para los ítems 1 y 3: el comportamiento observable NO debe cambiar (mismas rutas/archivos).
+# No es un inventario de directorios vacíos, credenciales, estado interactivo ni archivos que los
+# servicios generan después del primer inicio de sesión. Las rutas condicionales se marcan como tales.
 
 # --- ~/.config (desplegado por c3_backup_and_install.sh) ---
 .config/dolphinrc
@@ -79,6 +81,7 @@
 .local/bin/MinimalistDots/ai/templates/project/SPEC.md
 .local/bin/MinimalistDots/ai/templates/project/tasks.md
 .local/bin/MinimalistDots/ai/templates/project/README.md
+.local/bin/MinimalistDots/ai/templates/project/.gitignore
 .local/bin/MinimalistDots/ai/templates/project/docs/adr/0001-template.md
 
 # --- ~/.config/ai (bk8; se crean UNA vez y nunca se sobrescriben) ---
@@ -90,12 +93,19 @@
 .zshrc.d/plugins.zsh
 # .zshrc (editado, bloque delimitado "# >>> MinimalistDots zsh >>>")
 
-# --- Sistema (no son dotfiles; a título informativo) ---
+# --- Sistema y otros efectos (no todos son dotfiles; a título informativo) ---
 # /etc/sudoers.d/sudo_timeout_<user>            (c0)
 # /usr/share/sddm/themes/catppuccin-mocha-blue  (bk4)
 # /etc/sddm.conf.d/catppuccin.conf              (bk4)
 # /etc/sysctl.d/99-network-optimization.conf    (bk7)
+# /etc/modules-load.d/network-optimization.conf (bk7)
+# /etc/systemd/resolved.conf.d/dns_latency.conf (bk7)
+# /etc/resolv.conf                              (bk7, enlace al stub de systemd-resolved)
+# /etc/NetworkManager/conf.d/dns-resolved.conf  (bk7, solo si NetworkManager está activo)
+# /etc/pacman.conf                              (bk7, editado si PACMAN_PARALLEL > 0)
 # /usr/local/bin/md-network-tune                (bk7)
 # /etc/systemd/system/md-network-tune@.service  (bk7)
 # /etc/udev/rules.d/99-md-network-tune.rules    (bk7)
-# ~/.config/opencode/opencode.json              (bk8, solo proveedor llamacpp)
+# ${XDG_CONFIG_HOME:-~/.config}/opencode/opencode.json (bk8, si ai.sh config termina bien)
+# bk5 además habilita docker.service y puede modificar el grupo del usuario; bk6 puede cambiar
+# Git/gh/GPG de forma interactiva. Esos efectos no producen un conjunto de rutas fijo comparable.
