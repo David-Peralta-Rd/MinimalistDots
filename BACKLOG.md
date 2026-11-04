@@ -11,9 +11,9 @@ Este documento define la hoja de ruta de la configuración. Cada decisión se ri
 
 - [-] **Implementación de selector de lenguajes (Configurar cada script para que tenga diálogos en diferentes lenguajes)**: `Agregar:` La idea principal es que cada script como portapapeles, llm_menu, notificaciones, etc. Sus diálogos puedan ser variables para configurar un selector de idioma. Este selector debe ser usado con cache o memoria, solo aplicara cambios en los reinicio del equipo (*se podría considerar crearle un servicio.lua*), debe funcionar en terminal y como interfaz en Quickshell. Lo importante es que no sea un proceso que se mantenga todo el tiempo activo o que funcione en tiempo real.
 
-- [-] **Hacer escalable la selección de idiomas del proyecto (configurar: "src/setup/lang/load_lang.sh")**: `Optimización:` Se busca que **load_lang.sh** pueda analizar los lenguajes dentro de *"src/setup/lang/options"* y mostrarlos de manera automática, sin necesidad de modificaciones manuales en el script, teniendo una capacidad de mostrar 7 lenguajes en un script interactivo con buscador para facilitar la búsqueda de un lenguaje. **Idea principal:**
-  - Poder agregar lenguajes que tengan estas iniciales en su nombre: lg1_NOMBRE_DEL_IDIOMA-(SIGLAS_DEL_IDIOMA), ejemplo: lg1_Colombia_Spanish-(es-co). Asi con cada idioma.
-  - El script de "load_lang.sh" debe ser capaz de leer todos los archivos con estas iniciales y mostrarlos en orden numerados sin el "lgN_", esto se hará asi para que sea fácil agregar idiomas y que el script los lea sin necesidad de modificarlo manualmente.
+- [-] **Hacer escalable la selección de idiomas del proyecto (configurar: "src/setup/lang/load_lang.sh")**: `Optimización:` Se busca que **load_lang.sh** pueda analizar los lenguajes dentro de *"src/setup/lang/options"* y mostrarlos de manera automática, sin necesidad de modificaciones manuales en el script, con un viewport de 7 idiomas, desplazamiento y buscador. **Idea principal:**
+  - Poder agregar lenguajes con la convención `lgN_Nombre_del_idioma_locale.cfg`, por ejemplo `lg1_Colombia_Spanish_es-CO.cfg`, sin paréntesis.
+  - El script de "load_lang.sh" debe leer todos los archivos válidos, ordenarlos por `N` con desempate léxico y mostrarlos numerados sin el prefijo `lgN_`, sin asumir que `N` sea único o contiguo.
   - El script de "load_lang.sh" debe tener el buscador basándose en las siglas o el nombre del idioma.
 
 

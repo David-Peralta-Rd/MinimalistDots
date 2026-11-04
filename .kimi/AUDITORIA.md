@@ -38,9 +38,10 @@ src/setup/scripts/components/
     bk7_99_network_optimization.sh      # 99- es la prioridad sysctl; bk7 se ejecuta antes de bk8
     bk8_ai.sh                           # plantillas + models.env/api_models.conf (una vez) + opencode
 src/setup/lang/
-  load_lang.sh                          # ⚠ menú y case ESCRITOS A MANO (ítem 3)
+  load_lang.sh                          # descubrimiento automático, viewport 7 y buscador (ítem 3)
   options/                              # 5 archivos, ~88 líneas c/u, misma estructura T_*
-    lg1_es.cfg  lg2_en.cfg  lg3_fr.cfg  lg4_de.cfg  lg5_pt.cfg
+    lg1_Espanol_es.cfg  lg2_English_en.cfg  lg3_Francais_fr.cfg
+    lg4_Deutsch_de.cfg    lg5_Portugues_pt.cfg
 ```
 
 ### 1.2 Lo que se instala (`src/hyprland-dots/`)
@@ -106,7 +107,7 @@ u2_palette.sh (C_*, RAW_*)
 ```
 load_lang.sh
   ├─ lee /tmp/.current_lang (si existe y es válido, reutiliza)
-  ├─ si no: menú hardcoded → case hardcoded → escribe /tmp/.current_lang
+  ├─ si no: descubre/ordena idiomas → menú con viewport/buscador → escribe /tmp/.current_lang
   └─ source options/$SELECTED_LANG  (set -a) → exporta T_*
 ```
 

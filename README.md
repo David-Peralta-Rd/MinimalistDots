@@ -82,7 +82,7 @@ MiniTest/
 │   └── setup/                          # EL INSTALADOR
 │       ├── lang/
 │       │   ├── load_lang.sh
-│       │   └── options/lg1_es.cfg ... lg5_pt.cfg
+│       │   └── options/lg1_Espanol_es.cfg ... lg5_Portugues_pt.cfg
 │       └── scripts/
 │           ├── steps.sh                # Orquesta todo el proceso
 │           ├── utils/
@@ -131,7 +131,7 @@ La tecla modificadora por defecto es `SUPER` (definida en `vars.lua`). Consulta 
 
 ## Idiomas
 
-Todos los mensajes de la instalación están centralizados en `src/setup/lang/options/*.cfg` y disponibles en Español, Inglés, Francés y Alemán (incluido portugués). Añadir un idioma nuevo es tan simple como copiar un `.cfg` existente de `options/`, traducirlo y agregar la opción en `src/setup/lang/load_lang.sh`.
+Todos los mensajes de la instalación están centralizados en `src/setup/lang/options/*.cfg` y disponibles en Español, Inglés, Francés, Alemán y Português. Añadir un idioma nuevo es copiar un `.cfg`, traducirlo y nombrarlo como `lgN_Nombre_del_idioma_locale.cfg`: `load_lang.sh` lo descubre sin editar el script, lo ordena por `N` y ofrece un viewport de 7 entradas con desplazamiento (`n`/`p`) y buscador por nombre o siglas (`/texto`).
 
 ## Licencia
 
